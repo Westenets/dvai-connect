@@ -16,7 +16,7 @@ const s3Client = new S3Client({
 });
 
 // The bridge directory you created in your home folder
-const WATCH_DIR = '/home/dvadmin/dvai-connect/livekit-recordings';
+const WATCH_DIR = process.env.NODE_ENV === 'production' ? '/home/dvadmin/dvai-connect/livekit-recordings' : 'D:\\Docs\\Personal\\Projects\\Node.JS\\Projects\\meet\\livekit-recordings';
 
 // 2. Configure Chokidar File Watcher
 const watcher = chokidar.watch(WATCH_DIR, {
@@ -44,20 +44,36 @@ watcher.on('add', async (filePath) => {
       console.log(`File is empty: ${filePath}`);
       return;
     }
-    // Read the file via a stream to keep server memory usage low
+    // For Production: Using lib-storage Upload for robust streaming
+    const { Upload } = require('@aws-sdk/lib-storage');
     const fileStream = fs.createReadStream(filePath);
 
-    const uploadParams = {
-      Bucket: process.env.S3_BUCKET.trim(),
-      Key: `meet/${fileName}`, // Target path in your Linode bucket
-      Body: fileStream,
-      ContentLength: fileStats.size,
-      ContentType: filePath.endsWith('.mp4') ? 'video/mp4' : 'audio/ogg',
-    };
+    const parallelUploads3 = new Upload({
+      client: s3Client,
+      params: {
+        Bucket: process.env.S3_BUCKET.trim(),
+        Key: `meet/${fileName}`,
+        Body: fileStream,
+        ContentType: filePath.endsWith('.mp4') ? 'video/mp4' : 'audio/ogg',
+      },
+      // Optional: configuration for the upload
+      queueSize: 4, // Number of concurrent parts
+      partSize: 5 * 1024 * 1024, // 5MB per part
+      leavePartsOnError: false, // Clean up failed parts
+    });
 
-    console.log(`🚀 Uploading to Linode Object Storage (${(fileStats.size / 1024 / 1024).toFixed(2)} MB)...`);
-    await s3Client.send(new PutObjectCommand(uploadParams));
-    console.log(`✅ Upload complete: ${fileName}`);
+    console.log(
+      `🚀 [STREAM] Uploading to Linode via lib-storage (${(fileStats.size / 1024 / 1024).toFixed(2)} MB)...`,
+    );
+
+    parallelUploads3.on('httpUploadProgress', (progress) => {
+      const percentage = Math.round((progress.loaded / progress.total) * 100);
+      process.stdout.write(`\r   - Upload progress: ${percentage}%`);
+    });
+
+    await parallelUploads3.done();
+    process.stdout.write('\n');
+    console.log(`✅ [SUCCESS] Streaming upload complete: ${fileName}`);
 
     // 4. Safely delete the local copy to save your server's disk space
     fs.unlink(filePath, (err) => {
