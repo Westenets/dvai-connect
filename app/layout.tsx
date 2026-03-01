@@ -6,27 +6,27 @@ import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
   title: {
-    default: 'LiveKit Meet | Conference app build with LiveKit open source',
+    default: 'DVAI Connect | Conference app with built-in Agentic AI',
     template: '%s',
   },
   description:
-    'LiveKit is an open source WebRTC project that gives you everything needed to build scalable and real-time audio and/or video experiences in your applications.',
+    'DVAI Connect is an WebRTC project that gives you everything needed to connect with peers for audio and/or video calls with an additional layer of AI agents.',
   twitter: {
     creator: '@livekitted',
     site: '@livekitted',
     card: 'summary_large_image',
   },
   openGraph: {
-    url: 'https://meet.livekit.io',
+    url: 'https://connect.deepvoiceai.co',
     images: [
       {
-        url: 'https://meet.livekit.io/images/livekit-meet-open-graph.png',
+        url: 'https://connect.deepvoiceai.co/images/livekit-meet-open-graph.png',
         width: 2000,
         height: 1000,
         type: 'image/png',
       },
     ],
-    siteName: 'LiveKit Meet',
+    siteName: 'DVAI Connect',
   },
   icons: {
     icon: {
@@ -48,12 +48,23 @@ export const viewport: Viewport = {
   themeColor: '#070707',
 };
 
+import { Inter } from 'next/font/google';
+import { AuthProvider } from '@/components/AuthProvider';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable}`}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body data-lk-theme="default">
         <Toaster />
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

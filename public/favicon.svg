@@ -1,24 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   width="795"
-   height="121"
-   fill="none"
    version="1.1"
-   id="svg2"
-   sodipodi:docname="livekit-meet-home.svg"
+   width="44"
+   height="44"
+   id="svg10"
+   sodipodi:docname="favicon.svg"
    inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
-     id="defs2">
-    <rect
-       x="290.7897"
-       y="11.478541"
-       width="603.00598"
-       height="190.54378"
-       id="rect6" />
+     id="defs10">
     <filter
        id="filter4_i_9_76"
        x="65"
@@ -261,7 +254,7 @@
     </filter>
   </defs>
   <sodipodi:namedview
-     id="namedview2"
+     id="namedview10"
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
@@ -269,111 +262,112 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.3067863"
-     inkscape:cx="515.38648"
-     inkscape:cy="92.210945"
+     inkscape:zoom="16"
+     inkscape:cx="17.3125"
+     inkscape:cy="23.03125"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg2" />
+     inkscape:current-layer="svg10" />
+  <style
+     id="style9">@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: none; } }
+</style>
+  <rect
+     style="fill:#005c5c;fill-opacity:1;stroke:#005c5c;stroke-width:1.98126;stroke-opacity:1"
+     id="rect10"
+     width="42.012562"
+     height="42.012299"
+     x="0.99496585"
+     y="0.99496567"
+     rx="21" />
   <g
-     filter="url(#filter0_i_9_76)"
-     id="g1"
-     transform="translate(4.1244326,1.964527)">
-    <rect
-       x="253"
-       y="36"
-       width="13"
-       height="79"
-       rx="6.5"
-       fill="#fcfcfc"
-       id="rect1" />
-    <circle
-       cx="259.5"
-       cy="19"
-       r="8.5"
-       fill="#fcfcfc"
-       id="circle1" />
+     id="svg15"
+     transform="matrix(0.1481516,0,0,0.1481516,1.9698228,13.072276)">
+    <g
+       filter="url(#filter0_i_9_76)"
+       id="g1">
+      <rect
+         x="253"
+         y="36"
+         width="13"
+         height="79"
+         rx="6.5"
+         fill="#fcfcfc"
+         id="rect1" />
+      <circle
+         cx="259.5"
+         cy="19"
+         r="8.5"
+         fill="#fcfcfc"
+         id="circle1" />
+    </g>
+    <g
+       filter="url(#filter1_i_9_76)"
+       id="g2">
+      <rect
+         x="224"
+         y="69"
+         width="13"
+         height="46"
+         rx="6.5"
+         fill="#fcfcfc"
+         id="rect2" />
+      <path
+         d="m 198,37 c 21.539,0 39,17.4609 39,39 0,11.5495 -5.022,21.9243 -13,29.065 V 77 h -0.021 C 223.991,76.6682 224,76.3349 224,76 224,61.6406 212.359,50 198,50 c -14.359,0 -26,11.6406 -26,26 0,14.3594 11.641,26 26,26 7.499,0 14.255,-3.1762 19,-8.2549 v 16.3179 c -5.622,3.143 -12.101,4.937 -19,4.937 -21.539,0 -39,-17.4609 -39,-39 0,-21.5391 17.461,-39 39,-39 z"
+         fill="#fcfcfc"
+         id="path2" />
+    </g>
+    <g
+       filter="url(#filter2_i_9_76)"
+       id="g4">
+      <rect
+         x="82.945297"
+         y="40.1964"
+         width="13.0063"
+         height="83.0998"
+         rx="6.4928398"
+         transform="rotate(-23.6314,82.9453,40.1964)"
+         fill="#fcfcfc"
+         id="rect3" />
+      <rect
+         x="148.145"
+         y="34.948799"
+         width="13.0133"
+         height="83.113701"
+         rx="6.4988799"
+         transform="rotate(23.63,148.145,34.9488)"
+         fill="#fcfcfc"
+         id="rect4" />
+      <ellipse
+         cx="121.5"
+         cy="107.5"
+         rx="8.5"
+         ry="7.5"
+         fill="#fcfcfc"
+         id="ellipse4" />
+    </g>
+    <g
+       filter="url(#filter3_i_9_76)"
+       id="g5">
+      <path
+         d="m 39,37 c 6.8986,0 13.3778,1.7929 19,4.9355 V 58.2539 C 53.2548,53.1755 46.4987,50 39,50 24.6406,50 13,61.6406 13,76 c 0,14.3594 11.6406,26 26,26 14.3594,0 26,-11.6406 26,-26 V 46.9336 C 72.9779,54.0747 78,64.4502 78,76 78,97.5391 60.5391,115 39,115 17.4609,115 0,97.5391 0,76 0,54.4609 17.4609,37 39,37 Z"
+         fill="#fcfcfc"
+         id="path4" />
+    </g>
+    <g
+       filter="url(#filter4_i_9_76)"
+       id="g6">
+      <rect
+         x="65"
+         width="13"
+         height="81"
+         rx="6.5"
+         fill="#fcfcfc"
+         id="rect5"
+         y="0" />
+    </g>
   </g>
-  <g
-     filter="url(#filter1_i_9_76)"
-     id="g2"
-     transform="translate(4.1244326,1.964527)">
-    <rect
-       x="224"
-       y="69"
-       width="13"
-       height="46"
-       rx="6.5"
-       fill="#fcfcfc"
-       id="rect2" />
-    <path
-       d="m 198,37 c 21.539,0 39,17.4609 39,39 0,11.5495 -5.022,21.9243 -13,29.065 V 77 h -0.021 C 223.991,76.6682 224,76.3349 224,76 224,61.6406 212.359,50 198,50 c -14.359,0 -26,11.6406 -26,26 0,14.3594 11.641,26 26,26 7.499,0 14.255,-3.1762 19,-8.2549 v 16.3179 c -5.622,3.143 -12.101,4.937 -19,4.937 -21.539,0 -39,-17.4609 -39,-39 0,-21.5391 17.461,-39 39,-39 z"
-       fill="#fcfcfc"
-       id="path2-0" />
-  </g>
-  <g
-     filter="url(#filter2_i_9_76)"
-     id="g4"
-     transform="translate(4.1244326,1.964527)">
-    <rect
-       x="82.945297"
-       y="40.1964"
-       width="13.0063"
-       height="83.0998"
-       rx="6.4928398"
-       transform="rotate(-23.6314,82.9453,40.1964)"
-       fill="#fcfcfc"
-       id="rect3" />
-    <rect
-       x="148.145"
-       y="34.948799"
-       width="13.0133"
-       height="83.113701"
-       rx="6.4988799"
-       transform="rotate(23.63,148.145,34.9488)"
-       fill="#fcfcfc"
-       id="rect4" />
-    <ellipse
-       cx="121.5"
-       cy="107.5"
-       rx="8.5"
-       ry="7.5"
-       fill="#fcfcfc"
-       id="ellipse4" />
-  </g>
-  <g
-     filter="url(#filter3_i_9_76)"
-     id="g5"
-     transform="translate(4.1244326,1.964527)">
-    <path
-       d="m 39,37 c 6.8986,0 13.3778,1.7929 19,4.9355 V 58.2539 C 53.2548,53.1755 46.4987,50 39,50 24.6406,50 13,61.6406 13,76 c 0,14.3594 11.6406,26 26,26 14.3594,0 26,-11.6406 26,-26 V 46.9336 C 72.9779,54.0747 78,64.4502 78,76 78,97.5391 60.5391,115 39,115 17.4609,115 0,97.5391 0,76 0,54.4609 17.4609,37 39,37 Z"
-       fill="#fcfcfc"
-       id="path4" />
-  </g>
-  <g
-     filter="url(#filter4_i_9_76)"
-     id="g6"
-     transform="translate(4.1244326,1.964527)">
-    <rect
-       x="65"
-       width="13"
-       height="81"
-       rx="6.5"
-       fill="#fcfcfc"
-       id="rect5"
-       y="0" />
-  </g>
-  <text
-     xml:space="preserve"
-     id="text2"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:83.0434px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI';white-space:pre;shape-inside:url(#rect6);display:inline;fill:#008080"
-     transform="matrix(1.4746733,0,0,1.6110697,-155.58598,-25.744417)"><tspan
-       x="290.78906"
-       y="87.80317"
-       id="tspan2"><tspan
-         style="font-family:Montserrat;-inkscape-font-specification:Montserrat"
-         id="tspan1">Connect</tspan></tspan></text>
 </svg>

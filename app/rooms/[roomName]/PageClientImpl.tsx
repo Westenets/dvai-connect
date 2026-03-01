@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { decodePassphrase } from '@/lib/client-utils';
+import { useAuth } from '@/components/AuthProvider';
 import { DebugMode } from '@/lib/Debug';
 import { KeyboardShortcuts } from '@/lib/KeyboardShortcuts';
 import { RecordingIndicator } from '@/lib/RecordingIndicator';
@@ -43,13 +44,15 @@ export function PageClientImpl(props: {
   const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
     undefined,
   );
+  const { user } = useAuth();
+
   const preJoinDefaults = React.useMemo(() => {
     return {
-      username: '',
+      username: user?.name || '',
       videoEnabled: true,
       audioEnabled: true,
     };
-  }, []);
+  }, [user?.name]);
   const [connectionDetails, setConnectionDetails] = React.useState<ConnectionDetails | undefined>(
     undefined,
   );
