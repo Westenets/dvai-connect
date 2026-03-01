@@ -64,14 +64,14 @@ export default function LoginPage() {
         </div>
         <div className="hidden sm:flex items-center gap-4">
           <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-            {isRegistering ? 'Already have an account?' : 'New to VideoConf?'}
+            {isRegistering ? 'Already have an account?' : 'New to DVAI Connect?'}
           </span>
           <button
             onClick={() => {
               setIsRegistering(!isRegistering);
               setError(null);
             }}
-            className="text-[#258cf4] text-sm font-bold hover:underline"
+            className="bg-transparent border-0 text-[#258cf4] text-sm font-bold hover:underline"
           >
             {isRegistering ? 'Log In' : 'Sign Up'}
           </button>
@@ -122,7 +122,7 @@ export default function LoginPage() {
                   </label>
                   <div className="relative">
                     <input
-                      className="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#258cf4]/20 focus:border-[#258cf4] transition-all placeholder:text-slate-400"
+                      className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#258cf4]/20 focus:border-[#258cf4] transition-all placeholder:text-slate-400"
                       id="name"
                       name="name"
                       placeholder="Jane Doe"
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 </label>
                 <div className="relative">
                   <input
-                    className="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#258cf4]/20 focus:border-[#258cf4] transition-all placeholder:text-slate-400"
+                    className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#258cf4]/20 focus:border-[#258cf4] transition-all placeholder:text-slate-400"
                     id="email"
                     name="email"
                     placeholder="name@company.com"
@@ -181,7 +181,7 @@ export default function LoginPage() {
                 </div>
                 <div className="relative">
                   <input
-                    className="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#258cf4]/20 focus:border-[#258cf4] transition-all placeholder:text-slate-400"
+                    className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#258cf4]/20 focus:border-[#258cf4] transition-all placeholder:text-slate-400"
                     id="password"
                     name="password"
                     placeholder={isRegistering ? 'Create a strong password' : 'Enter your password'}
@@ -200,7 +200,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-2 w-full h-11 bg-[#258cf4] text-white font-bold rounded-lg hover:bg-[#258cf4]/90 focus:ring-4 focus:ring-[#258cf4]/30 transition-all text-sm shadow-md shadow-[#258cf4]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="mt-2 w-full h-11 border-0 bg-[#258cf4] text-white font-bold rounded-full hover:bg-[#258cf4]/90 focus:ring-4 focus:ring-[#258cf4]/30 transition-all text-sm shadow-md shadow-[#258cf4]/20 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {loading ? 'Please wait...' : isRegistering ? 'Sign Up' : 'Log In'}
               </button>
@@ -237,6 +237,15 @@ export default function LoginPage() {
           </a>
         </div>
       </main>
+      <footer className="text-center py-2 text-slate-400 dark:text-slate-600 text-sm">
+        <p>
+          © {new Date().getFullYear()}{' '}
+          <a href="https://deepvoiceai.co" rel="noopener" target="_blank">
+            Deep Voice AI Limited
+          </a>
+          . All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }
