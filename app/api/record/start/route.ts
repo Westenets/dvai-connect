@@ -37,8 +37,18 @@ export async function GET(req: NextRequest) {
       return new NextResponse('Meeting is already being recorded', { status: 409 });
     }
 
+    console.log('Starting egress for room:', roomName);
+    console.log('S3 Config:', {
+      endpoint: S3_ENDPOINT,
+      bucket: S3_BUCKET,
+      region: S3_REGION,
+    });
+
+    const filename = `meet/${new Date(Date.now()).toISOString().replace(/:/g, '-')}-${roomName}.mp4`;
+    console.log('Target filename:', filename);
+
     const fileOutput = new EncodedFileOutput({
-      filepath: `${new Date(Date.now()).toISOString()}-${roomName}.mp4`,
+      filepath: filename,
       output: {
         case: 's3',
         value: new S3Upload({
@@ -47,11 +57,12 @@ export async function GET(req: NextRequest) {
           secret: S3_KEY_SECRET,
           region: S3_REGION,
           bucket: S3_BUCKET,
+          forcePathStyle: true,
         }),
       },
     });
 
-    await egressClient.startRoomCompositeEgress(
+    const egressInfo = await egressClient.startRoomCompositeEgress(
       roomName,
       {
         file: fileOutput,
@@ -61,8 +72,11 @@ export async function GET(req: NextRequest) {
       },
     );
 
+    console.log('Egress started successfully:', egressInfo.egressId);
+
     return new NextResponse(null, { status: 200 });
   } catch (error) {
+    console.error('Error starting egress:', error);
     if (error instanceof Error) {
       return new NextResponse(error.message, { status: 500 });
     }

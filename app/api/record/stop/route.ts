@@ -28,10 +28,18 @@ export async function GET(req: NextRequest) {
     if (activeEgresses.length === 0) {
       return new NextResponse('No active recording found', { status: 404 });
     }
-    await Promise.all(activeEgresses.map((info) => egressClient.stopEgress(info.egressId)));
+    console.log('Stopping egress for room:', roomName);
+    const stopPromises = activeEgresses.map((info) => {
+      console.log('Stopping egress ID:', info.egressId);
+      return egressClient.stopEgress(info.egressId);
+    });
+    await Promise.all(stopPromises);
+
+    console.log('All active egresses stop request sent');
 
     return new NextResponse(null, { status: 200 });
   } catch (error) {
+    console.error('Error stopping egress:', error);
     if (error instanceof Error) {
       return new NextResponse(error.message, { status: 500 });
     }
