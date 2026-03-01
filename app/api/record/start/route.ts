@@ -49,17 +49,17 @@ export async function GET(req: NextRequest) {
 
     const fileOutput = new EncodedFileOutput({
       filepath: filename,
-      output: {
-        case: 's3',
-        value: new S3Upload({
-          endpoint: S3_ENDPOINT,
-          accessKey: S3_KEY_ID,
-          secret: S3_KEY_SECRET,
-          region: S3_REGION,
-          bucket: S3_BUCKET,
-          forcePathStyle: true,
-        }),
-      },
+      // output: {
+      //   case: 's3',
+      //   value: new S3Upload({
+      //     endpoint: S3_ENDPOINT,
+      //     accessKey: S3_KEY_ID,
+      //     secret: S3_KEY_SECRET,
+      //     region: S3_REGION,
+      //     bucket: S3_BUCKET,
+      //     forcePathStyle: true,
+      //   }),
+      // },
     });
 
     const egressInfo = await egressClient.startRoomCompositeEgress(
