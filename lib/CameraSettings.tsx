@@ -52,7 +52,9 @@ export function CameraSettings() {
       if (backgroundType === 'blur') {
         cameraTrack.track?.setProcessor(BackgroundBlur());
       } else if (backgroundType === 'image' && virtualBackgroundImagePath) {
-        cameraTrack.track?.setProcessor(VirtualBackground(virtualBackgroundImagePath));
+        // Use full URL to ensure it loads correctly in production workers
+        const fullImageUrl = window.location.origin + virtualBackgroundImagePath;
+        cameraTrack.track?.setProcessor(VirtualBackground(fullImageUrl));
       } else {
         cameraTrack.track?.stopProcessor();
       }
@@ -139,11 +141,9 @@ export function CameraSettings() {
               key={image.path}
               onClick={() => selectBackground('image', image.path)}
               className="lk-button"
-              aria-pressed={
-                backgroundType === 'image' && virtualBackgroundImagePath === image.path
-              }
+              aria-pressed={backgroundType === 'image' && virtualBackgroundImagePath === image.path}
               style={{
-                backgroundImage: `url(${image.path})`,
+                backgroundImage: `url("${image.path}")`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 width: '80px',
