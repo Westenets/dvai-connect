@@ -39,6 +39,11 @@ watcher.on('add', async (filePath) => {
   console.log(`\n🎬 New recording finished rendering: ${fileName}`);
 
   try {
+    const fileStats = fs.statSync(filePath);
+    if (fileStats.size === 0) {
+      console.log(`File is empty: ${filePath}`);
+      return;
+    }
     // Read the file via a stream to keep server memory usage low
     const fileStream = fs.createReadStream(filePath);
 
@@ -46,10 +51,11 @@ watcher.on('add', async (filePath) => {
       Bucket: process.env.S3_BUCKET.trim(),
       Key: `meet/${fileName}`, // Target path in your Linode bucket
       Body: fileStream,
+      ContentLength: fileStats.size,
       ContentType: filePath.endsWith('.mp4') ? 'video/mp4' : 'audio/ogg',
     };
 
-    console.log(`🚀 Uploading to Linode Object Storage...`);
+    console.log(`🚀 Uploading to Linode Object Storage (${(fileStats.size / 1024 / 1024).toFixed(2)} MB)...`);
     await s3Client.send(new PutObjectCommand(uploadParams));
     console.log(`✅ Upload complete: ${fileName}`);
 
