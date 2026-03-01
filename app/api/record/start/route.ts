@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       region: S3_REGION,
     });
 
-    const filename = `meet/${new Date(Date.now()).toISOString().replace(/:/g, '-')}-${roomName}.mp4`;
+    const filename = `/out/meet-${new Date(Date.now()).toISOString().replace(/:/g, '-')}-${roomName}.mp4`;
     console.log('Target filename:', filename);
 
     const fileOutput = new EncodedFileOutput({
