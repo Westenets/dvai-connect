@@ -16,7 +16,10 @@ const s3Client = new S3Client({
 });
 
 // The bridge directory you created in your home folder
-const WATCH_DIR = process.env.NODE_ENV === 'production' ? '/home/dvadmin/dvai-connect/livekit-recordings' : 'D:\\Docs\\Personal\\Projects\\Node.JS\\Projects\\meet\\livekit-recordings';
+const WATCH_DIR =
+  process.env.NODE_ENV === 'production'
+    ? '/home/dvadmin/dvai-connect/livekit-recordings'
+    : 'D:\\Docs\\Personal\\Projects\\Node.JS\\Projects\\meet\\livekit-recordings';
 
 // 2. Configure Chokidar File Watcher
 const watcher = chokidar.watch(WATCH_DIR, {
@@ -80,7 +83,37 @@ watcher.on('add', async (filePath) => {
       if (err) {
         console.error(`⚠️ Failed to delete local file: ${filePath}`, err);
       } else {
-        console.log(`🗑️ Deleted local file to free up space.`);
+        console.log(`🗑️ Deleted local file: ${fileName}`);
+
+        // Also cleanup corresponding JSON file
+        try {
+          const files = fs.readdirSync(WATCH_DIR);
+          const jsonFiles = files.filter((f) => f.endsWith('.json'));
+
+          for (const jsonFile of jsonFiles) {
+            const jsonPath = path.join(WATCH_DIR, jsonFile);
+            try {
+              const content = fs.readFileSync(jsonPath, 'utf8');
+              const data = JSON.parse(content);
+
+              // Check if any file in the metadata matches the current filename
+              const matches =
+                data.files &&
+                data.files.some(
+                  (f) => f.filename.endsWith(fileName) || f.location.endsWith(fileName),
+                );
+
+              if (matches) {
+                fs.unlinkSync(jsonPath);
+                console.log(`🗑️ Deleted associated metadata: ${jsonFile}`);
+              }
+            } catch (err) {
+              // Ignore parse/read errors for unrelated JSONs
+            }
+          }
+        } catch (err) {
+          console.error(`⚠️ Failed to scan for metadata files:`, err);
+        }
       }
     });
   } catch (err) {
