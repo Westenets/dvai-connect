@@ -1,5 +1,5 @@
-@import "tailwindcss/theme";
-@import "tailwindcss/utilities";
+@import 'tailwindcss/theme';
+@import 'tailwindcss/utilities';
 @import 'material-symbols';
 
 :root {
@@ -11,7 +11,7 @@
 
   --lk-success-fg: #fff;
   --lk-success: #1ff968;
-  
+
   --lk-connection-excellent: #06db4d;
   --lk-connection-good: #f9b11f;
   --lk-connection-poor: #f91f31;
@@ -28,6 +28,45 @@
   --lk-grid-gap: 0.5rem;
   --lk-control-bar-height: 69px;
   --lk-chat-header-height: 69px;
+}
+
+.lk-header {
+  min-height: 48px;
+}
+
+.lk-agent-button-container {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  z-index: 999;
+}
+
+.lk-agent-button {
+  background-color: #4ade80; /* green-400 */
+  color: #064e3b; /* emerald-900 */
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+  transition: all 0.2s;
+}
+
+.lk-agent-button:hover {
+  background-color: #22c55e; /* green-500 */
+}
+
+@media (max-width: 600px) {
+  .lk-agent-button-container {
+    bottom: 90px;
+    right: 10px;
+  }
 }
 
 * {
@@ -96,4 +135,8 @@ h2 a {
 
 h2 a {
   text-decoration: none;
+}
+
+button {
+  cursor: pointer;
 }

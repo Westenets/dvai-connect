@@ -6,6 +6,10 @@ import { generateRoomId, randomString, encodePassphrase } from '@/lib/client-uti
 import { useAuth } from '@/components/AuthProvider';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -102,12 +106,21 @@ export default function Dashboard() {
             </span>
             <span className="text-xs text-slate-500 dark:text-slate-500">{currentDate}</span>
           </div>
-          <button className="group flex items-center justify-center rounded-full size-10 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+          <button
+            className="group flex items-center justify-center rounded-full size-10 bg-transparent border-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 cursor-pointer"
+            onClick={() => {
+              window.open('https://deepvoiceai.co/pages/contact/', '_blank');
+            }}
+          >
             <span className="material-symbols-outlined text-[24px]">help</span>
           </button>
-          <button className="group flex items-center justify-center rounded-full size-10 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 relative">
-            <span className="material-symbols-outlined text-[24px]">notifications</span>
-            <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-white dark:border-[#15202b]"></span>
+          <button
+            className="group flex items-center justify-center rounded-full size-10 bg-transparent border-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 relative cursor-pointer"
+            onClick={() => {
+              router.push('/settings');
+            }}
+          >
+            <span className="material-symbols-outlined text-[24px]">settings</span>
           </button>
 
           <div className="relative">
@@ -127,7 +140,7 @@ export default function Dashboard() {
                 </div>
                 <button
                   onClick={() => router.push('/settings')}
-                  className="block w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  className="block w-full text-left px-4 py-2 text-sm bg-transparent border-0 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                 >
                   Settings
                 </button>
@@ -136,7 +149,7 @@ export default function Dashboard() {
                     setMenuOpen(false);
                     logout();
                   }}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  className="block w-full text-left px-4 py-2 text-sm bg-transparent border-0 text-red-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                 >
                   Sign out
                 </button>
@@ -157,24 +170,24 @@ export default function Dashboard() {
               </h1>
               <p className="text-slate-600 dark:text-slate-300 text-lg font-normal leading-relaxed max-w-lg">
                 We re-engineered the service we built for secure business meetings to make it free
-                and available for all.
+                and available for all with AI as a cherry on top.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <div className="relative">
                 <button
                   onClick={() => setNewMeetingOpen(!newMeetingOpen)}
-                  className="flex items-center justify-center gap-2 h-12 px-6 bg-[#258cf4] hover:bg-blue-600 text-white rounded-lg text-base font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]"
+                  className="flex items-center justify-center gap-2 h-12 px-6 bg-[#258cf4] hover:bg-blue-600 text-white rounded-full border-0 text-base font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]"
                 >
                   <span className="material-symbols-outlined text-[24px]">video_call</span>
                   <span>New meeting</span>
                 </button>
 
                 {newMeetingOpen && (
-                  <div className="absolute top-14 left-0 w-80 bg-white dark:bg-[#1e2936] rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-20 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-left">
+                  <div className="absolute top-14 left-0 w-80 bg-white dark:bg-[#1e2936] rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-20 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-left">
                     <button
                       onClick={createForLater}
-                      className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-4 transition-colors group"
+                      className="w-full text-left px-4 py-3 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50 border-0 flex items-center gap-4 transition-colors group"
                     >
                       <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#258cf4]">
                         link
@@ -185,7 +198,7 @@ export default function Dashboard() {
                     </button>
                     <button
                       onClick={startMeeting}
-                      className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-4 transition-colors group"
+                      className="w-full text-left px-4 py-3 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50 border-0 flex items-center gap-4 transition-colors group"
                     >
                       <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#258cf4]">
                         add
@@ -196,7 +209,7 @@ export default function Dashboard() {
                     </button>
                     <button
                       onClick={scheduleMeeting}
-                      className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-4 transition-colors group"
+                      className="w-full text-left px-4 py-3 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50 border-0 flex items-center gap-4 transition-colors group"
                     >
                       <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#258cf4]">
                         calendar_today
@@ -216,16 +229,20 @@ export default function Dashboard() {
                   <input
                     value={roomCode}
                     onChange={(e) => setRoomCode(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && joinMeeting()}
-                    className="form-input block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-lg leading-5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#258cf4] focus:border-[#258cf4] sm:text-base transition-all shadow-sm"
-                    placeholder="Enter a code or link"
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' &&
+                      /^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(roomCode.trim()) &&
+                      joinMeeting()
+                    }
+                    className="form-input block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-full leading-5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#258cf4] focus:border-[#258cf4] sm:text-base transition-all shadow-sm"
+                    placeholder="Enter meeting code"
                     type="text"
                   />
                 </div>
                 <button
                   onClick={joinMeeting}
-                  disabled={!roomCode.trim()}
-                  className="text-[#258cf4] hover:bg-[#258cf4]/10 font-semibold px-4 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!/^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(roomCode.trim())}
+                  className="bg-[#258cf4] text-white hover:bg-[#258cf4]/10 border-0 font-semibold px-4 py-3 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Join
                 </button>
@@ -239,38 +256,116 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column: Illustration & Upcoming Meetings */}
-        <div className="flex flex-col flex-1 gap-6 items-center md:items-end justify-center">
-          {/* Promo Card */}
-          <div className="w-full max-w-md bg-white dark:bg-[#15202b] rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
-            <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-blue-100 to-indigo-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
-              <div className="relative z-10 p-4 bg-white dark:bg-slate-700 rounded-full shadow-lg">
-                <span className="material-symbols-outlined text-[#258cf4] text-[64px]">
-                  security
-                </span>
+        <div className="flex flex-col flex-1 gap-6 items-center md:items-end justify-center w-full max-w-md mx-auto md:mx-0">
+          <Swiper
+            modules={[Pagination, Autoplay]}
+            pagination={{ clickable: true }}
+            autoplay={{ delay: 4000, disableOnInteraction: false }}
+            className="w-full pb-10"
+          >
+            {/* Slide 1: Security */}
+            <SwiperSlide>
+              <div className="w-full bg-white dark:bg-[#15202b] rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
+                <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-blue-100 to-indigo-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
+                  <div className="relative z-10 w-20 h-20 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-lg">
+                    <span className="material-symbols-outlined text-[#258cf4] text-[96px]">
+                      security
+                    </span>
+                  </div>
+                  <div className="absolute top-8 right-8 size-4 bg-yellow-400 rounded-full animate-pulse"></div>
+                  <div className="absolute bottom-10 left-10 size-3 bg-[#258cf4] rounded-full"></div>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  Your meeting is safe
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
+                  No one can join a meeting unless invited or admitted by the host. E2EE is{' '}
+                  {e2eeEnabled ? 'enabled' : 'disabled'} by administrator.
+                </p>
               </div>
-              <div className="absolute top-8 right-8 size-4 bg-yellow-400 rounded-full animate-pulse"></div>
-              <div className="absolute bottom-10 left-10 size-3 bg-[#258cf4] rounded-full"></div>
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-              Your meeting is safe
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">
-              No one can join a meeting unless invited or admitted by the host. E2EE is{' '}
-              {e2eeEnabled ? 'enabled' : 'disabled'} by administrator.
-            </p>
-            <div className="flex gap-2 justify-center pb-2">
-              <div className="size-2 rounded-full bg-[#258cf4]"></div>
-              <div className="size-2 rounded-full bg-slate-300 dark:bg-slate-600"></div>
-              <div className="size-2 rounded-full bg-slate-300 dark:bg-slate-600"></div>
-            </div>
-          </div>
+            </SwiperSlide>
+
+            {/* Slide 2: Agentic AI */}
+            <SwiperSlide>
+              <div className="w-full bg-white dark:bg-[#15202b] rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
+                <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-emerald-100 to-teal-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
+                  <div className="relative z-10 w-20 h-20 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-lg">
+                    <span className="material-symbols-outlined text-emerald-500 text-[96px]">
+                      smart_toy
+                    </span>
+                  </div>
+                  <div className="absolute top-10 left-8 size-4 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <div className="absolute bottom-12 right-12 size-3 bg-teal-500 rounded-full"></div>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  Bring Your Own Agent
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
+                  Seamlessly dispatch AI agents directly into your meeting rooms to assist with
+                  real-time intelligence.
+                </p>
+              </div>
+            </SwiperSlide>
+
+            {/* Slide 3: Share Link */}
+            <SwiperSlide>
+              <div className="w-full bg-white dark:bg-[#15202b] rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
+                <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-purple-100 to-fuchsia-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
+                  <div className="relative z-10 w-20 h-20 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-lg">
+                    <span className="material-symbols-outlined text-purple-500 text-[96px]">
+                      link
+                    </span>
+                  </div>
+                  <div className="absolute bottom-8 right-8 size-4 bg-purple-400 rounded-full animate-bounce"></div>
+                  <div className="absolute top-10 left-10 size-3 bg-fuchsia-400 rounded-full"></div>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  Get a link you can share
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
+                  Click New meeting to get a link you can send to people you want to meet with
+                  securely.
+                </p>
+              </div>
+            </SwiperSlide>
+
+            {/* Slide 4: Plan Ahead */}
+            <SwiperSlide>
+              <div className="w-full bg-white dark:bg-[#15202b] rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
+                <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-amber-100 to-orange-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
+                  <div className="relative z-10 w-20 h-20 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-lg">
+                    <span className="material-symbols-outlined text-amber-500 text-[96px]">
+                      event_available
+                    </span>
+                  </div>
+                  <div className="absolute top-12 right-10 size-4 bg-orange-400 rounded-full animate-pulse"></div>
+                  <div className="absolute bottom-10 left-8 size-3 bg-amber-500 rounded-full"></div>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  Plan ahead
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
+                  Click New meeting to schedule meetings in Google Calendar and send invites to
+                  participants in advance.
+                </p>
+              </div>
+            </SwiperSlide>
+          </Swiper>
         </div>
       </main>
 
-      <footer className="text-center py-6 text-slate-400 dark:text-slate-600 text-xs">
-        <p>© 2024 DeepVoiceAI VideoConf Clone. All rights reserved.</p>
+      <footer className="text-center py-2 text-slate-400 dark:text-slate-600 text-sm">
+        <p>
+          © {new Date().getFullYear()}{' '}
+          <a href="https://deepvoiceai.co" rel="noopener" target="_blank">
+            Deep Voice AI Limited
+          </a>
+          . All rights reserved.
+        </p>
       </footer>
     </div>
   );

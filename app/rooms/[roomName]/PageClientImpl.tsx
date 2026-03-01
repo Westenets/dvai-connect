@@ -57,18 +57,21 @@ export function PageClientImpl(props: {
     undefined,
   );
 
-  const handlePreJoinSubmit = React.useCallback(async (values: LocalUserChoices) => {
-    setPreJoinChoices(values);
-    const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
-    url.searchParams.append('roomName', props.roomName);
-    url.searchParams.append('participantName', values.username);
-    if (props.region) {
-      url.searchParams.append('region', props.region);
-    }
-    const connectionDetailsResp = await fetch(url.toString());
-    const connectionDetailsData = await connectionDetailsResp.json();
-    setConnectionDetails(connectionDetailsData);
-  }, [props.roomName, props.region]);
+  const handlePreJoinSubmit = React.useCallback(
+    async (values: LocalUserChoices) => {
+      setPreJoinChoices(values);
+      const url = new URL(CONN_DETAILS_ENDPOINT, window.location.origin);
+      url.searchParams.append('roomName', props.roomName);
+      url.searchParams.append('participantName', values.username);
+      if (props.region) {
+        url.searchParams.append('region', props.region);
+      }
+      const connectionDetailsResp = await fetch(url.toString());
+      const connectionDetailsData = await connectionDetailsResp.json();
+      setConnectionDetails(connectionDetailsData);
+    },
+    [props.roomName, props.region],
+  );
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
   return (
@@ -83,6 +86,7 @@ export function PageClientImpl(props: {
         </div>
       ) : (
         <VideoConferenceComponent
+          roomName={props.roomName}
           connectionDetails={connectionDetails}
           userChoices={preJoinChoices}
           options={{ codec: props.codec, hq: props.hq }}
@@ -93,6 +97,7 @@ export function PageClientImpl(props: {
 }
 
 function VideoConferenceComponent(props: {
+  roomName: string;
   userChoices: LocalUserChoices;
   connectionDetails: ConnectionDetails;
   options: {
@@ -212,7 +217,16 @@ function VideoConferenceComponent(props: {
       room.off(RoomEvent.EncryptionError, handleEncryptionError);
       room.off(RoomEvent.MediaDevicesError, handleError);
     };
-  }, [e2eeSetupComplete, room, props.connectionDetails, props.userChoices, connectOptions, handleOnLeave, handleEncryptionError, handleError]);
+  }, [
+    e2eeSetupComplete,
+    room,
+    props.connectionDetails,
+    props.userChoices,
+    connectOptions,
+    handleOnLeave,
+    handleEncryptionError,
+    handleError,
+  ]);
 
   React.useEffect(() => {
     if (lowPowerMode) {
@@ -230,6 +244,27 @@ function VideoConferenceComponent(props: {
         />
         <DebugMode />
         <RecordingIndicator />
+
+        {/* Agent Dispatch Button Overlay */}
+        <div className="lk-agent-button-container">
+          <button
+            className="lk-button lk-agent-button"
+            onClick={() => {
+              fetch('/api/agent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomName: props.roomName }),
+              })
+                .then(() => {
+                  alert('AI Agent dispatched to the room!');
+                })
+                .catch((err) => console.error('Failed to dispatch agent', err));
+            }}
+          >
+            <span className="material-symbols-outlined text-xl">smart_toy</span>
+            Add AI Agent
+          </button>
+        </div>
       </RoomContext.Provider>
     </div>
   );

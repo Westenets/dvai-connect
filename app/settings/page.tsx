@@ -17,6 +17,10 @@ export default function Settings() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState('Account');
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -100,6 +104,36 @@ export default function Settings() {
     }
   };
 
+  const handleUpdatePassword = async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      toast.error('Please fill in all password fields');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      await account.updatePassword(newPassword, oldPassword);
+      toast.success('Password updated successfully!');
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update password');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
   const initialLetter = name ? name.charAt(0).toUpperCase() : '?';
 
   return (
@@ -117,7 +151,10 @@ export default function Settings() {
             </div>
           </div>
           <div className="mb-4">
-            <h2 className="px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <h2 className="px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-start gap-1">
+              <button className="bg-transparent border-0 text-teal-600" onClick={() => router.push('/')}>
+                <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+              </button>
               Settings
             </h2>
             <nav className="flex flex-col gap-1 px-3">
@@ -125,7 +162,7 @@ export default function Settings() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center w-full text-left gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                  className={`flex items-center w-full text-left gap-3 px-3 py-2.5 rounded-lg bg-transparent border-0 transition-colors ${
                     activeTab === tab.id
                       ? 'bg-[#258cf4]/10 text-[#258cf4] dark:bg-[#258cf4]/20'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -146,7 +183,7 @@ export default function Settings() {
           <div className="mt-auto p-4 border-t border-slate-200 dark:border-slate-800">
             <button
               onClick={logout}
-              className="w-full flex items-center gap-3 px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 bg-transparent border-0 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
             >
               <span className="material-symbols-outlined text-[20px]">logout</span>
               <span className="text-sm font-medium">Log Out</span>
@@ -212,7 +249,7 @@ export default function Settings() {
                       </div>
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="text-sm font-medium text-[#258cf4] hover:underline"
+                        className="text-sm font-medium bg-transparent border-0 text-[#258cf4] hover:underline"
                       >
                         Change Picture
                       </button>
@@ -255,27 +292,85 @@ export default function Settings() {
                       </div>
                     </div>
                   </div>
+                  <div className="flex justify-end gap-4 pt-4">
+                    <button
+                      onClick={() => router.push('/')}
+                      className="px-6 py-2.5 rounded-lg border-0 bg-transparent text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="px-6 py-2.5 rounded-lg border-0 bg-[#258cf4] hover:bg-blue-600 text-white font-medium shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {isSaving && (
+                        <span className="material-symbols-outlined animate-spin text-[20px]">
+                          progress_activity
+                        </span>
+                      )}
+                      Save Changes
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex justify-end gap-4 pt-4">
-                  <button
-                    onClick={() => router.push('/')}
-                    className="px-6 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="px-6 py-2.5 rounded-lg bg-[#258cf4] hover:bg-blue-600 text-white font-medium shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isSaving && (
-                      <span className="material-symbols-outlined animate-spin text-[20px]">
-                        progress_activity
-                      </span>
-                    )}
-                    Save Changes
-                  </button>
+                {/* Change Password */}
+                <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
+                    Change Password
+                  </h3>
+                  <div className="space-y-6 max-w-md">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
+                      />
+                    </div>
+                    <div className="pt-2">
+                      <button
+                        onClick={handleUpdatePassword}
+                        disabled={isUpdatingPassword}
+                        className="px-6 py-2.5 rounded-lg border-0 bg-[#258cf4] hover:bg-blue-600 text-white font-medium shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        {isUpdatingPassword && (
+                          <span className="material-symbols-outlined animate-spin text-[20px]">
+                            progress_activity
+                          </span>
+                        )}
+                        Update Password
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
