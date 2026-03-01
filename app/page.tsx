@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { generateRoomId, randomString, encodePassphrase } from '@/lib/client-utils';
 import { useAuth } from '@/components/AuthProvider';
+import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -13,6 +15,7 @@ export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [newMeetingOpen, setNewMeetingOpen] = useState(false);
 
   // E2EE configuration from .env
   const e2eeEnabled = process.env.NEXT_PUBLIC_E2EE_ENABLED === 'true';
@@ -54,6 +57,23 @@ export default function Dashboard() {
     }
   };
 
+  const scheduleMeeting = () => {
+    const roomId = generateRoomId();
+    const url = `${window.location.origin}/rooms/${roomId}`;
+    window.open(
+      `https://calendar.google.com/calendar/r/eventedit?text=VideoConf+Meeting&details=Join+here:+${url}`,
+      '_blank',
+    );
+  };
+
+  const createForLater = () => {
+    const roomId = generateRoomId();
+    const url = `${window.location.origin}/rooms/${roomId}`;
+    navigator.clipboard.writeText(url);
+    toast.success('Meeting link copied to clipboard!');
+    setNewMeetingOpen(false);
+  };
+
   const joinMeeting = () => {
     if (roomCode.trim()) {
       router.push(`/rooms/${roomCode.trim()}`);
@@ -69,12 +89,11 @@ export default function Dashboard() {
       {/* Header */}
       <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-[#15202b] px-6 py-3 sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center text-[#258cf4]">
-            <span className="material-symbols-outlined text-[28px]">videocam</span>
-          </div>
-          <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">
-            VideoConf
-          </h2>
+          <img
+            src="/images/livekit-meet-home.svg"
+            alt="DVAI Connect"
+            className="h-8 md:h-10 object-contain"
+          />
         </div>
         <div className="flex items-center gap-4 sm:gap-6">
           <div className="hidden md:flex flex-col items-end mr-2">
@@ -142,13 +161,53 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <button
-                onClick={startMeeting}
-                className="flex items-center justify-center gap-2 h-12 px-6 bg-[#258cf4] hover:bg-blue-600 text-white rounded-lg text-base font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]"
-              >
-                <span className="material-symbols-outlined text-[24px]">video_call</span>
-                <span>New meeting</span>
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setNewMeetingOpen(!newMeetingOpen)}
+                  className="flex items-center justify-center gap-2 h-12 px-6 bg-[#258cf4] hover:bg-blue-600 text-white rounded-lg text-base font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]"
+                >
+                  <span className="material-symbols-outlined text-[24px]">video_call</span>
+                  <span>New meeting</span>
+                </button>
+
+                {newMeetingOpen && (
+                  <div className="absolute top-14 left-0 w-80 bg-white dark:bg-[#1e2936] rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-20 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-left">
+                    <button
+                      onClick={createForLater}
+                      className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-4 transition-colors group"
+                    >
+                      <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#258cf4]">
+                        link
+                      </span>
+                      <span className="text-slate-700 dark:text-slate-200 text-sm font-medium">
+                        Create a meeting for later
+                      </span>
+                    </button>
+                    <button
+                      onClick={startMeeting}
+                      className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-4 transition-colors group"
+                    >
+                      <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#258cf4]">
+                        add
+                      </span>
+                      <span className="text-slate-700 dark:text-slate-200 text-sm font-medium">
+                        Start an instant meeting
+                      </span>
+                    </button>
+                    <button
+                      onClick={scheduleMeeting}
+                      className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-4 transition-colors group"
+                    >
+                      <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#258cf4]">
+                        calendar_today
+                      </span>
+                      <span className="text-slate-700 dark:text-slate-200 text-sm font-medium">
+                        Schedule in Google Calendar
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <div className="relative flex-1 sm:w-64">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">

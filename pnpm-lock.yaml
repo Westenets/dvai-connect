@@ -32,6 +32,9 @@ importers:
       livekit-server-sdk:
         specifier: 2.15.0
         version: 2.15.0
+      material-symbols:
+        specifier: ^0.40.2
+        version: 0.40.2
       next:
         specifier: 15.2.8
         version: 15.2.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1919,6 +1922,9 @@ packages:
   map-obj@5.0.0:
     resolution: {integrity: sha512-2L3MIgJynYrZ3TYMriLDLWocz15okFakV6J12HXvMXDHui2x/zgChzg1u9mFFGbbGWE+GsLpQByt4POb9Or+uA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  material-symbols@0.40.2:
+    resolution: {integrity: sha512-QUJF1HztvcpP8pXHPPNESK05Thq/Zy8ub17T2xBDf4+gqx4KBs353lKHuVzE/eCYOtiB9JBlFOU7cjAI6vVMTQ==}
 
   merge-stream@2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
@@ -4452,6 +4458,8 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   map-obj@5.0.0: {}
+
+  material-symbols@0.40.2: {}
 
   merge-stream@2.0.0: {}
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { account } from '@/lib/appwrite';
 import { ID, AppwriteException } from 'appwrite';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -55,10 +56,11 @@ export default function LoginPage() {
       {/* Navbar (Simplified for Login Context) */}
       <header className="flex items-center justify-between px-6 py-4 w-full absolute top-0 left-0 z-10">
         <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
-          <div className="size-8 text-[#258cf4] flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl">videocam</span>
-          </div>
-          <h2 className="text-xl font-bold tracking-tight">VideoConf</h2>
+          <img
+            src="/images/livekit-meet-home.svg"
+            alt="DVAI Connect"
+            className="h-8 md:h-10 object-contain"
+          />
         </div>
         <div className="hidden sm:flex items-center gap-4">
           <span className="text-sm font-medium text-slate-600 dark:text-slate-400">

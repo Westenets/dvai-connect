@@ -1,5 +1,6 @@
 @import "tailwindcss/theme";
 @import "tailwindcss/utilities";
+@import 'material-symbols';
 
 :root {
   --lk-accent-fg: #fff;

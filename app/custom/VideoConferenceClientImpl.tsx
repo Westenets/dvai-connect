@@ -23,7 +23,7 @@ export function VideoConferenceClientImpl(props: {
   codec: VideoCodec | undefined;
   singlePeerConnection: boolean | undefined;
 }) {
-  const keyProvider = new ExternalE2EEKeyProvider();
+  const keyProvider = useMemo(() => new ExternalE2EEKeyProvider(), []);
   const { worker, e2eePassphrase } = useSetupE2EE();
   const e2eeEnabled = !!(e2eePassphrase && worker);
 
@@ -46,7 +46,7 @@ export function VideoConferenceClientImpl(props: {
         : undefined,
       singlePeerConnection: props.singlePeerConnection,
     };
-  }, [e2eeEnabled, props.codec, keyProvider, worker]);
+  }, [e2eeEnabled, props.codec, props.singlePeerConnection, keyProvider, worker]);
 
   const room = useMemo(() => new Room(roomOptions), [roomOptions]);
 
