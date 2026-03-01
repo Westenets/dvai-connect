@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     template: '%s',
   },
   description:
-    'DVAI Connect is an WebRTC project that gives you everything needed to connect with peers for audio and/or video calls with an additional layer of AI agents.',
+    'DVAI Connect is an Video conferencing app that gives you everything needed to connect with peers for audio and/or video calls with an additional layer of AI agents and End-to-end encryptions and a build in meeting record feature.',
   twitter: {
     creator: '@livekitted',
     site: '@livekitted',

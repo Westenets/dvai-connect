@@ -11,8 +11,8 @@ import { isLocalTrack, LocalTrackPublication, Track } from 'livekit-client';
 
 // Background image paths
 const BACKGROUND_IMAGES = [
-  { name: 'Desk', path: '/background-images/samantha-gades-BlIhVfXbi9s-unsplash.jpg' },
-  { name: 'Nature', path: '/background-images/ali-kazal-tbw_KQE3Cbg-unsplash.jpg' },
+  { name: 'Desk', path: '/bg/samantha-gades-BlIhVfXbi9s-unsplash.jpg' },
+  { name: 'Nature', path: '/bg/ali-kazal-tbw_KQE3Cbg-unsplash.jpg' },
 ];
 
 // Background options
