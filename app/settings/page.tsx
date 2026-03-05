@@ -1104,7 +1104,7 @@ export default function Settings() {
                                                     Pause all notifications
                                                 </h4>
                                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                                    You won't receive warnings about upcoming
+                                                    You won&apos;t receive warnings about upcoming
                                                     meetings or event changes.
                                                 </p>
                                             </div>
