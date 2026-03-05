@@ -4,7 +4,7 @@ const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
 const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
 if (!endpoint || !projectId) {
-  throw new Error('Appwrite endpoint or project id is not defined in environment variables');
+    throw new Error('Appwrite endpoint or project id is not defined in environment variables');
 }
 
 const client = new Client().setEndpoint(endpoint).setProject(projectId);

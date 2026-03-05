@@ -2,141 +2,178 @@
 @import 'tailwindcss/utilities';
 @import 'material-symbols';
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
-  --lk-accent-fg: #fff;
-  --lk-accent-bg: #00a8a8;
+    --lk-accent-fg: #fff;
+    --lk-accent-bg: #00a8a8;
 
-  --lk-danger-fg: #fff;
-  --lk-danger: #f91f31;
+    --lk-danger-fg: #fff;
+    --lk-danger: #f91f31;
 
-  --lk-success-fg: #fff;
-  --lk-success: #1ff968;
+    --lk-success-fg: #fff;
+    --lk-success: #1ff968;
 
-  --lk-connection-excellent: #06db4d;
-  --lk-connection-good: #f9b11f;
-  --lk-connection-poor: #f91f31;
+    --lk-connection-excellent: #06db4d;
+    --lk-connection-good: #f9b11f;
+    --lk-connection-poor: #f91f31;
 
-  --lk-font-family:
-    system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji';
-  --lk-font-size: 16px;
-  --lk-line-height: 1.5;
-  --lk-border-radius: 0.5rem;
-  --lk-box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
-  --lk-drop-shadow: rgba(255, 255, 255, 0.2) 0px 0px 24px;
+    --lk-font-family:
+        system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji';
+    --lk-font-size: 16px;
+    --lk-line-height: 1.5;
+    --lk-border-radius: 0.5rem;
+    --lk-box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+    --lk-drop-shadow: rgba(255, 255, 255, 0.2) 0px 0px 24px;
 
-  --lk-grid-gap: 0.5rem;
-  --lk-control-bar-height: 69px;
-  --lk-chat-header-height: 69px;
+    --lk-grid-gap: 0.5rem;
+    --lk-control-bar-height: 69px;
+    --lk-chat-header-height: 69px;
+}
+
+[data-theme='light'],
+.light {
+    color-scheme: light;
+
+    --lk-bg: #ffffff;
+    --lk-bg2: #f4f4f5;
+    --lk-bg3: #e4e4e7;
+    --lk-bg4: #d4d4d8;
+    --lk-bg5: #a1a1aa;
+
+    --lk-fg: #18181b;
+    --lk-fg2: #27272a;
+    --lk-fg3: #3f3f46;
+    --lk-fg4: #52525b;
+    --lk-fg5: #71717a;
+
+    --lk-border-color: rgba(0, 0, 0, 0.1);
+
+    --lk-accent-fg: #fff;
+    --lk-accent-bg: #00a8a8;
+    --lk-accent2: #009898;
+    --lk-accent3: #008888;
+    --lk-accent4: #007878;
+
+    --lk-control-fg: var(--lk-fg);
+    --lk-control-bg: var(--lk-bg2);
+    --lk-control-hover-bg: var(--lk-bg3);
+    --lk-control-active-bg: var(--lk-bg4);
+    --lk-control-active-hover-bg: var(--lk-bg5);
+
+    --lk-drop-shadow: rgba(0, 0, 0, 0.1) 0px 0px 24px;
 }
 
 .lk-header {
-  min-height: 48px;
+    min-height: 48px;
 }
 
 .lk-agent-button-container {
-  position: absolute;
-  bottom: 80px;
-  right: 20px;
-  z-index: 999;
+    position: absolute;
+    bottom: 80px;
+    right: 20px;
+    z-index: 999;
 }
 
 .lk-agent-button {
-  background-color: #4ade80; /* green-400 */
-  color: #064e3b; /* emerald-900 */
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1);
-  transition: all 0.2s;
+    background-color: #4ade80; /* green-400 */
+    color: #064e3b; /* emerald-900 */
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    box-shadow:
+        0 4px 6px -1px rgb(0 0 0 / 0.1),
+        0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: all 0.2s;
 }
 
 .lk-agent-button:hover {
-  background-color: #22c55e; /* green-500 */
+    background-color: #22c55e; /* green-500 */
 }
 
 @media (max-width: 600px) {
-  .lk-agent-button-container {
-    bottom: 90px;
-    right: 10px;
-  }
+    .lk-agent-button-container {
+        bottom: 90px;
+        right: 10px;
+    }
 }
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 html {
-  color-scheme: dark;
-  background-color: #111;
+    background-color: var(--lk-bg, #111);
+    color: var(--lk-fg, #fff);
 }
 
 html,
 body {
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  margin: 0px;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    margin: 0px;
 }
 
 body {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--lk-bg, #111);
+    color: var(--lk-fg, #fff);
 }
 
 .header {
-  max-width: 500px;
-  padding-inline: 2rem;
+    max-width: 500px;
+    padding-inline: 2rem;
 }
 
 .header > img {
-  display: block;
-  margin: auto;
-  max-width: 100%;
+    display: block;
+    margin: auto;
+    max-width: 100%;
 }
 
 .header > h2 {
-  font-family: 'TWK Everett', sans-serif;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 1.25rem;
-  line-height: 144%;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
+    font-family: 'TWK Everett', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 1.25rem;
+    line-height: 144%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 footer {
-  width: 100%;
-  padding: 1.5rem 2rem;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
-  background-color: var(--lk-bg);
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+    width: 100%;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    background-color: var(--lk-bg);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 footer a,
 h2 a {
-  color: #00a8a8;
-  text-decoration-color: #005c5c;
-  text-underline-offset: 0.125em;
+    color: #00a8a8;
+    text-decoration-color: #005c5c;
+    text-underline-offset: 0.125em;
 }
 
 footer a:hover,
 h2 a {
-  text-decoration-color: #00a8a8;
+    text-decoration-color: #00a8a8;
 }
 
 h2 a {
-  text-decoration: none;
+    text-decoration: none;
 }
 
 button {
-  cursor: pointer;
+    cursor: pointer;
 }
