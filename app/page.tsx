@@ -242,23 +242,50 @@ export default function Dashboard() {
                                     <input
                                         value={roomCode}
                                         onChange={(e) => setRoomCode(e.target.value)}
-                                        onKeyDown={(e) =>
-                                            e.key === 'Enter' &&
-                                            /^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(
-                                                roomCode.trim(),
-                                            ) &&
-                                            joinMeeting()
-                                        }
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                const code = roomCode.trim();
+                                                const urlMatch = code.match(
+                                                    /^https?:\/\/[^\/]+\/rooms\/([a-zA-Z0-9]{4}-[a-zA-Z0-9]{4})$/,
+                                                );
+                                                const finalCode = urlMatch ? urlMatch[1] : code;
+
+                                                if (
+                                                    /^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(
+                                                        finalCode,
+                                                    )
+                                                ) {
+                                                    if (finalCode !== code) {
+                                                        setRoomCode(finalCode);
+                                                    }
+                                                    router.push(`/rooms/${finalCode}`);
+                                                }
+                                            }
+                                        }}
                                         className="form-input block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-full leading-5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#258cf4] focus:border-[#258cf4] sm:text-base transition-all shadow-sm"
-                                        placeholder="Enter meeting code"
+                                        placeholder="Enter meeting code or link"
                                         type="text"
                                     />
                                 </div>
                                 <button
-                                    onClick={joinMeeting}
-                                    disabled={
-                                        !/^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(roomCode.trim())
-                                    }
+                                    onClick={() => {
+                                        const code = roomCode.trim();
+                                        const urlMatch = code.match(
+                                            /^https?:\/\/[^\/]+\/rooms\/([a-zA-Z0-9]{4}-[a-zA-Z0-9]{4})$/,
+                                        );
+                                        const finalCode = urlMatch ? urlMatch[1] : code;
+                                        if (/^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(finalCode)) {
+                                            router.push(`/rooms/${finalCode}`);
+                                        }
+                                    }}
+                                    disabled={(() => {
+                                        const code = roomCode.trim();
+                                        const urlMatch = code.match(
+                                            /^https?:\/\/[^\/]+\/rooms\/([a-zA-Z0-9]{4}-[a-zA-Z0-9]{4})$/,
+                                        );
+                                        const finalCode = urlMatch ? urlMatch[1] : code;
+                                        return !/^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(finalCode);
+                                    })()}
                                     className="bg-[#258cf4] text-white hover:bg-[#258cf4]/10 border-0 font-semibold px-4 py-3 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Join
