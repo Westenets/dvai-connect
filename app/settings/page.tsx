@@ -9,6 +9,14 @@ import toast from 'react-hot-toast';
 import { LocalVideoTrack, createLocalVideoTrack } from 'livekit-client';
 import languages from '@/lib/constants/languages.json';
 import speechLanguages from '@/lib/constants/speech-languages.json';
+import { useMediaDevices } from 'react-use';
+
+interface Device {
+    deviceId: string;
+    groupId: string;
+    kind: string;
+    label: string;
+}
 
 function CameraPreview({ deviceId, mirror }: { deviceId?: string; mirror?: boolean }) {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -74,6 +82,12 @@ export default function Settings() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+    const devicesState = useMediaDevices();
+    const devices = (devicesState as any)?.devices || [];
+    const videoDevices = devices.filter((d: any) => d.kind === 'videoinput');
+    const audioInputDevices = devices.filter((d: any) => d.kind === 'audioinput');
+    const audioOutputDevices = devices.filter((d: any) => d.kind === 'audiooutput');
 
     // General Settings State
     const [language, setLanguage] = useState('en');
@@ -613,7 +627,15 @@ export default function Settings() {
                                                     className="pl-10 w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
                                                 >
                                                     <option value="default">Default Camera</option>
-                                                    {/* In a real app, you'd populate this with navigator.mediaDevices.enumerateDevices() */}
+                                                    {videoDevices.map((device: Device) => (
+                                                        <option
+                                                            key={device.deviceId}
+                                                            value={device.deviceId}
+                                                        >
+                                                            {device.label ||
+                                                                `Camera ${device.deviceId.slice(0, 5)}...`}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
                                             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -642,9 +664,6 @@ export default function Settings() {
                                                     </option>
                                                     <option value="720">
                                                         Standard Definition (720p)
-                                                    </option>
-                                                    <option value="360">
-                                                        Low Definition (360p)
                                                     </option>
                                                 </select>
                                             </div>
@@ -937,6 +956,15 @@ export default function Settings() {
                                                     <option value="default">
                                                         Default Microphone
                                                     </option>
+                                                    {audioInputDevices.map((device: Device) => (
+                                                        <option
+                                                            key={device.deviceId}
+                                                            value={device.deviceId}
+                                                        >
+                                                            {device.label ||
+                                                                `Microphone ${device.deviceId.slice(0, 5)}...`}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
                                         </div>
@@ -960,6 +988,15 @@ export default function Settings() {
                                                     <option value="default">
                                                         Default Speakers
                                                     </option>
+                                                    {audioOutputDevices.map((device: Device) => (
+                                                        <option
+                                                            key={device.deviceId}
+                                                            value={device.deviceId}
+                                                        >
+                                                            {device.label ||
+                                                                `Speaker ${device.deviceId.slice(0, 5)}...`}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
                                         </div>
