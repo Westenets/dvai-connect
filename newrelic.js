@@ -7,6 +7,12 @@ module.exports = {
     ai_monitoring: {
         enabled: true,
     },
+    span_events: {
+        max_samples_stored: 10000,
+    },
+    custom_insights_events: {
+        max_samples_stored: 100000,
+    },
     distributed_tracing: {
         enabled: true,
     },
