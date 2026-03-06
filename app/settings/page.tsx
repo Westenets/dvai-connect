@@ -163,6 +163,7 @@ export default function Settings() {
                 const newPrefs: Record<string, any> = {
                     ...(user.prefs || {}),
                     language,
+                    voiceLanguage,
                     appearance,
                     reportDiagnostics,
                     audioInputDevice,
@@ -195,6 +196,7 @@ export default function Settings() {
         return () => clearTimeout(timeoutId);
     }, [
         language,
+        voiceLanguage,
         appearance,
         reportDiagnostics,
         audioInputDevice,
@@ -813,7 +815,7 @@ export default function Settings() {
                                                     {
                                                         id: 'dark',
                                                         label: 'Dark',
-                                                        cardBg: 'bg-slate-900',
+                                                        cardBg: 'bg-slate-50 dark:bg-slate-900',
                                                         innerBg: 'bg-[#1a2632]',
                                                         innerBorder: 'border-slate-700',
                                                         icon: 'dark_mode',
