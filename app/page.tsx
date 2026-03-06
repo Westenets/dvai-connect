@@ -186,7 +186,7 @@ export default function Dashboard() {
                             <div className="relative">
                                 <button
                                     onClick={() => setNewMeetingOpen(!newMeetingOpen)}
-                                    className="flex items-center justify-center gap-2 h-12 px-6 bg-[#258cf4] hover:bg-blue-600 text-white rounded-full border-0 text-base font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]"
+                                    className="flex items-center justify-center gap-2 h-12 px-6 bg-[#00a8a8] hover:bg-[#005c5c] text-white rounded-full border-0 text-base font-semibold shadow-md shadow-[#005c5c]/20 transition-all active:scale-[0.98]"
                                 >
                                     <span className="material-symbols-outlined text-[24px]">
                                         video_call
@@ -200,7 +200,7 @@ export default function Dashboard() {
                                             onClick={createForLater}
                                             className="w-full text-left px-4 py-3 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50 border-0 flex items-center gap-4 transition-colors group"
                                         >
-                                            <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#258cf4]">
+                                            <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#00a8a8]">
                                                 link
                                             </span>
                                             <span className="text-slate-700 dark:text-slate-200 text-sm font-medium">
@@ -211,7 +211,7 @@ export default function Dashboard() {
                                             onClick={startMeeting}
                                             className="w-full text-left px-4 py-3 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50 border-0 flex items-center gap-4 transition-colors group"
                                         >
-                                            <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#258cf4]">
+                                            <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#00a8a8]">
                                                 add
                                             </span>
                                             <span className="text-slate-700 dark:text-slate-200 text-sm font-medium">
@@ -222,7 +222,7 @@ export default function Dashboard() {
                                             onClick={scheduleMeeting}
                                             className="w-full text-left px-4 py-3 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50 border-0 flex items-center gap-4 transition-colors group"
                                         >
-                                            <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#258cf4]">
+                                            <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-[#00a8a8]">
                                                 calendar_today
                                             </span>
                                             <span className="text-slate-700 dark:text-slate-200 text-sm font-medium">
@@ -262,7 +262,7 @@ export default function Dashboard() {
                                                 }
                                             }
                                         }}
-                                        className="form-input block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-full leading-5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#258cf4] focus:border-[#258cf4] sm:text-base transition-all shadow-sm"
+                                        className="form-input block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-full leading-5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00a8a8] focus:border-[#00a8a8] sm:text-base transition-all shadow-sm"
                                         placeholder="Enter meeting code or link"
                                         type="text"
                                     />
@@ -286,7 +286,7 @@ export default function Dashboard() {
                                         const finalCode = urlMatch ? urlMatch[1] : code;
                                         return !/^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(finalCode);
                                     })()}
-                                    className="bg-[#258cf4] text-white hover:bg-[#258cf4]/10 border-0 font-semibold px-4 py-3 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="bg-[#00a8a8] text-white hover:bg-[#00a8a8]/10 border-0 font-semibold px-4 py-3 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Join
                                 </button>
@@ -313,12 +313,12 @@ export default function Dashboard() {
                                 <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
                                     <div className="absolute inset-0 bg-gradient-to-tr from-blue-100 to-indigo-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
                                     <div className="relative z-10 w-20 h-20 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-lg">
-                                        <span className="material-symbols-outlined text-[#258cf4] text-[96px]">
+                                        <span className="material-symbols-outlined text-[#00a8a8] text-[96px]">
                                             security
                                         </span>
                                     </div>
                                     <div className="absolute top-8 right-8 size-4 bg-yellow-400 rounded-full animate-pulse"></div>
-                                    <div className="absolute bottom-10 left-10 size-3 bg-[#258cf4] rounded-full"></div>
+                                    <div className="absolute bottom-10 left-10 size-3 bg-[#00a8a8] rounded-full"></div>
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                                     Your meeting is safe

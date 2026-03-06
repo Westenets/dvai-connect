@@ -368,7 +368,7 @@ export default function Settings() {
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex items-center w-full text-left gap-3 px-3 py-2.5 rounded-lg bg-transparent border-0 transition-colors ${
                                         activeTab === tab.id
-                                            ? 'bg-[#258cf4]/10 text-[#258cf4] dark:bg-[#258cf4]/20'
+                                            ? 'bg-[#00a8a8]/10 text-[#00a8a8] dark:bg-[#00a8a8]/20'
                                             : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                                     }`}
                                 >
@@ -462,7 +462,7 @@ export default function Settings() {
                                             </div>
                                             <button
                                                 onClick={() => fileInputRef.current?.click()}
-                                                className="text-sm font-medium bg-transparent border-0 text-[#258cf4] hover:underline"
+                                                className="text-sm font-medium bg-transparent border-0 text-[#00a8a8] hover:underline"
                                             >
                                                 Change Picture
                                             </button>
@@ -485,7 +485,7 @@ export default function Settings() {
                                                     type="text"
                                                     value={name}
                                                     onChange={(e) => setName(e.target.value)}
-                                                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors"
+                                                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors"
                                                 />
                                                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                                                     This is how you will appear to other
@@ -516,7 +516,7 @@ export default function Settings() {
                                         <button
                                             onClick={handleSaveAccount}
                                             disabled={isSaving}
-                                            className="px-6 py-2.5 rounded-lg border-0 bg-[#258cf4] hover:bg-blue-600 text-white font-medium shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                            className="px-6 py-2.5 rounded-lg border-0 bg-[#00a8a8] hover:bg-[#005c5c] text-white font-medium shadow-md shadow-[#005c5c]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                         >
                                             {isSaving && (
                                                 <span className="material-symbols-outlined animate-spin text-[20px]">
@@ -543,7 +543,7 @@ export default function Settings() {
                                                 value={oldPassword}
                                                 onChange={(e) => setOldPassword(e.target.value)}
                                                 placeholder="••••••••"
-                                                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
+                                                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
                                             />
                                         </div>
                                         <div>
@@ -555,7 +555,7 @@ export default function Settings() {
                                                 value={newPassword}
                                                 onChange={(e) => setNewPassword(e.target.value)}
                                                 placeholder="••••••••"
-                                                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
+                                                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
                                             />
                                         </div>
                                         <div>
@@ -567,14 +567,14 @@ export default function Settings() {
                                                 value={confirmPassword}
                                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                                 placeholder="••••••••"
-                                                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
+                                                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
                                             />
                                         </div>
                                         <div className="pt-2">
                                             <button
                                                 onClick={handleUpdatePassword}
                                                 disabled={isUpdatingPassword}
-                                                className="px-6 py-2.5 rounded-lg border-0 bg-[#258cf4] hover:bg-blue-600 text-white font-medium shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                                className="px-6 py-2.5 rounded-lg border-0 bg-[#00a8a8] hover:bg-[#005c5c] text-white font-medium shadow-md shadow-[#005c5c]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                             >
                                                 {isUpdatingPassword && (
                                                     <span className="material-symbols-outlined animate-spin text-[20px]">
@@ -624,7 +624,7 @@ export default function Settings() {
                                                     onChange={(e) =>
                                                         setVideoInputDevice(e.target.value)
                                                     }
-                                                    className="pl-10 w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                                    className="pl-10 w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
                                                 >
                                                     <option value="default">Default Camera</option>
                                                     {videoDevices.map((device: Device) => (
@@ -657,7 +657,7 @@ export default function Settings() {
                                                     onChange={(e) =>
                                                         setVideoQuality(e.target.value)
                                                     }
-                                                    className="pl-10 w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                                    className="pl-10 w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
                                                 >
                                                     <option value="1080">
                                                         High Definition (1080p)
@@ -704,7 +704,7 @@ export default function Settings() {
                                                         setAdjustForLowLight(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                             </label>
                                         </div>
                                         <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -733,7 +733,7 @@ export default function Settings() {
                                                         setMirrorVideo(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                             </label>
                                         </div>
                                     </div>
@@ -764,7 +764,7 @@ export default function Settings() {
                                                         onChange={(e) =>
                                                             setLanguage(e.target.value)
                                                         }
-                                                        className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                                        className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
                                                     >
                                                         {Object.entries(languages).map(
                                                             ([code, [englishName, nativeName]]) => (
@@ -795,7 +795,7 @@ export default function Settings() {
                                                         onChange={(e) =>
                                                             setVoiceLanguage(e.target.value)
                                                         }
-                                                        className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                                        className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
                                                     >
                                                         {Object.entries(speechLanguages).map(
                                                             ([code, [englishName, nativeName]]) => (
@@ -857,15 +857,15 @@ export default function Settings() {
                                                         key={themeOption.id}
                                                         className={`flex-1 min-w-[160px] relative group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                                                             appearance === themeOption.id
-                                                                ? 'border-[#258cf4] bg-[#258cf4]/5 shadow-sm ring-1 ring-[#258cf4]'
-                                                                : `border-slate-200 dark:border-slate-700 hover:border-[#258cf4] dark:hover:border-[#258cf4] ${themeOption.cardBg}`
+                                                                ? 'border-[#00a8a8] bg-[#00a8a8]/5 shadow-sm ring-1 ring-[#00a8a8]'
+                                                                : `border-slate-200 dark:border-slate-700 hover:border-[#00a8a8] dark:hover:border-[#00a8a8] ${themeOption.cardBg}`
                                                         }`}
                                                         onClick={() =>
                                                             setAppearance(themeOption.id)
                                                         }
                                                     >
                                                         {appearance === themeOption.id && (
-                                                            <div className="absolute top-3 right-3 text-[#258cf4]">
+                                                            <div className="absolute top-3 right-3 text-[#00a8a8]">
                                                                 <span
                                                                     className="material-symbols-outlined text-[20px]"
                                                                     style={{
@@ -881,13 +881,13 @@ export default function Settings() {
                                                             className={`w-full aspect-video rounded-lg border shadow-sm flex items-center justify-center mb-1 ${themeOption.innerBg} ${themeOption.innerBorder}`}
                                                         >
                                                             <span
-                                                                className={`material-symbols-outlined text-4xl ${appearance === themeOption.id ? 'text-[#258cf4]' : themeOption.iconColor}`}
+                                                                className={`material-symbols-outlined text-4xl ${appearance === themeOption.id ? 'text-[#00a8a8]' : themeOption.iconColor}`}
                                                             >
                                                                 {themeOption.icon}
                                                             </span>
                                                         </div>
                                                         <span
-                                                            className={`text-sm font-medium ${appearance === themeOption.id ? 'text-[#258cf4]' : 'text-slate-700 dark:text-slate-300'}`}
+                                                            className={`text-sm font-medium ${appearance === themeOption.id ? 'text-[#00a8a8]' : 'text-slate-700 dark:text-slate-300'}`}
                                                         >
                                                             {themeOption.label}
                                                         </span>
@@ -922,7 +922,7 @@ export default function Settings() {
                                                     setReportDiagnostics(e.target.checked)
                                                 }
                                             />
-                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                         </label>
                                     </div>
                                 </div>
@@ -951,7 +951,7 @@ export default function Settings() {
                                                     onChange={(e) =>
                                                         setAudioInputDevice(e.target.value)
                                                     }
-                                                    className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                                    className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
                                                 >
                                                     <option value="default">
                                                         Default Microphone
@@ -983,7 +983,7 @@ export default function Settings() {
                                                     onChange={(e) =>
                                                         setAudioOutputDevice(e.target.value)
                                                     }
-                                                    className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                                    className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
                                                 >
                                                     <option value="default">
                                                         Default Speakers
@@ -1034,7 +1034,7 @@ export default function Settings() {
                                                         setNoiseCancellation(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                             </label>
                                         </div>
                                         <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -1063,7 +1063,7 @@ export default function Settings() {
                                                         setEchoReduction(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                             </label>
                                         </div>
                                     </div>
@@ -1104,7 +1104,7 @@ export default function Settings() {
                                                         setEmailNotifications(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                             </label>
                                         </div>
                                         <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -1134,7 +1134,7 @@ export default function Settings() {
                                                         setSoundAlerts(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                             </label>
                                         </div>
                                         <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -1164,7 +1164,7 @@ export default function Settings() {
                                                         setPushNotifications(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                             </label>
                                         </div>
                                     </div>
@@ -1198,7 +1198,7 @@ export default function Settings() {
                                                 checked={doNotDisturb}
                                                 onChange={(e) => setDoNotDisturb(e.target.checked)}
                                             />
-                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                         </label>
                                     </div>
                                 </div>

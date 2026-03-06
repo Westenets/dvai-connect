@@ -27,7 +27,7 @@ export default function ErrorPage({
                 <div className="flex gap-4 justify-center">
                     <button
                         onClick={() => reset()}
-                        className="px-6 py-2.5 bg-[#258cf4] text-white font-bold rounded-lg hover:bg-[#258cf4]/90 transition-all text-sm shadow-md shadow-[#258cf4]/20"
+                        className="px-6 py-2.5 bg-[#00a8a8] text-white font-bold rounded-lg hover:bg-[#00a8a8]/90 transition-all text-sm shadow-md shadow-[#00a8a8]/20"
                     >
                         Try again
                     </button>

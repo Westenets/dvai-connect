@@ -76,7 +76,7 @@ export default function LoginPage() {
                             setIsRegistering(!isRegistering);
                             setError(null);
                         }}
-                        className="bg-transparent border-0 text-[#258cf4] text-sm font-bold hover:underline"
+                        className="bg-transparent border-0 text-[#00a8a8] text-sm font-bold hover:underline"
                     >
                         {isRegistering ? 'Log In' : 'Sign Up'}
                     </button>
@@ -127,7 +127,7 @@ export default function LoginPage() {
                                     </label>
                                     <div className="relative">
                                         <input
-                                            className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#258cf4]/20 focus:border-[#258cf4] transition-all placeholder:text-slate-400"
+                                            className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#00a8a8]/20 focus:border-[#00a8a8] transition-all placeholder:text-slate-400"
                                             id="name"
                                             name="name"
                                             placeholder="Jane Doe"
@@ -152,7 +152,7 @@ export default function LoginPage() {
                                 </label>
                                 <div className="relative">
                                     <input
-                                        className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#258cf4]/20 focus:border-[#258cf4] transition-all placeholder:text-slate-400"
+                                        className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#00a8a8]/20 focus:border-[#00a8a8] transition-all placeholder:text-slate-400"
                                         id="email"
                                         name="email"
                                         placeholder="name@company.com"
@@ -177,7 +177,7 @@ export default function LoginPage() {
                                     </label>
                                     {!isRegistering && (
                                         <a
-                                            className="text-xs font-medium text-[#258cf4] hover:text-[#258cf4]/80"
+                                            className="text-xs font-medium text-[#00a8a8] hover:text-[#00a8a8]/80"
                                             href="#"
                                         >
                                             Forgot password?
@@ -186,7 +186,7 @@ export default function LoginPage() {
                                 </div>
                                 <div className="relative">
                                     <input
-                                        className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#258cf4]/20 focus:border-[#258cf4] transition-all placeholder:text-slate-400"
+                                        className="w-full h-11 pl-10 pr-4 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-[#00a8a8]/20 focus:border-[#00a8a8] transition-all placeholder:text-slate-400"
                                         id="password"
                                         name="password"
                                         placeholder={
@@ -209,7 +209,7 @@ export default function LoginPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="mt-2 w-full h-11 border-0 bg-[#258cf4] text-white font-bold rounded-full hover:bg-[#258cf4]/90 focus:ring-4 focus:ring-[#258cf4]/30 transition-all text-sm shadow-md shadow-[#258cf4]/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="mt-2 w-full h-11 border-0 bg-[#00a8a8] text-white font-bold rounded-full hover:bg-[#00a8a8]/90 focus:ring-4 focus:ring-[#00a8a8]/30 transition-all text-sm shadow-md shadow-[#00a8a8]/20 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Please wait...' : isRegistering ? 'Sign Up' : 'Log In'}
                             </button>
@@ -227,7 +227,7 @@ export default function LoginPage() {
                                     setIsRegistering(!isRegistering);
                                     setError(null);
                                 }}
-                                className="text-[#258cf4] font-bold hover:underline bg-transparent border-none cursor-pointer"
+                                className="text-[#00a8a8] font-bold hover:underline bg-transparent border-none cursor-pointer"
                             >
                                 {isRegistering ? 'Log in instead' : 'Sign up for free'}
                             </button>

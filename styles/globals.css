@@ -30,6 +30,8 @@
     --lk-grid-gap: 0.5rem;
     --lk-control-bar-height: 69px;
     --lk-chat-header-height: 69px;
+
+    --swiper-theme-color: #00a8a8 !important;
 }
 
 [data-theme='light'],
