@@ -13,7 +13,6 @@ import {
     LocalUserChoices,
     PreJoin,
     RoomContext,
-    VideoConference,
 } from '@livekit/components-react';
 import {
     ExternalE2EEKeyProvider,
@@ -30,6 +29,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useSetupE2EE } from '@/lib/useSetupE2EE';
 import { useLowCPUOptimizer } from '@/lib/usePerfomanceOptimiser';
+import { VideoConference } from '@/lib/VideoConference';
 
 const CONN_DETAILS_ENDPOINT =
     process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
@@ -45,14 +45,25 @@ export function PageClientImpl(props: {
         undefined,
     );
     const { user } = useAuth();
+    const prefs = user?.prefs as Record<string, any> | undefined;
+
+    console.log(user?.prefs);
 
     const preJoinDefaults = React.useMemo(() => {
         return {
             username: user?.name || '',
             videoEnabled: true,
             audioEnabled: true,
+            videoDeviceId:
+                prefs?.videoInputDevice && prefs.videoInputDevice !== 'default'
+                    ? prefs.videoInputDevice
+                    : undefined,
+            audioDeviceId:
+                prefs?.audioInputDevice && prefs.audioInputDevice !== 'default'
+                    ? prefs.audioInputDevice
+                    : undefined,
         };
-    }, [user?.name]);
+    }, [user?.name, user?.prefs]);
     const [connectionDetails, setConnectionDetails] = React.useState<ConnectionDetails | undefined>(
         undefined,
     );
@@ -75,13 +86,18 @@ export function PageClientImpl(props: {
     const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
     return (
-        <main data-lk-theme="default" style={{ height: '100%' }}>
+        <main
+            className={`h-full`}
+            data-lk-theme={`${connectionDetails === undefined || preJoinChoices === undefined ? prefs?.appearance || 'default' : 'default'}`}
+            data-theme={`${connectionDetails === undefined || preJoinChoices === undefined ? prefs?.appearance || 'default' : 'default'}`}
+        >
             {connectionDetails === undefined || preJoinChoices === undefined ? (
                 <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
                     <PreJoin
                         defaults={preJoinDefaults}
                         onSubmit={handlePreJoinSubmit}
                         onError={handlePreJoinError}
+                        joinLabel="Join"
                     />
                 </div>
             ) : (
@@ -89,7 +105,10 @@ export function PageClientImpl(props: {
                     roomName={props.roomName}
                     connectionDetails={connectionDetails}
                     userChoices={preJoinChoices}
-                    options={{ codec: props.codec, hq: props.hq }}
+                    options={{
+                        codec: props.codec,
+                        hq: prefs?.videoQuality === '1080' ? true : false,
+                    }}
                 />
             )}
         </main>
@@ -205,19 +224,22 @@ function VideoConferenceComponent(props: {
                 props.connectionDetails.serverUrl,
                 props.connectionDetails.participantToken,
                 connectOptions,
-            ).catch((error) => {
-                handleError(error);
-            });
-            if (props.userChoices.videoEnabled) {
-                room.localParticipant.setCameraEnabled(true).catch((error) => {
+            )
+                .then(() => {
+                    if (props.userChoices.videoEnabled) {
+                        room.localParticipant.setCameraEnabled(true).catch((error) => {
+                            handleError(error);
+                        });
+                    }
+                    if (props.userChoices.audioEnabled) {
+                        room.localParticipant.setMicrophoneEnabled(true).catch((error) => {
+                            handleError(error);
+                        });
+                    }
+                })
+                .catch((error) => {
                     handleError(error);
                 });
-            }
-            if (props.userChoices.audioEnabled) {
-                room.localParticipant.setMicrophoneEnabled(true).catch((error) => {
-                    handleError(error);
-                });
-            }
         }
         return () => {
             room.off(RoomEvent.Disconnected, handleOnLeave);
@@ -251,27 +273,6 @@ function VideoConferenceComponent(props: {
                 />
                 <DebugMode />
                 <RecordingIndicator />
-
-                {/* Agent Dispatch Button Overlay */}
-                <div className="lk-agent-button-container">
-                    <button
-                        className="lk-button lk-agent-button"
-                        onClick={() => {
-                            fetch('/api/agent', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ roomName: props.roomName }),
-                            })
-                                .then(() => {
-                                    alert('AI Agent dispatched to the room!');
-                                })
-                                .catch((err) => console.error('Failed to dispatch agent', err));
-                        }}
-                    >
-                        <span className="material-symbols-outlined text-xl">smart_toy</span>
-                        Add AI Agent
-                    </button>
-                </div>
             </RoomContext.Provider>
         </div>
     );

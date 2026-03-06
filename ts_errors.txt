@@ -1,0 +1,6 @@
+app/rooms/[roomName]/PageClientImpl.tsx(91,110): error TS2339: Property 'appearance' does not exist on type 'Preferences'.
+app/rooms/[roomName]/PageClientImpl.tsx(92,107): error TS2339: Property 'appearance' does not exist on type 'Preferences'.
+app/rooms/[roomName]/PageClientImpl.tsx(110,42): error TS2339: Property 'videoQuality' does not exist on type 'Preferences'.
+lib/ControlBar.tsx(9,31): error TS2307: Cannot find module '../hooks/internal' or its corresponding type declarations.
+lib/ControlBar.tsx(12,28): error TS2307: Cannot find module '../utils' or its corresponding type declarations.
+lib/ControlBar.tsx(14,10): error TS2305: Module '"@livekit/components-react"' has no exported member 'SettingsMenuToggle'.
