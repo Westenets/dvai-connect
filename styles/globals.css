@@ -71,7 +71,7 @@
 
 .lk-agent-button-container {
     position: absolute;
-    bottom: 80px;
+    bottom: 12px;
     right: 20px;
     z-index: 999;
 }
