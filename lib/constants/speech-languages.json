@@ -1,0 +1,82 @@
+{
+    "ar": [
+        "Arabic",
+        "العربية"
+    ],
+    "zh": [
+        "Chinese (Mandarin)",
+        "中文 (普通话)"
+    ],
+    "cs": [
+        "Czech",
+        "Čeština"
+    ],
+    "da": [
+        "Danish",
+        "Dansk"
+    ],
+    "nl": [
+        "Dutch",
+        "Nederlands"
+    ],
+    "en": [
+        "English",
+        "English"
+    ],
+    "fi": [
+        "Finnish",
+        "Suomi"
+    ],
+    "fr": [
+        "French",
+        "Français"
+    ],
+    "de": [
+        "German",
+        "Deutsch"
+    ],
+    "hi": [
+        "Hindi",
+        "हिन्दी"
+    ],
+    "it": [
+        "Italian",
+        "Italiano"
+    ],
+    "ja": [
+        "Japanese",
+        "日本語"
+    ],
+    "ko": [
+        "Korean",
+        "한국어"
+    ],
+    "no": [
+        "Norwegian",
+        "Norsk"
+    ],
+    "pl": [
+        "Polish",
+        "Polski"
+    ],
+    "pt": [
+        "Portuguese",
+        "Português"
+    ],
+    "ru": [
+        "Russian",
+        "Русский"
+    ],
+    "es": [
+        "Spanish",
+        "Español"
+    ],
+    "sv": [
+        "Swedish",
+        "Svenska"
+    ],
+    "tr": [
+        "Turkish",
+        "Türkçe"
+    ]
+}

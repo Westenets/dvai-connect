@@ -1,8 +1,10 @@
+import 'newrelic';
 import '../styles/globals.css';
 import '@livekit/components-styles';
 import '@livekit/components-styles/prefabs';
 import type { Metadata, Viewport } from 'next';
 import { Toaster } from 'react-hot-toast';
+
 
 export const dynamic = 'force-dynamic';
 

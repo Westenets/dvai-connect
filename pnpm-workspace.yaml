@@ -1,3 +1,6 @@
 onlyBuiltDependencies:
+  - '@newrelic/fn-inspect'
+  - '@newrelic/native-metrics'
   - esbuild
+  - protobufjs
   - sharp

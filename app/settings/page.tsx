@@ -6,8 +6,9 @@ import { useAuth } from '@/components/AuthProvider';
 import { storage, account } from '@/lib/appwrite';
 import { ID } from 'appwrite';
 import toast from 'react-hot-toast';
-import Image from 'next/image';
 import { LocalVideoTrack, createLocalVideoTrack } from 'livekit-client';
+import languages from '@/lib/constants/languages.json';
+import speechLanguages from '@/lib/constants/speech-languages.json';
 
 function CameraPreview({ deviceId, mirror }: { deviceId?: string; mirror?: boolean }) {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -76,6 +77,7 @@ export default function Settings() {
 
     // General Settings State
     const [language, setLanguage] = useState('en');
+    const [voiceLanguage, setVoiceLanguage] = useState('en');
     const [appearance, setAppearance] = useState('system');
     const [reportDiagnostics, setReportDiagnostics] = useState(true);
 
@@ -124,6 +126,7 @@ export default function Settings() {
 
             // Load Settings
             if (prefs?.language) setLanguage(prefs.language);
+            if (prefs?.voiceLanguage) setVoiceLanguage(prefs.voiceLanguage);
             if (prefs?.appearance) setAppearance(prefs.appearance);
             if (prefs?.reportDiagnostics !== undefined)
                 setReportDiagnostics(prefs.reportDiagnostics);
@@ -662,7 +665,7 @@ export default function Settings() {
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-slate-900 dark:text-white">
+                                                    <h4 className="font-medium text-slate-900 dark:text-white my-0">
                                                         Adjust for low light
                                                     </h4>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -680,7 +683,7 @@ export default function Settings() {
                                                         setAdjustForLowLight(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
                                             </label>
                                         </div>
                                         <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -692,7 +695,7 @@ export default function Settings() {
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-slate-900 dark:text-white">
+                                                    <h4 className="font-medium text-slate-900 my-0 dark:text-white">
                                                         Mirror my video
                                                     </h4>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -709,7 +712,7 @@ export default function Settings() {
                                                         setMirrorVideo(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
                                             </label>
                                         </div>
                                     </div>
@@ -724,30 +727,70 @@ export default function Settings() {
                                         Interface
                                     </h3>
                                     <div className="space-y-8">
-                                        <div className="space-y-3">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                                Language
-                                            </label>
-                                            <div className="relative max-w-md">
-                                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                                                    <span className="material-symbols-outlined text-[20px]">
-                                                        language
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-3">
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                                    Language
+                                                </label>
+                                                <div className="relative max-w-md">
+                                                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                                        <span className="material-symbols-outlined text-[20px]">
+                                                            language
+                                                        </span>
                                                     </span>
-                                                </span>
-                                                <select
-                                                    value={language}
-                                                    onChange={(e) => setLanguage(e.target.value)}
-                                                    className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
-                                                >
-                                                    <option value="en">English</option>
-                                                    <option value="es">Español</option>
-                                                    <option value="fr">Français</option>
-                                                    <option value="de">Deutsch</option>
-                                                </select>
+                                                    <select
+                                                        value={language}
+                                                        onChange={(e) =>
+                                                            setLanguage(e.target.value)
+                                                        }
+                                                        className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                                    >
+                                                        {Object.entries(languages).map(
+                                                            ([code, [englishName, nativeName]]) => (
+                                                                <option key={code} value={code}>
+                                                                    {englishName} ({nativeName})
+                                                                </option>
+                                                            ),
+                                                        )}
+                                                    </select>
+                                                </div>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                    Select your preferred language for the
+                                                    interface.
+                                                </p>
                                             </div>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                                                Select your preferred language for the interface.
-                                            </p>
+                                            <div className="space-y-3">
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                                    Speech Language
+                                                </label>
+                                                <div className="relative max-w-md">
+                                                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                                        <span className="material-symbols-outlined text-[20px]">
+                                                            language
+                                                        </span>
+                                                    </span>
+                                                    <select
+                                                        value={voiceLanguage}
+                                                        onChange={(e) =>
+                                                            setVoiceLanguage(e.target.value)
+                                                        }
+                                                        className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#258cf4] focus:ring-[#258cf4] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                                    >
+                                                        {Object.entries(speechLanguages).map(
+                                                            ([code, [englishName, nativeName]]) => (
+                                                                <option key={code} value={code}>
+                                                                    {englishName} ({nativeName})
+                                                                </option>
+                                                            ),
+                                                        )}
+                                                    </select>
+                                                </div>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                    Select your preferred spoken language for
+                                                    auto-transation of chat and DVAI Agent. (Coming
+                                                    soon)
+                                                </p>
+                                            </div>
                                         </div>
 
                                         <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -840,7 +883,7 @@ export default function Settings() {
                                     </h3>
                                     <div className="flex items-start justify-between">
                                         <div>
-                                            <h4 className="font-medium text-slate-900 dark:text-white">
+                                            <h4 className="font-medium text-slate-900 my-0 dark:text-white">
                                                 Report additional diagnostics
                                             </h4>
                                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
@@ -858,7 +901,7 @@ export default function Settings() {
                                                     setReportDiagnostics(e.target.checked)
                                                 }
                                             />
-                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4]"></div>
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
                                         </label>
                                     </div>
                                 </div>
@@ -934,7 +977,7 @@ export default function Settings() {
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-slate-900 dark:text-white">
+                                                    <h4 className="font-medium text-slate-900 my-0 dark:text-white">
                                                         Noise Cancellation
                                                     </h4>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -952,7 +995,7 @@ export default function Settings() {
                                                         setNoiseCancellation(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
                                             </label>
                                         </div>
                                         <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -964,7 +1007,7 @@ export default function Settings() {
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-slate-900 dark:text-white">
+                                                    <h4 className="font-medium text-slate-900 my-0 dark:text-white">
                                                         Echo Reduction
                                                     </h4>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -981,7 +1024,7 @@ export default function Settings() {
                                                         setEchoReduction(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
                                             </label>
                                         </div>
                                     </div>
@@ -1004,7 +1047,7 @@ export default function Settings() {
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-slate-900 dark:text-white">
+                                                    <h4 className="font-medium text-slate-900 my-0 dark:text-white">
                                                         Email notifications
                                                     </h4>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -1022,7 +1065,7 @@ export default function Settings() {
                                                         setEmailNotifications(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
                                             </label>
                                         </div>
                                         <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -1034,7 +1077,7 @@ export default function Settings() {
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-slate-900 dark:text-white">
+                                                    <h4 className="font-medium text-slate-900 my-0 dark:text-white">
                                                         Desktop sound alerts
                                                     </h4>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -1052,7 +1095,7 @@ export default function Settings() {
                                                         setSoundAlerts(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
                                             </label>
                                         </div>
                                         <div className="w-full h-px bg-slate-100 dark:bg-slate-800"></div>
@@ -1064,7 +1107,7 @@ export default function Settings() {
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-slate-900 dark:text-white">
+                                                    <h4 className="font-medium text-slate-900 my-0 dark:text-white">
                                                         Browser push notifications
                                                     </h4>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -1082,7 +1125,7 @@ export default function Settings() {
                                                         setPushNotifications(e.target.checked)
                                                     }
                                                 />
-                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4]"></div>
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
                                             </label>
                                         </div>
                                     </div>
@@ -1100,7 +1143,7 @@ export default function Settings() {
                                                 </span>
                                             </div>
                                             <div>
-                                                <h4 className="font-medium text-slate-900 dark:text-white">
+                                                <h4 className="font-medium text-slate-900 myh-0 dark:text-white">
                                                     Pause all notifications
                                                 </h4>
                                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -1116,7 +1159,7 @@ export default function Settings() {
                                                 checked={doNotDisturb}
                                                 onChange={(e) => setDoNotDisturb(e.target.checked)}
                                             />
-                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4]"></div>
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#258cf4]/20 dark:peer-focus:ring-[#258cf4]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#258cf4] dark:peer-checked:bg-[#258cf4]"></div>
                                         </label>
                                     </div>
                                 </div>

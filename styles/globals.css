@@ -177,3 +177,9 @@ h2 a {
 button {
     cursor: pointer;
 }
+
+:where(.peer):checked ~ .peer-checked\:after\:translate-x-full::after {
+    content: var(--tw-content);
+    --tw-translate-x: 90%;
+    translate: var(--tw-translate-x) var(--tw-translate-y);
+}
