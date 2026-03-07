@@ -43,3 +43,4 @@ yarn-error.log*
 /livekit-recordings
 
 newrelic_agent.log
+next-env.d.ts

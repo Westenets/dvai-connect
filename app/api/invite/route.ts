@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
         // 3. Save/Update contact in Appwrite
         try {
-            const databaseId = 'dvai-connect';
+            const databaseId = process.env.APPWRITE_DATABASE_ID || 'dvai-connect';
             const collectionId = 'contacts';
 
             // Check if contact already exists for this owner and email

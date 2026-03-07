@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Search, Copy, Check, UserPlus, Mail, Share2 } from 'lucide-react';
+import { X, Search, Copy, Check, UserPlus } from 'lucide-react';
+import {
+    WhatsappShareButton,
+    EmailShareButton,
+    LinkedinShareButton,
+    TwitterShareButton,
+    TelegramShareButton,
+    FacebookMessengerShareButton,
+} from 'react-share';
+import { SocialIcon } from 'react-social-icons';
 import { toast } from 'react-hot-toast';
 import { databases } from './appwrite';
 import { ID, Query } from 'appwrite';
@@ -35,24 +44,29 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, roomN
         return `${window.location.origin}/rooms/${roomName}`;
     }, [roomName]);
 
+    const fetchContacts = React.useCallback(async () => {
+        if (!user) return;
+        setIsLoading(true);
+        try {
+            const response = await databases.listDocuments('dvai-connect', 'contacts', [
+                Query.equal('userid', user.$id),
+                Query.limit(50), // Increase limit slightly to show more
+                Query.orderDesc('$createdAt'), // Show newest first
+            ]);
+            setContacts(response.documents as unknown as Contact[]);
+        } catch (error) {
+            console.error('Failed to fetch contacts:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [user]);
+
     // Fetch contacts from Appwrite
     useEffect(() => {
-        if (!isOpen || !user) return;
-
-        const fetchContacts = async () => {
-            try {
-                const response = await databases.listDocuments('dvai-connect', 'contacts', [
-                    Query.equal('userid', user.$id),
-                    Query.limit(10),
-                ]);
-                setContacts(response.documents as unknown as Contact[]);
-            } catch (error) {
-                console.error('Failed to fetch contacts:', error);
-            }
-        };
-
-        fetchContacts();
-    }, [isOpen, user]);
+        if (isOpen && user) {
+            fetchContacts();
+        }
+    }, [isOpen, user, fetchContacts]);
 
     const handleCopyLink = async () => {
         try {
@@ -86,10 +100,9 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, roomN
 
             if (response.ok) {
                 toast.success(`Invite sent to ${email}`);
-                // If it was a new email, we might want to refresh contacts
-                if (!contactId) {
-                    // Refresh logic here if needed
-                }
+                // Refresh contacts to show the newly added one immediately
+                await fetchContacts();
+                setSearchQuery(''); // Clear search query after success
             } else {
                 toast.error('Failed to send invite');
             }
@@ -154,7 +167,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, roomN
                         </label>
 
                         {/* Contacts List */}
-                        <div className="space-y-1">
+                        <div className="space-y-1 max-h-[20vh] overflow-y-auto lk-scrollbar">
                             {filteredContacts.map((contact) => (
                                 <div
                                     key={contact.$id}
@@ -166,19 +179,21 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, roomN
                                                 <img
                                                     src={contact.avatarUrl}
                                                     alt={contact.name}
-                                                    className="w-full h-full object-cover"
+                                                    className="w-full h-full object-cover rounded-full"
                                                 />
                                             ) : (
-                                                <span className="text-primary font-bold">
-                                                    {contact.name.charAt(0).toUpperCase()}
-                                                </span>
+                                                <img
+                                                    src={`https://ui-avatars.com/api/?name=${contact.name}&length=1&background=random`}
+                                                    alt={contact.name}
+                                                    className="w-full h-full object-cover rounded-full"
+                                                />
                                             )}
                                         </div>
-                                        <div className="flex flex-col">
-                                            <p className="text-slate-900 dark:text-slate-100 text-sm font-medium">
+                                        <div className="flex flex-col gap-1">
+                                            <p className="text-slate-900 dark:text-slate-100 text-sm font-medium m-0">
                                                 {contact.name}
                                             </p>
-                                            <p className="text-slate-500 text-xs">
+                                            <p className="text-slate-500 text-xs m-0">
                                                 {contact.email}
                                             </p>
                                         </div>
@@ -188,7 +203,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, roomN
                                             handleInvite(contact.email, contact.name, contact.$id)
                                         }
                                         disabled={isInviting === contact.email}
-                                        className="text-primary text-sm font-semibold px-3 py-1 hover:bg-primary/5 rounded disabled:opacity-50"
+                                        className="text-white border-0 bg-[#00a8a8] hover:bg-[#00a8a8]/90 text-sm font-semibold px-3 py-1 rounded disabled:opacity-50"
                                     >
                                         {isInviting === contact.email ? 'Sending...' : 'Invite'}
                                     </button>
@@ -253,26 +268,51 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, roomN
 
                     {/* Platforms */}
                     <div className="pt-2">
-                        <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider font-semibold mb-3">
-                            Other platforms
+                        <p className="text-slate-500 dark:text-slate-400 text-xs tracking-wider font-semibold mb-3 px-1">
+                            Share via other platforms
                         </p>
-                        <div className="flex gap-4">
-                            <a
-                                href={`https://wa.me/?text=${encodeURIComponent(`Join my meeting: ${meetingLink}`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="size-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-green-500/10 hover:text-green-500 transition-colors text-slate-600 dark:text-slate-300"
-                                title="Share via WhatsApp"
-                            >
-                                <Share2 size={20} />
-                            </a>
-                            <a
-                                href={`mailto:?subject=${encodeURIComponent('Join my meeting')}&body=${encodeURIComponent(`You're invited to join a meeting: ${meetingLink}`)}`}
-                                className="size-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-red-500/10 hover:text-red-500 transition-colors text-slate-600 dark:text-slate-300"
-                                title="Share via Email"
-                            >
-                                <Mail size={20} />
-                            </a>
+                        <div className="flex gap-4 overflow-x-auto pb-4 lk-scrollbar snap-x">
+                            <div className="snap-start shrink-0">
+                                <TelegramShareButton
+                                    url={meetingLink}
+                                    title={`Join my meeting: ${roomName}`}
+                                >
+                                    <SocialIcon
+                                        network="telegram"
+                                        style={{ height: 40, width: 40 }}
+                                    />
+                                </TelegramShareButton>
+                            </div>
+                            <div className="snap-start shrink-0">
+                                <WhatsappShareButton
+                                    url={meetingLink}
+                                    title={`Join my meeting: ${roomName}`}
+                                >
+                                    <SocialIcon
+                                        network="whatsapp"
+                                        style={{ height: 40, width: 40 }}
+                                    />
+                                </WhatsappShareButton>
+                            </div>
+                            <div className="snap-start shrink-0">
+                                <TwitterShareButton
+                                    url={meetingLink}
+                                    title={`Join my meeting: ${roomName}`}
+                                >
+                                    <SocialIcon
+                                        network="x"
+                                        style={{ height: 40, width: 40 }}
+                                    />
+                                </TwitterShareButton>
+                            </div>
+                            <div className="snap-start shrink-0">
+                                <LinkedinShareButton url={meetingLink}>
+                                    <SocialIcon
+                                        network="linkedin"
+                                        style={{ height: 40, width: 40 }}
+                                    />
+                                </LinkedinShareButton>
+                            </div>
                         </div>
                     </div>
                 </div>
