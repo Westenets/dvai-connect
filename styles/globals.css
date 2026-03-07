@@ -257,6 +257,10 @@ button[data-lk-unread-msgs]:not([data-lk-unread-msgs='0']) {
     padding: 30% !important;
 }
 
+.lk-chat {
+    width: max(200px, 40ch) !important;
+}
+
 
 /* scrollbar */
 ::-webkit-scrollbar {

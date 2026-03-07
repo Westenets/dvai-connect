@@ -108,7 +108,10 @@ function MeetingUI({
     setIsWaitingForShare?: (waiting: boolean) => void;
 }) {
     return (
-        <div className="lk-video-conference-inner flex-1 flex flex-row min-h-0 relative w-full h-full overflow-hidden">
+        <div
+            className="lk-video-conference-inner flex-1 flex flex-row min-h-0 relative w-full h-full overflow-hidden"
+            style={{ flexDirection: 'row' as any }}
+        >
             <div className="flex-1 flex flex-col min-w-0 relative h-full">
                 {!focusTrack ? (
                     <div className="lk-grid-layout-wrapper flex-1">
