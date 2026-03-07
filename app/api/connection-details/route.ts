@@ -50,7 +50,11 @@ export async function GET(request: NextRequest) {
 
         // Generate participant token
         if (!randomParticipantPostfix) {
-            randomParticipantPostfix = randomString(4);
+            // Check headers or query params for mobile apps
+            randomParticipantPostfix =
+                request.headers.get('x-postfix') ||
+                request.nextUrl.searchParams.get('postfix') ||
+                randomString(4);
         }
         const participantToken = await createParticipantToken(
             {
@@ -63,11 +67,12 @@ export async function GET(request: NextRequest) {
         );
 
         // Return connection details
-        const data: ConnectionDetails = {
+        const data: ConnectionDetails & { postfix: string } = {
             serverUrl: livekitServerUrl,
             roomName: roomName,
             participantToken: participantToken,
             participantName: participantName,
+            postfix: randomParticipantPostfix,
         };
         return new NextResponse(JSON.stringify(data), {
             headers: {
