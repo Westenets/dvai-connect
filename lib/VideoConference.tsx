@@ -16,14 +16,17 @@ import {
     FocusLayoutContainer,
     GridLayout,
     LayoutContextProvider,
-    ParticipantTile,
     RoomAudioRenderer,
     useCreateLayoutContext,
     usePinnedTracks,
     useTracks,
     useTranscriptions,
+    useMaybeRoomContext,
 } from '@livekit/components-react';
+import { Lock } from 'lucide-react';
 import { ControlBar } from './ControlBar';
+import { ParticipantTile } from './ParticipantTile';
+import { ParticipantsSidebar } from './ParticipantsSidebar';
 
 /**
  * @public
@@ -67,6 +70,7 @@ export function VideoConference({
         showSettings: false,
     });
     const [showTranscription, setShowTranscription] = React.useState(false);
+    const [showParticipants, setShowParticipants] = React.useState(false);
     const transcriptions = useTranscriptions();
     const lastAutoFocusedScreenShareTrack = React.useRef<TrackReferenceOrPlaceholder | null>(null);
 
@@ -77,8 +81,22 @@ export function VideoConference({
             { source: Track.Source.Camera, withPlaceholder: true },
             { source: Track.Source.ScreenShare, withPlaceholder: false },
         ],
-        { updateOnlyOn: [RoomEvent.ActiveSpeakersChanged], onlySubscribed: false },
-    );
+        {
+            updateOnlyOn: [
+                RoomEvent.ActiveSpeakersChanged,
+                RoomEvent.ParticipantMetadataChanged,
+                RoomEvent.ParticipantPermissionsChanged,
+            ],
+            onlySubscribed: false,
+        },
+    ).filter((track) => {
+        try {
+            const md = track.participant.metadata ? JSON.parse(track.participant.metadata) : {};
+            return md.status !== 'waiting';
+        } catch (e) {
+            return true;
+        }
+    });
 
     const widgetUpdate = (state: WidgetState) => {
         log.debug('updating widget state', state);
@@ -86,6 +104,22 @@ export function VideoConference({
     };
 
     const layoutContext = useCreateLayoutContext();
+
+    const handleParticipantsToggle = React.useCallback(
+        (show: boolean) => {
+            if (show && widgetState.showChat) {
+                layoutContext.widget.dispatch?.({ msg: 'toggle_chat' });
+            }
+            setShowParticipants(show);
+        },
+        [widgetState.showChat, layoutContext],
+    );
+
+    React.useEffect(() => {
+        if (widgetState.showChat && showParticipants) {
+            setShowParticipants(false);
+        }
+    }, [widgetState.showChat, showParticipants]);
 
     const screenShareTracks = tracks
         .filter(isTrackReference)
@@ -135,6 +169,8 @@ export function VideoConference({
         tracks,
     ]);
 
+    const room = useMaybeRoomContext();
+
     return (
         <div className="lk-video-conference" {...props}>
             {isWeb() && (
@@ -179,14 +215,20 @@ export function VideoConference({
                         )}
                         <ControlBar
                             controls={{
+                                invite: true,
                                 chat: true,
                                 settings: !!SettingsComponent,
                                 agent: true,
                                 transcription: false,
+                                participants: true,
+                                hand: true,
                             }}
                             showTranscription={showTranscription}
                             onTranscriptionToggle={setShowTranscription}
-                            variation='minimal'
+                            showParticipants={showParticipants}
+                            onParticipantsToggle={handleParticipantsToggle}
+                            variation="minimal"
+                            className="justify-between!"
                         />
                     </div>
                     <Chat
@@ -194,6 +236,10 @@ export function VideoConference({
                         messageFormatter={chatMessageFormatter}
                         messageEncoder={chatMessageEncoder}
                         messageDecoder={chatMessageDecoder}
+                    />
+                    <ParticipantsSidebar
+                        style={{ display: showParticipants ? 'flex' : 'none' }}
+                        onClose={() => setShowParticipants(false)}
                     />
                     {SettingsComponent && (
                         <div

@@ -18,6 +18,8 @@
     --lk-connection-good: #f9b11f;
     --lk-connection-poor: #f91f31;
 
+    --lk-border-color: var(--lk-accesnt-fg);
+
     --lk-font-family:
         system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji';
@@ -66,7 +68,9 @@
 
     --lk-drop-shadow: rgba(0, 0, 0, 0.1) 0px 0px 24px !important;
 }
-
+[data-lk-theme] .lk-form-control {
+    color: var(--lk-accent-fg) !important;
+}
 .lk-header {
     min-height: 48px;
 }
@@ -184,4 +188,64 @@ button {
     content: var(--tw-content);
     --tw-translate-x: 90%;
     translate: var(--tw-translate-x) var(--tw-translate-y);
+}
+button[data-rounded-r='true'] {
+    @apply rounded-r-full;
+}
+
+@keyframes wave-hand {
+    0% {
+        transform: rotate(0deg);
+    }
+    10% {
+        transform: rotate(14deg);
+    }
+    20% {
+        transform: rotate(-8deg);
+    }
+    30% {
+        transform: rotate(14deg);
+    }
+    40% {
+        transform: rotate(-4deg);
+    }
+    50% {
+        transform: rotate(10deg);
+    }
+    60% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.animate-wave {
+    animation: wave-hand 2s ease-in-out infinite;
+    transform-origin: bottom right;
+}
+
+/* LiveKit Badge Styles for Participants Button */
+button[data-lk-unread-msgs]:not([data-lk-unread-msgs='0']) {
+    position: relative;
+}
+
+.lk-button[data-lk-unread-msgs]:not([data-lk-unread-msgs='0'])::after {
+    content: attr(data-lk-unread-msgs) !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    transform: translate(20%, -20%) !important;
+    background-color: var(--lk-danger, #f91f31) !important;
+    color: var(--lk-danger-fg, #fff) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 2px !important;
+    border-radius: 10px !important;
+    line-height: 1 !important;
+    width: 18px !important;
+    height: 18px !important;
+    text-align: center !important;
+    border: 2px solid var(--lk-bg, #111) !important;
+    z-index: 10 !important;
 }
