@@ -15,8 +15,21 @@ export async function GET(request: NextRequest) {
         // Parse query parameters
         const roomName = request.nextUrl.searchParams.get('roomName');
         const participantName = request.nextUrl.searchParams.get('participantName');
-        const metadata = request.nextUrl.searchParams.get('metadata') ?? '';
+        const isCreatorParam = request.nextUrl.searchParams.get('isCreator');
+        const isCreator = isCreatorParam === 'true';
+        let metadata = request.nextUrl.searchParams.get('metadata') ?? '';
         const region = request.nextUrl.searchParams.get('region');
+
+        if (!isCreator) {
+            try {
+                const parsedMetadata = metadata ? JSON.parse(metadata) : {};
+                parsedMetadata.status = 'waiting';
+                metadata = JSON.stringify(parsedMetadata);
+            } catch (e) {
+                metadata = JSON.stringify({ status: 'waiting' });
+            }
+        }
+
         if (!LIVEKIT_URL) {
             throw new Error('LIVEKIT_URL is not defined');
         }
@@ -46,6 +59,7 @@ export async function GET(request: NextRequest) {
                 metadata,
             },
             roomName,
+            isCreator,
         );
 
         // Return connection details
@@ -68,15 +82,21 @@ export async function GET(request: NextRequest) {
     }
 }
 
-function createParticipantToken(userInfo: AccessTokenOptions, roomName: string) {
+function createParticipantToken(
+    userInfo: AccessTokenOptions,
+    roomName: string,
+    isCreator: boolean,
+) {
     const at = new AccessToken(API_KEY, API_SECRET, userInfo);
     at.ttl = '5m';
     const grant: VideoGrant = {
         room: roomName,
         roomJoin: true,
-        canPublish: true,
+        roomAdmin: isCreator,
+        canPublish: isCreator,
         canPublishData: true,
-        canSubscribe: true,
+        canSubscribe: isCreator,
+        canUpdateOwnMetadata: true,
     };
     at.addGrant(grant);
     return at.toJwt();

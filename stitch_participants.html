@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Meeting Room Participant Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#258cf4",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1e2832",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        "2xl": "1rem",
+                        full: "9999px",
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-dark text-slate-100 font-display h-screen w-full flex overflow-hidden">
+<main class="flex-1 flex flex-col relative h-full">
+<header class="absolute top-0 left-0 right-0 z-10 px-6 py-4 flex items-center justify-between bg-gradient-to-b from-black/50 to-transparent">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-surface-dark/80 backdrop-blur-md rounded-lg">
+<span class="material-symbols-outlined text-white">videocam</span>
+</div>
+<div>
+<h1 class="text-white font-semibold text-lg leading-tight">Weekly Design Huddle</h1>
+<p class="text-slate-300 text-xs font-medium">04:23 • Ongoing</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center size-10 rounded-full bg-surface-dark/50 hover:bg-surface-dark/80 text-white backdrop-blur-md transition-colors">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-full bg-surface-dark/50 hover:bg-surface-dark/80 text-white backdrop-blur-md transition-colors">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+</div>
+</header>
+<div class="flex-1 p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 h-full overflow-y-auto">
+<div class="relative bg-surface-dark rounded-2xl overflow-hidden group">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA4JlFado9LrproxCwNrmBg2okeB1NwRw24lQ6N4YYe-laOuqXLtrXo659MiwWS6_PxOxGdISW1meNXCCkKsePRP7ha2A9C_CopS1aZH2tmdHv7CluTrYzsA3SAaHfze7BREOhPZpnqhS4ZkJB0Jd-Hz2DVDy8NexzYiYLfQBPCM22FqV2PqUo85QZ8X0cCH6P_Gztxac3FinKZula38LGH2n-Poj2-EGS_hp1417vHIMzGKHLDbVHR6KZ2CL7fJZI9Mr3CGdZKRB5O");'></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="absolute top-4 right-4 bg-black/40 backdrop-blur-sm p-1.5 rounded-full">
+<span class="material-symbols-outlined text-white text-[18px]">mic_off</span>
+</div>
+<div class="absolute bottom-4 left-4">
+<p class="text-white font-semibold text-sm drop-shadow-md">Sarah (You)</p>
+</div>
+<div class="absolute bottom-5 right-5 flex gap-0.5 items-end h-4">
+<div class="w-1 bg-green-500 h-2 rounded-full"></div>
+<div class="w-1 bg-green-500 h-4 rounded-full"></div>
+<div class="w-1 bg-green-500 h-1 rounded-full"></div>
+</div>
+</div>
+<div class="relative bg-surface-dark rounded-2xl overflow-hidden group">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAYHD4z_KOl43zaQLH_LbqMr1PTH00gcjwIsISpXm7eYD9HiZo7ZDH3f_4Bn2AakjRHetISz353vYTclrnx2_q7ZRSuRgHDq4xsyY_3_2mhUmk4GefydSlt2Ul0UtQL5RkUEeMcWnti5158lKA7vC_FnQx-4GE4cjI9IFExhiOGU3qCUJkEjpaFO9ngPWCKAeEzGGyD-o5aE01UJCcUYCICN2s6fZrjwQIJr1qM9lU6yaTDrDhz5qNWExgseW5jLA6saSBHaW7weIwY");'></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<p class="text-white font-semibold text-sm drop-shadow-md">Mike</p>
+</div>
+</div>
+<div class="relative bg-surface-dark rounded-2xl overflow-hidden group">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuByo6_yr1mf0Cu2Ak9o-wZBwUAgNTCKVQVQM-ikKNLwMB4C_y0o05cgJa3_JOIr3L3wJuqam2Ng5s8Bk5p93-7CBF24Ty9SmidaZZ9MqnDUCYmFivc1nROH0fXDVxX0CwV0zJcub7CZPHCqICGlHwBepKEVLxXTW8Pdq58rExW3Xppu4O8gyczFUOuT1dhdN045nbAfYm-w7KlY7leIDzNEV6YoTIom4McvlZHUi6px-gLXOAalYkFgjunExXc9VW-zHQxZ0sOAwPbO");'></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<p class="text-white font-semibold text-sm drop-shadow-md">Jessica</p>
+</div>
+</div>
+<div class="relative bg-surface-dark rounded-2xl overflow-hidden group">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC2HQehWXOrCwHv6_U7kDItVKqLOR5NjFW7d0Dh99oDmssGUAcEDye8xU9hhRuCZIOGI8bG3uguWUdT507dkxOCm5mzoqwPDSRz-jtFKhgU8o0l325bxKGPbG59UmxDn0GW3iOZOSmO3qKHXw4vATtF4qy48z5jYmHeoo355hkCw7exUA4mLzgahqfTwB7T6VvcCmXsBEcWBQcD0odWERXVu7B-0hy02mgfTIe9maNE-2YIf2OsowKencjNqYJWzhxh9y_ClbImDj3q");'></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<p class="text-white font-semibold text-sm drop-shadow-md">David</p>
+</div>
+</div>
+</div>
+<div class="absolute bottom-24 left-6 z-30">
+<div class="bg-surface-dark border border-white/10 rounded-xl shadow-2xl p-4 flex items-center gap-4 min-w-[320px] backdrop-blur-xl">
+<div class="size-10 rounded-full bg-cover bg-center shrink-0 border border-white/10" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDBwUADj-HoRTYLB5DIEmNLZFbZfLLWm-l0rsPLJos3QS4ds_BgM2TGo5p3EQjgi3H8dy4l8bNIoQb0slO6NCxAXp62joksvgugDyPx6SOHD1Be3WqZzvC11dPpk9LFnnukckf9_f483uIVXI1TmMB58hCAk9NARQylzfyj_PknUMxpmyWctQBbrp6k2A8UYlTcEMChlelhYhNQaD6C0RwESDvdX_boaE0hDY2bWaVoi38A81STL0SPt_r8baoHIsbhK3J5mGj5rCiE");'></div>
+<div class="flex-1">
+<p class="text-white text-sm font-semibold">Alex Johnson</p>
+<p class="text-slate-400 text-xs">Wants to join this call</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 rounded transition-colors">Deny</button>
+<button class="px-3 py-1.5 text-xs font-semibold bg-primary text-white hover:bg-blue-600 rounded transition-colors">Admit</button>
+</div>
+</div>
+</div>
+<div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
+<div class="flex items-center gap-3 px-4 py-3 bg-surface-dark/90 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
+<button class="size-10 flex items-center justify-center rounded-full bg-slate-700/50 hover:bg-slate-600 text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">mic_off</span>
+</button>
+<button class="size-10 flex items-center justify-center rounded-full bg-slate-700/50 hover:bg-slate-600 text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">videocam</span>
+</button>
+<button class="size-10 flex items-center justify-center rounded-full bg-slate-700/50 hover:bg-slate-600 text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">closed_caption</span>
+</button>
+<button class="size-10 flex items-center justify-center rounded-full bg-slate-700/50 hover:bg-slate-600 text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">back_hand</span>
+</button>
+<button class="size-10 flex items-center justify-center rounded-full bg-slate-700/50 hover:bg-slate-600 text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">present_to_all</span>
+</button>
+<div class="w-px h-8 bg-white/20 mx-1"></div>
+<button class="h-10 px-6 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white transition-all">
+<span class="material-symbols-outlined text-[20px] mr-2">call_end</span>
+<span class="text-sm font-medium">Leave</span>
+</button>
+</div>
+</div>
+</main>
+<aside class="w-80 bg-surface-dark border-l border-white/10 flex flex-col h-full z-20 shadow-xl">
+<div class="flex items-center justify-between px-5 py-4 border-b border-white/10">
+<h2 class="text-white text-lg font-bold">People</h2>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto py-2">
+<div class="px-5 py-4">
+<h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Waiting to join</h3>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDBwUADj-HoRTYLB5DIEmNLZFbZfLLWm-l0rsPLJos3QS4ds_BgM2TGo5p3EQjgi3H8dy4l8bNIoQb0slO6NCxAXp62joksvgugDyPx6SOHD1Be3WqZzvC11dPpk9LFnnukckf9_f483uIVXI1TmMB58hCAk9NARQylzfyj_PknUMxpmyWctQBbrp6k2A8UYlTcEMChlelhYhNQaD6C0RwESDvdX_boaE0hDY2bWaVoi38A81STL0SPt_r8baoHIsbhK3J5mGj5rCiE");'></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold text-white truncate">Alex Johnson</p>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-2 text-slate-400 hover:text-red-400 transition-colors" title="Deny">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+<button class="p-2 text-primary hover:text-blue-400 transition-colors" title="Admit">
+<span class="material-symbols-outlined text-lg">check</span>
+</button>
+</div>
+</div>
+</div>
+<div class="px-5 border-t border-white/5 my-2"></div>
+<div class="px-5 py-4">
+<h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 flex justify-between items-center">
+<span>In call (5)</span>
+</h3>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAZfp4SRvyfyOQ2Fben9zW_cpsqy8jSgsTTWDRWEyuS2a1wJGr1E2bNIS-5zKFMEPwClBmcfc4bHZsT6Mqu9kUwRnyfjmAfWfGDcpI96YBtPjrhaN2t1_M_6uN-HEjAswALXR0kSYrwLHwzjUzQLsBFk80wK8ZDtWufg6glGxkhKK7OCeBzfhLuGgahKN7FXs8H2m8l6W3IIHJ-FpEEFRCiogJ8UjdXPvUYYiJaJPOrU0RkK396R-cPg3JiOXodFeRWzunYN9kg9lDI");'></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold text-white truncate">Sarah (You)</p>
+</div>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDBwUADj-HoRTYLB5DIEmNLZFbZfLLWm-l0rsPLJos3QS4ds_BgM2TGo5p3EQjgi3H8dy4l8bNIoQb0slO6NCxAXp62joksvgugDyPx6SOHD1Be3WqZzvC11dPpk9LFnnukckf9_f483uIVXI1TmMB58hCAk9NARQylzfyj_PknUMxpmyWctQBbrp6k2A8UYlTcEMChlelhYhNQaD6C0RwESDvdX_boaE0hDY2bWaVoi38A81STL0SPt_r8baoHIsbhK3J5mGj5rCiE");'></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold text-white truncate">Mike</p>
+</div>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAxHi3AL1dJ0Ix8NS2R6bwxJGQJPcgX4ovJi-BwlXf4QYpahlTC2JngE-fKfi_aiSMFKkP3-wXRc0mQfj5tb6YIAAiHX1vyTD9c0o34R1sKQJw3X4oKhUlxEbLjmbDZHnfUYC-7NKZe2gynEiOOBJ_DkXKlF2OKt5r_U3e8x86mtM_jLWBSHNTOXnNmTREw7e5ExAIwwe7O2SpNmbyLVmpcLtSyD6dA0ctLNwC4PHmfd0SZvWub3VpY6Mec-hOOwV2YOXG4LY8KD900");'></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold text-white truncate">Jessica</p>
+</div>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC2HQehWXOrCwHv6_U7kDItVKqLOR5NjFW7d0Dh99oDmssGUAcEDye8xU9hhRuCZIOGI8bG3uguWUdT507dkxOCm5mzoqwPDSRz-jtFKhgU8o0l325bxKGPbG59UmxDn0GW3iOZOSmO3qKHXw4vATtF4qy48z5jYmHeoo355hkCw7exUA4mLzgahqfTwB7T6VvcCmXsBEcWBQcD0odWERXVu7B-0hy02mgfTIe9maNE-2YIf2OsowKencjNqYJWzhxh9y_ClbImDj3q");'></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold text-white truncate">David</p>
+</div>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-white/10 bg-surface-dark">
+<button class="w-full py-2.5 px-4 bg-slate-700/50 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+            Add people
+        </button>
+</div>
+</aside>
+
+</body></html>

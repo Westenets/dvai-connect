@@ -18,6 +18,8 @@
     --lk-connection-good: #f9b11f;
     --lk-connection-poor: #f91f31;
 
+    --lk-border-color: var(--lk-accesnt-fg);
+
     --lk-font-family:
         system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji';
@@ -36,37 +38,39 @@
 
 [data-theme='light'],
 .light {
-    color-scheme: light;
+    color-scheme: light !important;
 
-    --lk-bg: #ffffff;
-    --lk-bg2: #f4f4f5;
-    --lk-bg3: #e4e4e7;
-    --lk-bg4: #d4d4d8;
-    --lk-bg5: #a1a1aa;
+    --lk-bg: #ffffff !important;
+    --lk-bg2: #f4f4f5 !important;
+    --lk-bg3: #e4e4e7 !important;
+    --lk-bg4: #d4d4d8 !important;
+    --lk-bg5: #a1a1aa !important;
 
-    --lk-fg: #18181b;
-    --lk-fg2: #27272a;
-    --lk-fg3: #3f3f46;
-    --lk-fg4: #52525b;
-    --lk-fg5: #71717a;
+    --lk-fg: #18181b !important;
+    --lk-fg2: #27272a !important;
+    --lk-fg3: #3f3f46 !important;
+    --lk-fg4: #52525b !important;
+    --lk-fg5: #71717a !important;
 
-    --lk-border-color: rgba(0, 0, 0, 0.1);
+    --lk-border-color: rgba(0, 0, 0, 0.1) !important;
 
-    --lk-accent-fg: #fff;
-    --lk-accent-bg: #00a8a8;
-    --lk-accent2: #009898;
-    --lk-accent3: #008888;
-    --lk-accent4: #007878;
+    --lk-accent-fg: #fff !important;
+    --lk-accent-bg: #00a8a8 !important;
+    --lk-accent2: #009898 !important;
+    --lk-accent3: #008888 !important;
+    --lk-accent4: #007878 !important;
 
-    --lk-control-fg: var(--lk-fg);
-    --lk-control-bg: var(--lk-bg2);
-    --lk-control-hover-bg: var(--lk-bg3);
-    --lk-control-active-bg: var(--lk-bg4);
-    --lk-control-active-hover-bg: var(--lk-bg5);
+    --lk-control-fg: var(--lk-fg) !important;
+    --lk-control-bg: var(--lk-bg2) !important;
+    --lk-control-hover-bg: var(--lk-bg3) !important;
+    --lk-control-active-bg: var(--lk-bg4) !important;
+    --lk-control-active-hover-bg: var(--lk-bg5) !important;
 
-    --lk-drop-shadow: rgba(0, 0, 0, 0.1) 0px 0px 24px;
+    --lk-drop-shadow: rgba(0, 0, 0, 0.1) 0px 0px 24px !important;
 }
-
+[data-lk-theme] .lk-form-control {
+    color: var(--lk-accent-fg) !important;
+}
 .lk-header {
     min-height: 48px;
 }
@@ -184,4 +188,64 @@ button {
     content: var(--tw-content);
     --tw-translate-x: 90%;
     translate: var(--tw-translate-x) var(--tw-translate-y);
+}
+button[data-rounded-r='true'] {
+    @apply rounded-r-full;
+}
+
+@keyframes wave-hand {
+    0% {
+        transform: rotate(0deg);
+    }
+    10% {
+        transform: rotate(14deg);
+    }
+    20% {
+        transform: rotate(-8deg);
+    }
+    30% {
+        transform: rotate(14deg);
+    }
+    40% {
+        transform: rotate(-4deg);
+    }
+    50% {
+        transform: rotate(10deg);
+    }
+    60% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.animate-wave {
+    animation: wave-hand 2s ease-in-out infinite;
+    transform-origin: bottom right;
+}
+
+/* LiveKit Badge Styles for Participants Button */
+button[data-lk-unread-msgs]:not([data-lk-unread-msgs='0']) {
+    position: relative;
+}
+
+.lk-button[data-lk-unread-msgs]:not([data-lk-unread-msgs='0'])::after {
+    content: attr(data-lk-unread-msgs) !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    transform: translate(20%, -20%) !important;
+    background-color: var(--lk-danger, #f91f31) !important;
+    color: var(--lk-danger-fg, #fff) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 2px !important;
+    border-radius: 10px !important;
+    line-height: 1 !important;
+    width: 18px !important;
+    height: 18px !important;
+    text-align: center !important;
+    border: 2px solid var(--lk-bg, #111) !important;
+    z-index: 10 !important;
 }

@@ -10,6 +10,8 @@ import { LocalVideoTrack, createLocalVideoTrack } from 'livekit-client';
 import languages from '@/lib/constants/languages.json';
 import speechLanguages from '@/lib/constants/speech-languages.json';
 import { useMediaDevices } from 'react-use';
+import Cropper from 'react-easy-crop';
+import { getCroppedImg } from '@/lib/cropImage';
 
 interface Device {
     deviceId: string;
@@ -82,6 +84,14 @@ export default function Settings() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+    // Cropper State
+    const [isCropping, setIsCropping] = useState(false);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+    const [avatarFiles, setAvatarFiles] = useState<{ avatar: File; thumb: File } | null>(null);
 
     const devicesState = useMediaDevices();
     const devices = (devicesState as any)?.devices || [];
@@ -238,12 +248,43 @@ export default function Settings() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setSelectedFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setAvatarPreview(reader.result as string);
+                setImageToCrop(reader.result as string);
+                setIsCropping(true);
             };
             reader.readAsDataURL(file);
+        }
+        if (e.target) {
+            e.target.value = ''; // Reset input to allow selecting same file again
+        }
+    };
+
+    const handleCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    };
+
+    const handleCropSave = async () => {
+        if (!imageToCrop || !croppedAreaPixels) return;
+
+        try {
+            // Get high res avatar
+            const avatarBlob = await getCroppedImg(imageToCrop, croppedAreaPixels, 200, 200);
+            if (!avatarBlob) throw new Error('Failed to crop image');
+
+            // Generate thumbnail
+            const thumbBlob = await getCroppedImg(imageToCrop, croppedAreaPixels, 40, 40);
+            if (!thumbBlob) throw new Error('Failed to create thumbnail');
+
+            const avatarFile = new File([avatarBlob], 'avatar.jpg', { type: 'image/jpeg' });
+            const thumbFile = new File([thumbBlob], 'avatar_thumb.jpg', { type: 'image/jpeg' });
+
+            setAvatarFiles({ avatar: avatarFile, thumb: thumbFile });
+            setAvatarPreview(URL.createObjectURL(avatarBlob)); // Show the cropped version immediately
+            setIsCropping(false);
+            setImageToCrop(null);
+        } catch (error: any) {
+            toast.error(error.message);
         }
     };
 
@@ -257,21 +298,53 @@ export default function Settings() {
             }
 
             let avatarUrl = (user.prefs as Record<string, any>)?.avatarUrl;
+            let avatarThumbUrl = (user.prefs as Record<string, any>)?.avatarThumbUrl;
+            let avatarFileId = (user.prefs as Record<string, any>)?.avatarFileId;
+            let avatarThumbFileId = (user.prefs as Record<string, any>)?.avatarThumbFileId;
 
-            if (selectedFile) {
+            if (avatarFiles) {
                 const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID || 'mvc-files';
                 try {
-                    const uploadedFile = await storage.createFile(
+                    // Delete old avatars if they exist to save space
+                    if (avatarFileId) {
+                        try {
+                            await storage.deleteFile(BUCKET_ID, avatarFileId);
+                        } catch (e) {
+                            console.error('Failed to delete old avatar', e);
+                        }
+                    }
+                    if (avatarThumbFileId) {
+                        try {
+                            await storage.deleteFile(BUCKET_ID, avatarThumbFileId);
+                        } catch (e) {
+                            console.error('Failed to delete old thumb', e);
+                        }
+                    }
+
+                    // Upload new files
+                    const uploadedAvatar = await storage.createFile(
                         BUCKET_ID,
                         ID.unique(),
-                        selectedFile,
+                        avatarFiles.avatar,
                     );
-                    const result = storage.getFileView(BUCKET_ID, uploadedFile.$id);
-                    avatarUrl = result.toString();
+                    const uploadedThumb = await storage.createFile(
+                        BUCKET_ID,
+                        ID.unique(),
+                        avatarFiles.thumb,
+                    );
+
+                    avatarUrl = storage.getFileView(BUCKET_ID, uploadedAvatar.$id).toString();
+                    avatarFileId = uploadedAvatar.$id;
+
+                    avatarThumbUrl = storage.getFileView(BUCKET_ID, uploadedThumb.$id).toString();
+                    avatarThumbFileId = uploadedThumb.$id;
 
                     const newPrefs: Record<string, any> = {
                         ...(user.prefs || {}),
                         avatarUrl,
+                        avatarFileId,
+                        avatarThumbUrl,
+                        avatarThumbFileId,
                     };
 
                     Object.keys(newPrefs).forEach(
@@ -527,6 +600,82 @@ export default function Settings() {
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* Cropper Modal */}
+                                {isCropping && imageToCrop && (
+                                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                                        <div className="bg-white dark:bg-slate-900 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col">
+                                            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-[#1a2632] text-white">
+                                                <h3 className="text-lg font-semibold">
+                                                    Crop Image
+                                                </h3>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsCropping(false);
+                                                        setImageToCrop(null);
+                                                    }}
+                                                    className="text-slate-400 hover:text-white transition-colors bg-transparent border-none"
+                                                >
+                                                    <span className="material-symbols-outlined text-[24px]">
+                                                        close
+                                                    </span>
+                                                </button>
+                                            </div>
+                                            <div className="relative w-full h-[60vh] bg-black">
+                                                <Cropper
+                                                    image={imageToCrop}
+                                                    crop={crop}
+                                                    zoom={zoom}
+                                                    aspect={1}
+                                                    cropShape="round"
+                                                    showGrid={false}
+                                                    onCropChange={setCrop}
+                                                    onCropComplete={handleCropComplete}
+                                                    onZoomChange={setZoom}
+                                                />
+                                            </div>
+                                            <div className="p-6 bg-[#1a2632] border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                                <div className="flex items-center gap-4 w-full sm:w-1/2">
+                                                    <span className="material-symbols-outlined text-slate-400 text-[20px]">
+                                                        zoom_out
+                                                    </span>
+                                                    <input
+                                                        type="range"
+                                                        value={zoom}
+                                                        min={1}
+                                                        max={3}
+                                                        step={0.1}
+                                                        aria-labelledby="Zoom"
+                                                        onChange={(e) =>
+                                                            setZoom(Number(e.target.value))
+                                                        }
+                                                        className="w-full accent-[#00a8a8]"
+                                                    />
+                                                    <span className="material-symbols-outlined text-slate-400 text-[20px]">
+                                                        zoom_in
+                                                    </span>
+                                                </div>
+                                                <div className="flex gap-3 w-full sm:w-auto mt-4 sm:mt-0 justify-end">
+                                                    <button
+                                                        onClick={() => {
+                                                            setIsCropping(false);
+                                                            setImageToCrop(null);
+                                                        }}
+                                                        className="px-5 py-2.5 rounded-lg border-0 bg-slate-800 text-white font-medium hover:bg-slate-700 transition-colors"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCropSave}
+                                                        className="px-5 py-2.5 rounded-lg border-0 bg-[#00a8a8] text-white font-medium hover:bg-[#005c5c] shadow-md transition-colors"
+                                                    >
+                                                        Apply Crop
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Change Password */}
                                 <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm">

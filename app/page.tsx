@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { generateRoomId, randomString, encodePassphrase } from '@/lib/client-utils';
 import { useAuth } from '@/components/AuthProvider';
+import { databases } from '@/lib/appwrite';
+import { ID } from 'appwrite';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -51,8 +53,22 @@ export default function Dashboard() {
         );
     }
 
-    const startMeeting = () => {
+    const trackAdminRoom = async (roomId: string) => {
+        if (!user) return;
+        try {
+            await databases.createDocument('dvai-connect', 'room_admins', ID.unique(), {
+                roomId: roomId,
+                adminId: user.$id,
+            });
+        } catch (error) {
+            console.error('Failed to track admin room', error);
+        }
+    };
+
+    const startMeeting = async () => {
         const roomId = generateRoomId();
+        await trackAdminRoom(roomId);
+
         if (e2eeEnabled) {
             const sharedPassphrase = randomString(64);
             router.push(`/rooms/${roomId}#${encodePassphrase(sharedPassphrase)}`);
@@ -61,8 +77,10 @@ export default function Dashboard() {
         }
     };
 
-    const scheduleMeeting = () => {
+    const scheduleMeeting = async () => {
         const roomId = generateRoomId();
+        await trackAdminRoom(roomId);
+
         const url = `${window.location.origin}/rooms/${roomId}`;
         window.open(
             `https://calendar.google.com/calendar/r/eventedit?text=VideoConf+Meeting&details=Join+here:+${url}`,
@@ -70,26 +88,23 @@ export default function Dashboard() {
         );
     };
 
-    const createForLater = () => {
+    const createForLater = async () => {
         const roomId = generateRoomId();
+        await trackAdminRoom(roomId);
+
         const url = `${window.location.origin}/rooms/${roomId}`;
         navigator.clipboard.writeText(url);
         toast.success('Meeting link copied to clipboard!');
         setNewMeetingOpen(false);
     };
 
-    const joinMeeting = () => {
-        if (roomCode.trim()) {
-            router.push(`/rooms/${roomCode.trim()}`);
-        }
-    };
-
     const initialLetter = user.name ? user.name.charAt(0).toUpperCase() : '?';
     const prefs = user.prefs as Record<string, any>;
     const avatarUrl = prefs?.avatarUrl;
+    const avatarThumbUrl = prefs?.avatarThumbUrl;
 
     return (
-        <div className="bg-[#f5f7f8] dark:bg-[#101922] min-h-screen flex flex-col font-['Inter',_sans-serif] text-slate-900 dark:text-slate-100 overflow-x-hidden">
+        <div className="bg-[#f5f7f8] dark:bg-[#101922] min-h-screen flex flex-col font-['Inter',sans-serif] text-slate-900 dark:text-slate-100 overflow-x-hidden">
             {/* Header */}
             <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-[#15202b] px-6 py-3 sticky top-0 z-50">
                 <div className="flex items-center gap-3">
@@ -134,9 +149,13 @@ export default function Dashboard() {
                         <div
                             onClick={() => setMenuOpen(!menuOpen)}
                             className="bg-center flex items-center justify-center font-bold text-slate-600 dark:text-white bg-slate-200 dark:bg-slate-700 bg-no-repeat bg-cover rounded-full size-10 border-2 border-slate-100 dark:border-slate-700 cursor-pointer"
-                            style={avatarUrl ? { backgroundImage: `url("${avatarUrl}")` } : {}}
+                            style={
+                                avatarThumbUrl || avatarUrl
+                                    ? { backgroundImage: `url("${avatarThumbUrl || avatarUrl}")` }
+                                    : {}
+                            }
                         >
-                            {!avatarUrl && initialLetter}
+                            {!(avatarThumbUrl || avatarUrl) && initialLetter}
                         </div>
 
                         {menuOpen && (
@@ -311,7 +330,7 @@ export default function Dashboard() {
                         <SwiperSlide>
                             <div className="w-full bg-white dark:bg-[#15202b] rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
                                 <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-100 to-indigo-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
+                                    <div className="absolute inset-0 bg-linear-to-tr from-blue-100 to-indigo-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
                                     <div className="relative z-10 w-20 h-20 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-lg">
                                         <span className="material-symbols-outlined text-[#00a8a8] text-[96px]">
                                             security
@@ -335,7 +354,7 @@ export default function Dashboard() {
                         <SwiperSlide>
                             <div className="w-full bg-white dark:bg-[#15202b] rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
                                 <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-emerald-100 to-teal-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
+                                    <div className="absolute inset-0 bg-linear-to-tr from-emerald-100 to-teal-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
                                     <div className="relative z-10 w-20 h-20 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-lg">
                                         <span className="material-symbols-outlined text-emerald-500 text-[96px]">
                                             smart_toy
@@ -358,7 +377,7 @@ export default function Dashboard() {
                         <SwiperSlide>
                             <div className="w-full bg-white dark:bg-[#15202b] rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
                                 <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-purple-100 to-fuchsia-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
+                                    <div className="absolute inset-0 bg-linear-to-tr from-purple-100 to-fuchsia-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
                                     <div className="relative z-10 w-20 h-20 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-lg">
                                         <span className="material-symbols-outlined text-purple-500 text-[96px]">
                                             link
@@ -381,7 +400,7 @@ export default function Dashboard() {
                         <SwiperSlide>
                             <div className="w-full bg-white dark:bg-[#15202b] rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center">
                                 <div className="w-48 h-48 mb-6 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden relative">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-amber-100 to-orange-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
+                                    <div className="absolute inset-0 bg-linear-to-tr from-amber-100 to-orange-50 dark:from-slate-700 dark:to-slate-600 opacity-50"></div>
                                     <div className="relative z-10 w-20 h-20 flex items-center justify-center bg-white dark:bg-slate-700 rounded-full shadow-lg">
                                         <span className="material-symbols-outlined text-amber-500 text-[96px]">
                                             event_available
