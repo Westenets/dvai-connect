@@ -243,11 +243,18 @@ button[data-lk-unread-msgs]:not([data-lk-unread-msgs='0']) {
     padding: 2px !important;
     border-radius: 10px !important;
     line-height: 1 !important;
-    width: 18px !important;
-    height: 18px !important;
+    width: 10px !important;
+    height: 10px !important;
     text-align: center !important;
     border: 2px solid var(--lk-bg, #111) !important;
     z-index: 10 !important;
+    margin-top: unset !important;
+    margin-left: unset !important;
+    left: unset !important;
+}
+
+.lk-participant-tile .lk-participant-placeholder svg {
+    padding: 30% !important;
 }
 
 

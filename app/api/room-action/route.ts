@@ -35,9 +35,42 @@ export async function POST(request: NextRequest) {
                 recorder: false,
             });
             return new NextResponse('Admitted', { status: 200 });
-        } else if (action === 'deny') {
+        } else if (action === 'deny' || action === 'remove') {
             await roomService.removeParticipant(roomName, identity);
-            return new NextResponse('Denied', { status: 200 });
+            return new NextResponse('Participant removed', { status: 200 });
+        } else if (action === 'mute' || action === 'unmute') {
+            const p = await roomService.getParticipant(roomName, identity);
+            const audioTrack = p.tracks.find((t) => t.type === 0); // Audio track type
+            if (!audioTrack) {
+                return new NextResponse('No audio track found', { status: 404 });
+            }
+
+            if (action === 'mute') {
+                await roomService.mutePublishedTrack(roomName, identity, audioTrack.sid, true);
+                return new NextResponse('Muted', { status: 200 });
+            } else {
+                // 'unmute' - send data message to request local unmute
+                const encoder = new TextEncoder();
+                const payload = JSON.stringify({ type: 'request-unmute' });
+                await roomService.sendData(roomName, encoder.encode(payload), 0, {
+                    destinationIdentities: [identity],
+                });
+                return new NextResponse('Unmute requested', { status: 200 });
+            }
+        } else if (action === 'togglePin') {
+            const p = await roomService.getParticipant(roomName, identity);
+            const attributes = p.attributes || {};
+            const isPinned = attributes.pinned === 'true';
+
+            await roomService.updateParticipant(roomName, identity, {
+                metadata: p.metadata,
+                permission: p.permission,
+                attributes: {
+                    ...attributes,
+                    pinned: isPinned ? 'false' : 'true',
+                },
+            });
+            return new NextResponse(isPinned ? 'Unpinned' : 'Pinned', { status: 200 });
         } else {
             return new NextResponse('Invalid action', { status: 400 });
         }

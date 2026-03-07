@@ -24,6 +24,7 @@ import {
     Copy,
     PhoneOff,
     Hand,
+    PictureInPicture,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -65,6 +66,7 @@ export type ControlBarControls = {
     transcription?: boolean;
     participants?: boolean;
     hand?: boolean;
+    pip?: boolean;
 };
 
 const trackSourceToProtocol = (source: Track.Source) => {
@@ -97,6 +99,8 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
     onTranscriptionToggle?: (show: boolean) => void;
     showParticipants?: boolean;
     onParticipantsToggle?: (show: boolean) => void;
+    onPipToggle?: () => void;
+    pipMode?: boolean;
 }
 
 /**
@@ -123,6 +127,8 @@ export function ControlBar({
     onTranscriptionToggle,
     showParticipants,
     onParticipantsToggle,
+    onPipToggle,
+    pipMode,
     onDeviceError,
     ...props
 }: ControlBarProps) {
@@ -148,6 +154,17 @@ export function ControlBar({
     const handRaisedAttr = useParticipantAttribute('handRaised', { participant: localParticipant });
     const isHandRaised = handRaisedAttr === 'true';
 
+    const localMetadata = React.useMemo(() => {
+        if (!localParticipant?.metadata) return {};
+        try {
+            return JSON.parse(localParticipant.metadata);
+        } catch {
+            return {};
+        }
+    }, [localParticipant?.metadata]);
+
+    const isAdmin = (localParticipant?.permissions as any)?.roomAdmin || localMetadata?.isCreator;
+
     React.useEffect(() => {
         if (layoutContext?.widget.state?.showChat !== undefined) {
             setIsChatOpen(layoutContext?.widget.state?.showChat);
@@ -158,7 +175,9 @@ export function ControlBar({
     const defaultVariation = isTooLittleSpace ? 'minimal' : 'verbose';
     variation ??= defaultVariation;
 
-    const visibleControls = { leave: true, ...controls };
+    const visibleControls = pipMode
+        ? { microphone: true, camera: true, chat: false, screenShare: true, leave: true }
+        : { leave: true, ...controls };
 
     const localPermissions = useLocalParticipantPermissions();
 
@@ -194,13 +213,6 @@ export function ControlBar({
 
     const [isScreenShareEnabled, setIsScreenShareEnabled] = React.useState(false);
 
-    const onScreenShareChange = React.useCallback(
-        (enabled: boolean) => {
-            setIsScreenShareEnabled(enabled);
-        },
-        [setIsScreenShareEnabled],
-    );
-
     const htmlProps = { ...props, className: `lk-control-bar ${props.className || ''}`.trim() };
 
     const {
@@ -223,7 +235,7 @@ export function ControlBar({
     );
 
     return (
-        <div {...htmlProps}>
+        <div {...htmlProps} data-pip-mode={pipMode}>
             {visibleControls.invite && (
                 <button
                     className="lk-button rounded-full!"
@@ -317,14 +329,33 @@ export function ControlBar({
                         source={Track.Source.ScreenShare}
                         captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
                         showIcon={false}
-                        onChange={onScreenShareChange}
+                        onChange={setIsScreenShareEnabled}
+                        onClick={() => {
+                            if (pipMode) {
+                                // In PiP mode, clicking should close the window
+                                onPipToggle?.();
+                            } else if (!isScreenShareEnabled) {
+                                // Open PiP immediately to capture the gesture
+                                onPipToggle?.();
+                            }
+                        }}
                         onDeviceError={(error) =>
                             onDeviceError?.({ source: Track.Source.ScreenShare, error })
                         }
-                        title="Share Screen"
+                        title={pipMode ? 'Stop Presenting' : 'Share Screen'}
                     >
-                        {showIcon && <MonitorUp size={16} />}
-                        {showText && (isScreenShareEnabled ? 'Stop screen share' : 'Share screen')}
+                        {showIcon && (
+                            <MonitorUp
+                                size={16}
+                                className={isScreenShareEnabled ? 'text-red-500' : ''}
+                            />
+                        )}
+                        {showText &&
+                            (isScreenShareEnabled
+                                ? pipMode
+                                    ? 'Stop Presenting'
+                                    : 'Stop screen share'
+                                : 'Share screen')}
                     </TrackToggle>
                 )}
                 {visibleControls.hand && (
@@ -339,7 +370,13 @@ export function ControlBar({
                         title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
                     >
                         {/* {showIcon && <Hand size={16} color={isHandRaised ? '#f91f31' : '#fff'} />} */}
-                        {showIcon && <span className={`material-symbols-outlined text-[16px]! ${isHandRaised ? 'text-red-500' : 'text-white'}`}>back_hand</span>}
+                        {showIcon && (
+                            <span
+                                className={`material-symbols-outlined text-[16px]! ${isHandRaised ? 'text-red-500' : 'text-white'}`}
+                            >
+                                back_hand
+                            </span>
+                        )}
                         {showText && (isHandRaised ? 'Lower Hand' : 'Raise Hand')}
                     </button>
                 )}
@@ -356,6 +393,16 @@ export function ControlBar({
                         {showText && 'Transcriptions'}
                     </button>
                 )}
+                {visibleControls.pip && (
+                    <button
+                        className="lk-button rounded-full!"
+                        onClick={() => onPipToggle?.()}
+                        title="Open Mini Player (PiP)"
+                    >
+                        {showIcon && <PictureInPicture size={16} />}
+                        {showText && 'Mini Player'}
+                    </button>
+                )}
                 {visibleControls.participants && (
                     <button
                         className="lk-button rounded-full!"
@@ -363,7 +410,7 @@ export function ControlBar({
                         onClick={() => onParticipantsToggle?.(!showParticipants)}
                         title="Participants"
                         data-lk-unread-msgs={
-                            waitingCount > 0
+                            isAdmin && waitingCount > 0
                                 ? waitingCount < 10
                                     ? waitingCount.toString()
                                     : '9+'

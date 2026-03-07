@@ -4,10 +4,12 @@ import {
     useLocalParticipant,
     useMaybeRoomContext,
 } from '@livekit/components-react';
-import { X, MoreVertical, UserPlus } from 'lucide-react';
+import { X, MoreVertical, UserPlus, Pin, PinOff, MicOff, Mic, UserX } from 'lucide-react';
 import { Participant, RoomEvent } from 'livekit-client';
 import toast from 'react-hot-toast';
 import { InviteModal } from './InviteModal';
+import { useAuth } from '@/components/AuthProvider';
+import { playSound, SOUNDS } from './sound';
 
 export interface ParticipantsSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     onClose: () => void;
@@ -24,6 +26,19 @@ export function ParticipantsSidebar({
     const room = useMaybeRoomContext();
     const [isProcessing, setIsProcessing] = React.useState<string | null>(null);
     const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
+    const [openMenu, setOpenMenu] = React.useState<string | null>(null);
+    const { user } = useAuth();
+
+    const localMetadata = React.useMemo(() => {
+        if (!localParticipant?.metadata) return {};
+        try {
+            return JSON.parse(localParticipant.metadata);
+        } catch {
+            return {};
+        }
+    }, [localParticipant?.metadata]);
+
+    const isAdmin = (localParticipant?.permissions as any)?.roomAdmin || localMetadata?.isCreator;
 
     const inCallParticipants = React.useMemo(() => {
         return participants.filter((p) => {
@@ -49,9 +64,10 @@ export function ParticipantsSidebar({
         });
     }, [participants]);
 
-    const handleWaitAction = async (identity: string, action: 'admit' | 'deny') => {
+    const handleAction = async (identity: string, action: string) => {
         if (!room) return;
         setIsProcessing(identity);
+        setOpenMenu(null);
         try {
             const res = await fetch('/api/room-action', {
                 method: 'POST',
@@ -64,12 +80,18 @@ export function ParticipantsSidebar({
             });
             if (!res.ok) throw new Error('Failed to perform action');
 
-            if (action === 'deny') {
-                toast.success('Participant denied entry');
-            } else {
-                toast.success('Participant admitted');
-                // onClose();
-            }
+            const actionText =
+                action === 'mute'
+                    ? 'Muted for everyone'
+                    : action === 'unmute'
+                      ? 'Unmute requested'
+                      : action === 'togglePin'
+                        ? 'Pin toggled'
+                        : action === 'remove'
+                          ? 'Participant removed'
+                          : 'Action performed';
+
+            toast.success(actionText);
         } catch (error) {
             console.error(error);
             toast.error('Could not process request');
@@ -77,6 +99,15 @@ export function ParticipantsSidebar({
             setIsProcessing(null);
         }
     };
+
+    // Close menu when clicking outside
+    React.useEffect(() => {
+        const handleClickOutside = () => setOpenMenu(null);
+        if (openMenu) {
+            window.addEventListener('click', handleClickOutside);
+        }
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, [openMenu]);
 
     const notifiedParticipants = React.useRef<Set<string>>(new Set());
     const activeToasts = React.useRef<Record<string, string>>({});
@@ -88,6 +119,8 @@ export function ParticipantsSidebar({
         const showJoinToast = (participant: Participant) => {
             if (notifiedParticipants.current.has(participant.identity)) return;
             notifiedParticipants.current.add(participant.identity);
+
+            playSound(SOUNDS.JOIN_REQUEST);
 
             const toastId = toast.custom(
                 (t) => (
@@ -113,7 +146,7 @@ export function ParticipantsSidebar({
                             <button
                                 onClick={() => {
                                     toast.dismiss(t.id);
-                                    handleWaitAction(participant.identity, 'admit');
+                                    handleAction(participant.identity, 'admit');
                                 }}
                                 className="w-full border-0 rounded-full bg-transparent px-4 py-3 flex items-center justify-center text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-600 focus:outline-none"
                             >
@@ -122,7 +155,7 @@ export function ParticipantsSidebar({
                             <button
                                 onClick={() => {
                                     toast.dismiss(t.id);
-                                    handleWaitAction(participant.identity, 'deny');
+                                    handleAction(participant.identity, 'deny');
                                 }}
                                 className="w-full border-0 rounded-full bg-transparent px-4 py-3 flex items-center justify-center text-sm font-medium text-red-700 dark:text-slate-300 hover:text-slate-500 dark:hover:text-slate-600 focus:outline-none"
                             >
@@ -240,7 +273,7 @@ export function ParticipantsSidebar({
             <div className="flex-1 overflow-y-auto py-2">
                 <div className="px-5 py-4 flex flex-col gap-6">
                     {/* Waiting Participants */}
-                    {waitingParticipants.length > 0 && (
+                    {waitingParticipants.length > 0 && isAdmin && (
                         <div>
                             <h3 className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-4 flex justify-between items-center">
                                 <span>Waiting to join ({waitingParticipants.length})</span>
@@ -292,10 +325,7 @@ export function ParticipantsSidebar({
                                             <div className="flex gap-2 mt-1">
                                                 <button
                                                     onClick={() =>
-                                                        handleWaitAction(
-                                                            participant.identity,
-                                                            'deny',
-                                                        )
+                                                        handleAction(participant.identity, 'deny')
                                                     }
                                                     disabled={isProcessing === participant.identity}
                                                     className="flex-1 py-1.5 px-3 rounded-md text-sm font-medium bg-transparent border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
@@ -304,10 +334,7 @@ export function ParticipantsSidebar({
                                                 </button>
                                                 <button
                                                     onClick={() =>
-                                                        handleWaitAction(
-                                                            participant.identity,
-                                                            'admit',
-                                                        )
+                                                        handleAction(participant.identity, 'admit')
                                                     }
                                                     disabled={isProcessing === participant.identity}
                                                     className="flex-1 py-1.5 px-3 rounded-md text-sm font-medium bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
@@ -382,12 +409,85 @@ export function ParticipantsSidebar({
                                                 </span>
                                             )}
                                         </div>
-                                        <button
-                                            className="text-slate-400 hover:text-white transition-colors border-0 bg-transparent"
-                                            title="More options"
-                                        >
-                                            <MoreVertical size={18} />
-                                        </button>
+                                        {isAdmin && !isLocal && (
+                                            <div className="relative">
+                                                <button
+                                                    className={`text-slate-400 hover:text-white transition-colors border-0 bg-transparent p-1 rounded-md ${openMenu === participant.identity ? 'text-white bg-white/10' : ''}`}
+                                                    title="More options"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setOpenMenu(
+                                                            openMenu === participant.identity
+                                                                ? null
+                                                                : participant.identity,
+                                                        );
+                                                    }}
+                                                >
+                                                    <MoreVertical size={18} />
+                                                </button>
+
+                                                {openMenu === participant.identity && (
+                                                    <div
+                                                        className="absolute right-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-lg shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <button
+                                                            onClick={() =>
+                                                                handleAction(
+                                                                    participant.identity,
+                                                                    'togglePin',
+                                                                )
+                                                            }
+                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 transition-colors border-0 bg-transparent text-left"
+                                                        >
+                                                            {participant.attributes?.pinned ===
+                                                            'true' ? (
+                                                                <PinOff size={16} />
+                                                            ) : (
+                                                                <Pin size={16} />
+                                                            )}
+                                                            {participant.attributes?.pinned ===
+                                                            'true'
+                                                                ? 'Unpin for everyone'
+                                                                : 'Pin for everyone'}
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleAction(
+                                                                    participant.identity,
+                                                                    participant.isMicrophoneEnabled
+                                                                        ? 'mute'
+                                                                        : 'unmute',
+                                                                )
+                                                            }
+                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 transition-colors border-0 bg-transparent text-left"
+                                                        >
+                                                            {participant.isMicrophoneEnabled ? (
+                                                                <MicOff size={16} />
+                                                            ) : (
+                                                                <Mic size={16} />
+                                                            )}
+                                                            {participant.isMicrophoneEnabled
+                                                                ? 'Mute for everyone'
+                                                                : 'Request unmute'}
+                                                        </button>
+                                                        <hr className="my-1 border-white/10" />
+                                                        <button
+                                                            onClick={() =>
+                                                                handleAction(
+                                                                    participant.identity,
+                                                                    'remove',
+                                                                )
+                                                            }
+                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors border-0 bg-transparent text-left"
+                                                        >
+                                                            <UserX size={16} />
+                                                            Remove participant
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
