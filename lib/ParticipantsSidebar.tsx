@@ -124,7 +124,7 @@ export function ParticipantsSidebar({
 
             const toastId = toast.custom(
                 (t) => (
-                    <div className="max-w-md w-full bg-white dark:bg-[#1e2936] shadow-xl rounded-xl border border-slate-200 dark:border-slate-700 pointer-events-auto flex ring-1 ring-black ring-opacity-5 animate-in fade-in slide-in-from-bottom-5 duration-300">
+                    <div className="max-w-md w-full mb-[64px]! bg-white dark:bg-[#1e2936] shadow-xl rounded-xl border border-slate-200 dark:border-slate-700 pointer-events-auto flex ring-1 ring-black ring-opacity-5 animate-in fade-in slide-in-from-bottom-5 duration-300">
                         <div className="flex-1 w-0 p-4">
                             <div className="flex items-start">
                                 <div className="shrink-0 pt-0.5">

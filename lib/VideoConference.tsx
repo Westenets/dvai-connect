@@ -29,11 +29,25 @@ import {
     useLocalParticipant,
     VideoTrack,
 } from '@livekit/components-react';
-import { Lock, Mic, MicOff, Video, VideoOff, PictureInPicture } from 'lucide-react';
+import {
+    Lock,
+    Mic,
+    MicOff,
+    Video,
+    VideoOff,
+    PictureInPicture,
+    Copy,
+    Check,
+    UserPlus,
+    X,
+    Shield,
+} from 'lucide-react';
 import { ControlBar } from './ControlBar';
 import { ParticipantTile } from './ParticipantTile';
 import { ParticipantsSidebar } from './ParticipantsSidebar';
 import { PipWindow } from './PipWindow';
+import { InviteModal } from './InviteModal';
+import { useSetupE2EE } from './useSetupE2EE';
 
 /**
  * @public
@@ -221,6 +235,89 @@ function MeetingUI({
     );
 }
 
+function HostInviteToast({
+    t,
+    e2e,
+    onInviteClick,
+}: {
+    t: any;
+    e2e: boolean;
+    onInviteClick: () => void;
+}) {
+    const [isCopied, setIsCopied] = React.useState(false);
+    const url = typeof window !== 'undefined' ? window.location.href.split('?')[0] : '';
+    const displayUrl = url.replace(/^https?:\/\//, '');
+
+    return (
+        <div
+            className={`max-w-md w-full mb-[64px]! bg-white dark:bg-[#1e2936] shadow-2xl rounded-xl pointer-events-auto flex flex-col p-6 animate-in fade-in slide-in-from-bottom-5 duration-300 ${
+                t.visible ? 'opacity-100' : 'opacity-0'
+            }`}
+        >
+            <div className="flex justify-between items-center mb-6">
+                <h3 className="text-slate-900 dark:text-white text-lg font-medium m-0">
+                    Your meeting's ready
+                </h3>
+                {e2e && (
+                    <div className="text-white bg-[#00a8a8]/20 px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                        <Lock size={14} />
+                        <span>End-to-end encrypted</span>
+                    </div>
+                )}
+                <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors bg-transparent border-0 p-1 flex items-center justify-center cursor-pointer"
+                >
+                    <X size={20} />
+                </button>
+            </div>
+
+            <button
+                onClick={onInviteClick}
+                className="w-fit bg-[#00a8a8] hover:bg-[#007878] text-white py-2.5 px-4 rounded-full text-sm font-medium transition-all border-0 flex items-center justify-center gap-2 mb-6 cursor-pointer transform hover:scale-[1.02]"
+            >
+                <UserPlus size={18} />
+                Add others
+            </button>
+
+            <p className="text-slate-600 dark:text-slate-200 text-sm mb-2 leading-relaxed text-left">
+                Or share this meeting link with others you want in the meeting
+            </p>
+
+            <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-700 p-3 rounded-lg border border-slate-100 dark:border-slate-700 mb-6">
+                <span className="text-slate-600 dark:text-slate-200 text-sm truncate font-medium">
+                    {displayUrl}
+                </span>
+                <button
+                    onClick={async () => {
+                        await navigator.clipboard.writeText(url);
+                        setIsCopied(true);
+                        setTimeout(() => setIsCopied(false), 5000);
+                    }}
+                    className="text-slate-500 hover:text-slate-900 transition-all bg-transparent border-0 p-1 flex items-center justify-center cursor-pointer"
+                    title="Copy link"
+                >
+                    {isCopied ? (
+                        <Check
+                            size={18}
+                            className="text-emerald-500 animate-in zoom-in duration-200"
+                        />
+                    ) : (
+                        <Copy size={18} />
+                    )}
+                </button>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-slate-50/50 dark:bg-slate-700/50 rounded-lg">
+                <Shield fill="#1a73e8" size={18} className="text-[#1a73e8] shrink-0 mt-0.5" />
+                <p className="text-[12px] text-slate-500 dark:text-slate-200 m-0 leading-normal text-left">
+                    People who use this meeting link must get your permission before they can join.
+                </p>
+            </div>
+        </div>
+    );
+}
+
 export function VideoConference({
     chatMessageFormatter,
     chatMessageDecoder,
@@ -235,8 +332,11 @@ export function VideoConference({
     });
     const [showTranscription, setShowTranscription] = React.useState(false);
     const [showParticipants, setShowParticipants] = React.useState(false);
+    const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
     const transcriptions = useTranscriptions();
     const lastAutoFocusedScreenShareTrack = React.useRef<TrackReferenceOrPlaceholder | null>(null);
+    const { worker, e2eePassphrase } = useSetupE2EE();
+    const e2eeEnabled = !!(e2eePassphrase && worker);
 
     const tracks = useTracks(
         [
@@ -489,6 +589,36 @@ export function VideoConference({
         };
     }, [room]);
 
+    const localMetadata = React.useMemo(() => {
+        if (!localParticipant?.metadata) return {};
+        try {
+            return JSON.parse(localParticipant.metadata);
+        } catch {
+            return {};
+        }
+    }, [localParticipant?.metadata]);
+
+    const isAdmin = (localParticipant?.permissions as any)?.roomAdmin || localMetadata?.isCreator;
+
+    // Show host invite toast
+    const hasShownToast = React.useRef(false);
+
+    React.useEffect(() => {
+        if (isAdmin && !hasShownToast.current) {
+            hasShownToast.current = true;
+            toast.custom(
+                (t) => (
+                    <HostInviteToast
+                        t={t}
+                        e2e={e2eeEnabled}
+                        onInviteClick={() => setIsInviteModalOpen(true)}
+                    />
+                ),
+                { duration: Infinity, position: 'bottom-left' },
+            );
+        }
+    }, [isAdmin]);
+
     return (
         <div className="lk-video-conference" {...props}>
             {isWeb() && (
@@ -567,6 +697,13 @@ export function VideoConference({
             )}
             <RoomAudioRenderer />
             <ConnectionStateToast />
+            {room && (
+                <InviteModal
+                    isOpen={isInviteModalOpen}
+                    onClose={() => setIsInviteModalOpen(false)}
+                    roomName={room.name}
+                />
+            )}
         </div>
     );
 }
