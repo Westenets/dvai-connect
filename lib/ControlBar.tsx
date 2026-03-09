@@ -30,6 +30,7 @@ import {
     Circle,
     Square,
     Smile,
+    LoaderCircle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
@@ -455,7 +456,9 @@ export function ControlBar({
                                 title={isRecording ? 'Stop Recording' : 'Start Recording'}
                             >
                                 {showIcon &&
-                                    (isRecording ? (
+                                    (processingRecRequest ? (
+                                        <LoaderCircle size={16} className="animate-spin" />
+                                    ) : isRecording ? (
                                         <Square size={16} className="fill-red-500 text-red-500" />
                                     ) : (
                                         <Circle size={16} />
