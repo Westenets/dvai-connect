@@ -3,13 +3,16 @@ import { ExternalE2EEKeyProvider } from 'livekit-client';
 import { decodePassphrase } from './client-utils';
 
 export function useSetupE2EE() {
-    const e2eePassphrase =
-        typeof window !== 'undefined' ? decodePassphrase(location.hash.substring(1)) : undefined;
+    const e2eePassphrase = React.useMemo(() => {
+        if (typeof window === 'undefined') return undefined;
+        const hash = location.hash.substring(1);
+        return hash ? decodePassphrase(hash) : undefined;
+    }, []);
 
-    const worker: Worker | undefined =
-        typeof window !== 'undefined' && e2eePassphrase
-            ? new Worker(new URL('livekit-client/e2ee-worker', import.meta.url))
-            : undefined;
+    const worker = React.useMemo(() => {
+        if (typeof window === 'undefined' || !e2eePassphrase) return undefined;
+        return new Worker(new URL('livekit-client/e2ee-worker', import.meta.url));
+    }, [e2eePassphrase]);
 
     return { worker, e2eePassphrase };
 }

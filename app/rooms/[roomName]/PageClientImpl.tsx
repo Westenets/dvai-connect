@@ -172,6 +172,14 @@ export function PageClientImpl(props: {
     );
     const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
+    const videoConferenceOptions = useMemo(
+        () => ({
+            codec: props.codec,
+            hq: prefs?.videoQuality === '1080',
+        }),
+        [props.codec, prefs?.videoQuality],
+    );
+
     return (
         <main
             className={`h-full`}
@@ -201,10 +209,7 @@ export function PageClientImpl(props: {
                     roomName={props.roomName}
                     connectionDetails={connectionDetails}
                     userChoices={preJoinChoices}
-                    options={{
-                        codec: props.codec,
-                        hq: prefs?.videoQuality === '1080' ? true : false,
-                    }}
+                    options={videoConferenceOptions}
                 />
             )}
         </main>
@@ -251,11 +256,12 @@ function VideoConferenceComponent(props: {
             },
             adaptiveStream: true,
             dynacast: true,
-            e2ee: keyProvider && worker && e2eeEnabled ? { keyProvider, worker } : undefined,
+            encryption: keyProvider && worker && e2eeEnabled ? { keyProvider, worker } : undefined,
             singlePeerConnection: true,
         };
     }, [
-        props.userChoices,
+        props.userChoices.videoDeviceId,
+        props.userChoices.audioDeviceId,
         props.options.hq,
         props.options.codec,
         e2eeEnabled,
