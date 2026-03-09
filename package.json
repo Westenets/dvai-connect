@@ -25,6 +25,7 @@
         "appwrite": "^23.0.0",
         "chokidar": "^5.0.0",
         "dotenv": "^17.3.1",
+        "emoji-picker-react": "github:DK013/emoji-picker-react",
         "iconsax-react": "^0.0.8",
         "livekit-client": "2.17.2",
         "livekit-server-sdk": "2.15.0",

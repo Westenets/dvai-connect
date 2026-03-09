@@ -170,13 +170,8 @@ function MeetingUI({
                 )}
                 <ControlBar
                     controls={{
-                        invite: true,
-                        chat: true,
                         settings: !!SettingsComponent,
-                        agent: true,
                         transcription: false,
-                        participants: true,
-                        hand: true,
                         pip: false,
                     }}
                     showTranscription={showTranscription}

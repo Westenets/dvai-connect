@@ -409,69 +409,70 @@ export function ParticipantsSidebar({
                                                 </span>
                                             )}
                                         </div>
-                                        {isAdmin && !isLocal && (
-                                            <div className="relative">
-                                                <button
-                                                    className={`text-slate-400 hover:text-white transition-colors border-0 bg-transparent p-1 rounded-md ${openMenu === participant.identity ? 'text-white bg-white/10' : ''}`}
-                                                    title="More options"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setOpenMenu(
-                                                            openMenu === participant.identity
-                                                                ? null
-                                                                : participant.identity,
-                                                        );
-                                                    }}
-                                                >
-                                                    <MoreVertical size={18} />
-                                                </button>
+                                        <div className="relative">
+                                            <button
+                                                className={`text-slate-400 hover:text-white transition-colors border-0 bg-transparent p-1 rounded-md ${openMenu === participant.identity ? 'text-white bg-white/10' : ''}`}
+                                                title="More options"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenu(
+                                                        openMenu === participant.identity
+                                                            ? null
+                                                            : participant.identity,
+                                                    );
+                                                }}
+                                            >
+                                                <MoreVertical size={18} />
+                                            </button>
 
-                                                {openMenu === participant.identity && (
-                                                    <div
-                                                        className="absolute right-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-lg shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
-                                                        onClick={(e) => e.stopPropagation()}
+                                            {openMenu === participant.identity && (
+                                                <div
+                                                    className="absolute right-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-lg shadow-2xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <button
+                                                        onClick={() =>
+                                                            handleAction(
+                                                                participant.identity,
+                                                                'togglePin',
+                                                            )
+                                                        }
+                                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 transition-colors border-0 bg-transparent text-left"
                                                     >
-                                                        <button
-                                                            onClick={() =>
-                                                                handleAction(
-                                                                    participant.identity,
-                                                                    'togglePin',
-                                                                )
-                                                            }
-                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 transition-colors border-0 bg-transparent text-left"
-                                                        >
-                                                            {participant.attributes?.pinned ===
-                                                            'true' ? (
-                                                                <PinOff size={16} />
-                                                            ) : (
-                                                                <Pin size={16} />
-                                                            )}
-                                                            {participant.attributes?.pinned ===
-                                                            'true'
-                                                                ? 'Unpin for everyone'
-                                                                : 'Pin for everyone'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() =>
-                                                                handleAction(
-                                                                    participant.identity,
-                                                                    participant.isMicrophoneEnabled
-                                                                        ? 'mute'
-                                                                        : 'unmute',
-                                                                )
-                                                            }
-                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 transition-colors border-0 bg-transparent text-left"
-                                                        >
-                                                            {participant.isMicrophoneEnabled ? (
-                                                                <MicOff size={16} />
-                                                            ) : (
-                                                                <Mic size={16} />
-                                                            )}
-                                                            {participant.isMicrophoneEnabled
-                                                                ? 'Mute for everyone'
-                                                                : 'Request unmute'}
-                                                        </button>
-                                                        <hr className="my-1 border-white/10" />
+                                                        {participant.attributes?.pinned ===
+                                                        'true' ? (
+                                                            <PinOff size={16} />
+                                                        ) : (
+                                                            <Pin size={16} />
+                                                        )}
+                                                        {participant.attributes?.pinned === 'true'
+                                                            ? 'Unpin for everyone'
+                                                            : 'Pin for everyone'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleAction(
+                                                                participant.identity,
+                                                                participant.isMicrophoneEnabled
+                                                                    ? 'mute'
+                                                                    : 'unmute',
+                                                            )
+                                                        }
+                                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 transition-colors border-0 bg-transparent text-left"
+                                                    >
+                                                        {participant.isMicrophoneEnabled ? (
+                                                            <MicOff size={16} />
+                                                        ) : (
+                                                            <Mic size={16} />
+                                                        )}
+                                                        {participant.isMicrophoneEnabled
+                                                            ? 'Mute for everyone'
+                                                            : 'Request unmute'}
+                                                    </button>
+                                                    <hr className="my-1 border-white/10" />
+                                                    {((isAdmin && !isLocal) ||
+                                                        (localParticipant?.permissions as any)
+                                                            ?.canManageAgentSession) && (
                                                         <button
                                                             onClick={() =>
                                                                 handleAction(
@@ -484,10 +485,10 @@ export function ParticipantsSidebar({
                                                             <UserX size={16} />
                                                             Remove participant
                                                         </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })}

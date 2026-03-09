@@ -120,6 +120,9 @@ export const ParticipantTile: (
         const handRaised = useParticipantAttribute('handRaised', {
             participant: trackReference.participant,
         });
+        const emoji = useParticipantAttribute('emoji', {
+            participant: trackReference.participant,
+        });
 
         const handleSubscribe = React.useCallback(
             (subscribed: boolean) => {
@@ -152,6 +155,22 @@ export const ParticipantTile: (
             <div ref={ref} style={{ position: 'relative' }} {...elementProps}>
                 <TrackRefContextIfNeeded trackRef={trackReference}>
                     <ParticipantContextIfNeeded participant={trackReference.participant}>
+                        {emoji && (
+                            <div className="absolute top-2 right-2 z-10 pointer-events-none">
+                                <picture>
+                                    <source
+                                        srcSet={`https://fonts.gstatic.com/s/e/notoemoji/latest/${emoji}/512.webp`}
+                                        type="image/webp"
+                                    />
+                                    <img
+                                        src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${emoji}/512.gif`}
+                                        alt="reaction"
+                                        width="40"
+                                        height="40"
+                                    />
+                                </picture>
+                            </div>
+                        )}
                         {children ?? (
                             <>
                                 {isTrackReference(trackReference) &&

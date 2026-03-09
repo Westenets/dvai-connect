@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
                 canPublish: true,
                 canSubscribe: true,
                 canPublishData: true,
+                canUpdateMetadata: true,
+                canManageAgentSession: true,
                 hidden: false,
                 recorder: false,
             });

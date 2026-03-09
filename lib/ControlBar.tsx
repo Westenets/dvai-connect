@@ -12,6 +12,8 @@ import {
     useLocalParticipant,
     useParticipantAttribute,
     useParticipants,
+    useIsRecording,
+    useRoomContext,
 } from '@livekit/components-react';
 import { supportsScreenSharing } from '@livekit/components-core';
 import { StartMediaButton } from '@livekit/components-react';
@@ -25,8 +27,12 @@ import {
     PhoneOff,
     Hand,
     PictureInPicture,
+    Circle,
+    Square,
+    Smile,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import EmojiPicker, { Theme } from 'emoji-picker-react';
 
 export function useMediaQuery(query: string): boolean {
     const getMatches = (query: string): boolean => {
@@ -66,7 +72,9 @@ export type ControlBarControls = {
     transcription?: boolean;
     participants?: boolean;
     hand?: boolean;
+    emoji?: boolean;
     pip?: boolean;
+    recording?: boolean;
 };
 
 const trackSourceToProtocol = (source: Track.Source) => {
@@ -134,8 +142,11 @@ export function ControlBar({
 }: ControlBarProps) {
     const [isChatOpen, setIsChatOpen] = React.useState(false);
     const [agentOpen, setAgentOpen] = React.useState(false);
+    const [isEmojiMenuOpen, setIsEmojiMenuOpen] = React.useState(false);
+    const emojiMenuRef = React.useRef<HTMLDivElement>(null);
     const layoutContext = useMaybeLayoutContext();
     const roomContext = useMaybeRoomContext();
+    const room = useRoomContext();
     const participants = useParticipants();
 
     const waitingCount = React.useMemo(() => {
@@ -148,6 +159,44 @@ export function ControlBar({
             }
         }).length;
     }, [participants]);
+
+    const recordingEndpoint = process.env.NEXT_PUBLIC_LK_RECORD_ENDPOINT;
+    const isRecording = useIsRecording();
+    const [initialRecStatus, setInitialRecStatus] = React.useState(isRecording);
+    const [processingRecRequest, setProcessingRecRequest] = React.useState(false);
+
+    React.useEffect(() => {
+        if (initialRecStatus !== isRecording) {
+            setProcessingRecRequest(false);
+        }
+    }, [isRecording, initialRecStatus]);
+
+    const toggleRoomRecording = async () => {
+        if (!recordingEndpoint) {
+            throw TypeError('No recording endpoint specified');
+        }
+        if (room.isE2EEEnabled) {
+            throw Error('Recording of encrypted meetings is currently not supported');
+        }
+        setProcessingRecRequest(true);
+        setInitialRecStatus(isRecording);
+        let response: Response;
+        if (isRecording) {
+            response = await fetch(recordingEndpoint + `/stop?roomName=${room.name}`);
+        } else {
+            response = await fetch(recordingEndpoint + `/start?roomName=${room.name}`);
+        }
+        if (response.ok) {
+        } else {
+            console.error(
+                'Error handling recording request, check server logs:',
+                response.status,
+                response.statusText,
+            );
+            setProcessingRecRequest(false);
+            toast.error('Recording Feature is not available');
+        }
+    };
 
     // Reset agentOpen when the agent participant is removed from the room
     React.useEffect(() => {
@@ -183,14 +232,70 @@ export function ControlBar({
             setIsChatOpen(layoutContext?.widget.state?.showChat);
         }
     }, [layoutContext?.widget.state?.showChat]);
+
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (emojiMenuRef.current && !emojiMenuRef.current.contains(event.target as Node)) {
+                setIsEmojiMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleReaction = React.useCallback(
+        async (reaction: any) => {
+            if (!localParticipant) return;
+            const emoji = reaction.unified.toLowerCase().replace(/-/g, '_');
+            await localParticipant.setAttributes({ emoji });
+
+            setTimeout(async () => {
+                if (localParticipant.attributes.emoji === emoji) {
+                    await localParticipant.setAttributes({ emoji: '' });
+                }
+            }, 5000);
+        },
+        [localParticipant],
+    );
     const isTooLittleSpace = useMediaQuery(`(max-width: ${isChatOpen ? 1000 : 760}px)`);
 
     const defaultVariation = isTooLittleSpace ? 'minimal' : 'verbose';
     variation ??= defaultVariation;
 
-    const visibleControls = pipMode
-        ? { microphone: true, camera: true, chat: false, screenShare: true, leave: true }
-        : { leave: true, ...controls };
+    const visibleControls: Required<ControlBarControls> = pipMode
+        ? {
+              microphone: true,
+              camera: true,
+              chat: false,
+              screenShare: true,
+              leave: true,
+              agent: false,
+              recording: false,
+              invite: false,
+              settings: false,
+              transcription: false,
+              participants: false,
+              hand: false,
+              emoji: false,
+              pip: false,
+          }
+        : {
+              invite: true,
+              microphone: true,
+              camera: true,
+              chat: true,
+              screenShare: true,
+              leave: true,
+              settings: true,
+              agent: true,
+              transcription: true,
+              participants: true,
+              hand: true,
+              emoji: true,
+              pip: true,
+              recording: true,
+              ...controls,
+          };
 
     const localPermissions = useLocalParticipantPermissions();
 
@@ -207,10 +312,12 @@ export function ControlBar({
                     localPermissions.canPublishSources.includes(trackSourceToProtocol(source)))
             );
         };
-        visibleControls.camera ??= canPublishSource(Track.Source.Camera);
-        visibleControls.microphone ??= canPublishSource(Track.Source.Microphone);
-        visibleControls.screenShare ??= canPublishSource(Track.Source.ScreenShare);
-        visibleControls.chat ??= localPermissions.canPublishData && controls?.chat;
+        visibleControls.camera = visibleControls.camera && canPublishSource(Track.Source.Camera);
+        visibleControls.microphone =
+            visibleControls.microphone && canPublishSource(Track.Source.Microphone);
+        visibleControls.screenShare =
+            visibleControls.screenShare && canPublishSource(Track.Source.ScreenShare);
+        visibleControls.chat = visibleControls.chat && localPermissions.canPublishData;
     }
 
     const showIcon = React.useMemo(
@@ -313,28 +420,50 @@ export function ControlBar({
                         </div>
                     </div>
                 )}
-                {visibleControls.agent && (
-                    <button
-                        className="lk-button rounded-full!"
-                        title="Add DVAI Agent"
-                        aria-pressed={agentOpen}
-                        disabled={agentOpen}
-                        onClick={() => {
-                            fetch('/api/agent', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ roomName: roomContext?.name }),
-                            })
-                                .then(() => {
-                                    toast.success('AI Agent dispatched to the room!');
-                                    setAgentOpen(true);
-                                })
-                                .catch((err) => console.error('Failed to dispatch agent', err));
-                        }}
-                    >
-                        {showIcon && <Bot size={16} />}
-                        {showText && 'Add AI Agent'}
-                    </button>
+                {(visibleControls.agent || (visibleControls.recording && recordingEndpoint)) && (
+                    <div className="lk-button-group">
+                        {visibleControls.agent && (
+                            <button
+                                className={`lk-button ${visibleControls.recording && recordingEndpoint ? 'rounded-l-full!' : 'rounded-full!'}`}
+                                title="Add DVAI Agent"
+                                aria-pressed={agentOpen}
+                                disabled={agentOpen}
+                                onClick={() => {
+                                    fetch('/api/agent', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ roomName: roomContext?.name }),
+                                    })
+                                        .then(() => {
+                                            toast.success('AI Agent dispatched to the room!');
+                                            setAgentOpen(true);
+                                        })
+                                        .catch((err) =>
+                                            console.error('Failed to dispatch agent', err),
+                                        );
+                                }}
+                            >
+                                {showIcon && <Bot size={16} />}
+                                {showText && 'Add AI Agent'}
+                            </button>
+                        )}
+                        {visibleControls.recording && recordingEndpoint && (
+                            <button
+                                className={`lk-button ${visibleControls.agent ? 'rounded-r-full!' : 'rounded-full!'}`}
+                                disabled={processingRecRequest}
+                                onClick={() => toggleRoomRecording()}
+                                title={isRecording ? 'Stop Recording' : 'Start Recording'}
+                            >
+                                {showIcon &&
+                                    (isRecording ? (
+                                        <Square size={16} className="fill-red-500 text-red-500" />
+                                    ) : (
+                                        <Circle size={16} />
+                                    ))}
+                                {showText && (isRecording ? 'Stop Rec' : 'Record')}
+                            </button>
+                        )}
+                    </div>
                 )}
                 {visibleControls.screenShare && browserSupportsScreenSharing && (
                     <TrackToggle
@@ -371,27 +500,69 @@ export function ControlBar({
                                 : 'Share screen')}
                     </TrackToggle>
                 )}
-                {visibleControls.hand && (
-                    <button
-                        className="lk-button rounded-full!"
-                        aria-pressed={isHandRaised}
-                        onClick={() =>
-                            localParticipant?.setAttributes({
-                                handRaised: isHandRaised ? 'false' : 'true',
-                            })
-                        }
-                        title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
-                    >
-                        {/* {showIcon && <Hand size={16} color={isHandRaised ? '#f91f31' : '#fff'} />} */}
-                        {showIcon && (
-                            <span
-                                className={`material-symbols-outlined text-[16px]! ${isHandRaised ? 'text-red-500' : 'text-white'}`}
+                {(visibleControls.hand || visibleControls.emoji) && (
+                    <div className="lk-button-group">
+                        {visibleControls.hand && (
+                            <button
+                                className={`lk-button ${visibleControls.emoji ? 'rounded-l-full!' : 'rounded-full!'}`}
+                                aria-pressed={isHandRaised}
+                                onClick={() =>
+                                    localParticipant?.setAttributes({
+                                        handRaised: isHandRaised ? 'false' : 'true',
+                                    })
+                                }
+                                title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
                             >
-                                back_hand
-                            </span>
+                                {/* {showIcon && <Hand size={16} color={isHandRaised ? '#f91f31' : '#fff'} />} */}
+                                {showIcon && (
+                                    <span
+                                        className={`material-symbols-outlined text-[16px]! ${isHandRaised ? 'text-red-500' : 'text-white'}`}
+                                    >
+                                        back_hand
+                                    </span>
+                                )}
+                                {showText && (isHandRaised ? 'Lower Hand' : 'Raise Hand')}
+                            </button>
                         )}
-                        {showText && (isHandRaised ? 'Lower Hand' : 'Raise Hand')}
-                    </button>
+                        {visibleControls.emoji && (
+                            <div className="relative" ref={emojiMenuRef}>
+                                <button
+                                    className={`lk-button ${visibleControls.hand ? 'rounded-r-full!' : 'rounded-full!'}`}
+                                    aria-pressed={isEmojiMenuOpen}
+                                    onClick={() => setIsEmojiMenuOpen(!isEmojiMenuOpen)}
+                                    title="Send emoji"
+                                >
+                                    {showIcon && <Smile size={16} />}
+                                    {showText && 'emoji'}
+                                </button>
+                                {isEmojiMenuOpen && (
+                                    <div
+                                        className="absolute left-1/2 -translate-x-1/2 mb-2 z-50 lk-device-menu -top-[80px]! p-0! bg-transparent! border-0! shadow-none!"
+                                        style={{ visibility: 'visible' }}
+                                    >
+                                        <EmojiPicker
+                                            theme={Theme.DARK}
+                                            reactionsDefaultOpen={true}
+                                            reactions={[
+                                                '1f44d', //like
+                                                '2764-fe0f', //heart
+                                                '1f603', //smile
+                                                '1f973', //excited
+                                                '1f923', //laugh
+                                                '1f622', //cry
+                                                '1f621', //angry
+                                                '1f614', //sad
+                                                '1f64f', //thanks
+                                                '1f44e', //dislike
+                                            ]}
+                                            onReactionClick={handleReaction}
+                                            allowExpandReactions={false}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 )}
                 {visibleControls.transcription && (
                     <button
