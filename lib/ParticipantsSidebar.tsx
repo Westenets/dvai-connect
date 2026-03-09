@@ -256,7 +256,7 @@ export function ParticipantsSidebar({
 
     return (
         <aside
-            className={`w-80 border-l border-white/10 flex flex-col h-full z-20 shadow-xl ${className || ''}`}
+            className={`w-80 border-l bg-(--lk-bg) border-white/10 flex flex-col h-full z-20 shadow-xl ${className || ''}`}
             style={style}
             {...props}
         >

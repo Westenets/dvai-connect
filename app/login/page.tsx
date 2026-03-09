@@ -52,7 +52,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="bg-[#f5f7f8] dark:bg-[#101922] font-['Inter',_sans-serif] min-h-screen flex flex-col antialiased">
+        <div className="bg-[#f5f7f8] dark:bg-[#101922] font-['Inter',sans-serif] min-h-screen flex flex-col antialiased">
             {/* Navbar (Simplified for Login Context) */}
             <header className="flex items-center justify-between px-6 py-4 w-full absolute top-0 left-0 z-10">
                 <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
@@ -84,7 +84,7 @@ export default function LoginPage() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-grow flex items-center justify-center p-4 relative overflow-hidden">
+            <main className="grow flex flex-col items-center justify-center p-4 relative overflow-hidden">
                 {/* Abstract Background Pattern */}
                 <div
                     className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden"
@@ -236,14 +236,29 @@ export default function LoginPage() {
                 </div>
 
                 {/* Mobile Footer Links */}
-                <div className="sm:hidden mt-8 text-center text-xs text-slate-400">
-                    <a className="hover:text-slate-600 dark:hover:text-slate-300 mx-2" href="#">
+                <div className="mt-8 text-center text-xs text-slate-400">
+                    <a
+                        className="text-slate-400 hover:text-slate-600 dark:text-slate-200 dark:hover:text-slate-300 mx-2"
+                        href="https://deepvoiceai.co/pages/privacy/"
+                        rel="noopener"
+                        target="_blank"
+                    >
                         Privacy
                     </a>
-                    <a className="hover:text-slate-600 dark:hover:text-slate-300 mx-2" href="#">
+                    <a
+                        className="text-slate-400 hover:text-slate-600 dark:text-slate-200 dark:hover:text-slate-300 mx-2"
+                        href="https://deepvoiceai.co/pages/terms/"
+                        rel="noopener"
+                        target="_blank"
+                    >
                         Terms
                     </a>
-                    <a className="hover:text-slate-600 dark:hover:text-slate-300 mx-2" href="#">
+                    <a
+                        className="text-slate-400 hover:text-slate-600 dark:text-slate-200 dark:hover:text-slate-300 mx-2"
+                        href="https://deepvoiceai.co/pages/contact/"
+                        rel="noopener"
+                        target="_blank"
+                    >
                         Help
                     </a>
                 </div>

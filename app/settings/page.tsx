@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { storage, account } from '@/lib/appwrite';
 import { ID } from 'appwrite';
@@ -79,7 +79,9 @@ export default function Settings() {
     const [isSaving, setIsSaving] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [activeTab, setActiveTab] = useState('General');
+    const searchParams = useSearchParams();
+    const initialTab = searchParams.get('tab') || 'General';
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -155,8 +157,7 @@ export default function Settings() {
             if (prefs?.appearance) setAppearance(prefs.appearance);
             if (prefs?.reportDiagnostics !== undefined)
                 setReportDiagnostics(prefs.reportDiagnostics);
-            if (prefs?.e2e !== undefined)
-                setE2e(prefs.e2e);
+            if (prefs?.e2e !== undefined) setE2e(prefs.e2e);
             if (prefs?.audioInputDevice) setAudioInputDevice(prefs.audioInputDevice);
             if (prefs?.audioOutputDevice) setAudioOutputDevice(prefs.audioOutputDevice);
             if (prefs?.noiseCancellation !== undefined)
@@ -478,8 +479,8 @@ export default function Settings() {
                     <div className="max-w-4xl mx-auto">
                         <div className="mb-10 flex items-center gap-4">
                             <button
-                                onClick={() => router.push('/')}
-                                className="md:hidden flex items-center justify-center size-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                                onClick={() => router.push('/settings/menu')}
+                                className="md:hidden flex items-center justify-center size-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors bg-transparent border-0! text-slate-700 dark:text-slate-200"
                             >
                                 <span className="material-symbols-outlined text-[24px]">
                                     arrow_back
@@ -724,7 +725,7 @@ export default function Settings() {
                                                 className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 outline-none shadow-sm py-2.5 px-3 transition-colors text-sm"
                                             />
                                         </div>
-                                        <div className="pt-2">
+                                        <div className="pt-2 flex justify-end">
                                             <button
                                                 onClick={handleUpdatePassword}
                                                 disabled={isUpdatingPassword}
@@ -902,7 +903,7 @@ export default function Settings() {
                                         Interface
                                     </h3>
                                     <div className="space-y-8">
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                             <div className="space-y-3">
                                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                                                     Language
@@ -1076,9 +1077,7 @@ export default function Settings() {
                                                 type="checkbox"
                                                 className="sr-only peer"
                                                 checked={e2e}
-                                                onChange={(e) =>
-                                                    setE2e(e.target.checked)
-                                                }
+                                                onChange={(e) => setE2e(e.target.checked)}
                                             />
                                             <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                         </label>

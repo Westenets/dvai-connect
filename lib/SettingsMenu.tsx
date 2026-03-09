@@ -1,16 +1,11 @@
 'use client';
 import * as React from 'react';
-import { Track } from 'livekit-client';
-import {
-    useMaybeLayoutContext,
-    MediaDeviceMenu,
-    TrackToggle,
-    useRoomContext,
-    useIsRecording,
-} from '@livekit/components-react';
-import styles from '../styles/SettingsMenu.module.css';
+import { useMaybeLayoutContext, MediaDeviceMenu } from '@livekit/components-react';
+import { Camera, Mic, Speaker, X, Settings2 } from 'lucide-react';
 import { CameraSettings } from './CameraSettings';
 import { MicrophoneSettings } from './MicrophoneSettings';
+import { SpeakerSettings } from './SpeakerSettings';
+
 /**
  * @alpha
  */
@@ -21,79 +16,80 @@ export interface SettingsMenuProps extends React.HTMLAttributes<HTMLDivElement> 
  */
 export function SettingsMenu(props: SettingsMenuProps) {
     const layoutContext = useMaybeLayoutContext();
-
-    const settings = React.useMemo(() => {
-        return {
-            media: { camera: true, microphone: true, label: 'Media Devices', speaker: true },
-        };
-    }, []);
-
-    const tabs = React.useMemo(
-        () => Object.keys(settings) as Array<keyof typeof settings>,
-        [settings],
-    );
-    const [activeTab, setActiveTab] = React.useState(tabs[0]);
+    const settingsRef = React.useRef<null | HTMLDivElement>(null);
 
     return (
-        <div className="settings-menu" style={{ width: '100%', position: 'relative' }} {...props}>
-            <div className={styles.tabs}>
-                {tabs.map(
-                    (tab) =>
-                        settings[tab] && (
-                            <button
-                                className={`${styles.tab} lk-button`}
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                aria-pressed={tab === activeTab}
-                            >
-                                {
-                                    // @ts-ignore
-                                    settings[tab].label
-                                }
-                            </button>
-                        ),
-                )}
-            </div>
-            <div className="tab-content">
-                {activeTab === 'media' && (
-                    <>
-                        {settings.media && settings.media.camera && (
-                            <>
-                                <h3>Camera</h3>
-                                <section>
-                                    <CameraSettings />
-                                </section>
-                            </>
-                        )}
-                        {settings.media && settings.media.microphone && (
-                            <>
-                                <h3>Microphone</h3>
-                                <section>
-                                    <MicrophoneSettings />
-                                </section>
-                            </>
-                        )}
-                        {settings.media && settings.media.speaker && (
-                            <>
-                                <h3>Speaker & Headphones</h3>
-                                <section className="lk-button-group">
-                                    <span className="lk-button">Audio Output</span>
-                                    <div className="lk-button-group-menu">
-                                        <MediaDeviceMenu kind="audiooutput"></MediaDeviceMenu>
-                                    </div>
-                                </section>
-                            </>
-                        )}
-                    </>
-                )}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-                <button
-                    className={`lk-button`}
-                    onClick={() => layoutContext?.widget.dispatch?.({ msg: 'toggle_settings' })}
+        <div
+            className="settings-menu-container"
+            onClick={() => layoutContext?.widget.dispatch?.({ msg: 'toggle_settings' })}
+        >
+            <div
+                className="w-full bg-(--lk-bg)/75 backdrop-blur-xl rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden animate-in slide-in-from-bottom-5 duration-300"
+                onClick={(e) => e.stopPropagation()}
+                {...props}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-slate-200/20 dark:border-white/5">
+                    <div className="flex items-center gap-2">
+                        <Settings2 className="w-5 h-5 text-[#00a8a8]" />
+                        <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
+                            Settings
+                        </h2>
+                    </div>
+                    <button
+                        onClick={() => layoutContext?.widget.dispatch?.({ msg: 'toggle_settings' })}
+                        className="p-2 rounded-full hover:bg-slate-200/50 dark:hover:bg-white/10 transition-colors border-0 bg-transparent text-slate-500 dark:text-slate-400"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div
+                    ref={settingsRef}
+                    className="p-4 max-h-[70vh] overflow-y-auto overflow-x-hidden scrollbar-hide flex flex-col gap-6"
                 >
-                    Close
-                </button>
+                    {/* Camera Section */}
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                            <Camera className="w-4 h-4" />
+                            <span>Camera</span>
+                        </div>
+                        <div className="bg-slate-100/50 dark:bg-white/5 rounded-xl p-3 border border-slate-200/30 dark:border-white/5">
+                            <CameraSettings />
+                        </div>
+                    </div>
+
+                    {/* Microphone Section */}
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                            <Mic className="w-4 h-4" />
+                            <span>Microphone</span>
+                        </div>
+                        <div className="bg-slate-100/50 dark:bg-white/5 rounded-xl p-3 border border-slate-200/30 dark:border-white/5">
+                            <MicrophoneSettings />
+                        </div>
+                    </div>
+
+                    {/* Speaker Section */}
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                            <Speaker className="w-4 h-4" />
+                            <span>Speaker & Headphones</span>
+                        </div>
+                        <SpeakerSettings settingsRef={settingsRef} />
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-200/20 dark:border-white/5">
+                    <button
+                        className="w-full py-3 bg-[#00a8a8] hover:bg-[#008f8f] text-white rounded-xl font-medium transition-all transform active:scale-[0.98] border-0"
+                        onClick={() => layoutContext?.widget.dispatch?.({ msg: 'toggle_settings' })}
+                    >
+                        Save & Close
+                    </button>
+                </div>
             </div>
         </div>
     );

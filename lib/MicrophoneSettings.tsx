@@ -25,15 +25,7 @@ export function MicrophoneSettings() {
         setNoiseFilterEnabled(!isLowPowerDevice());
     }, [setNoiseFilterEnabled]);
     return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '10px',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-            }}
-        >
+        <div className="flex flex-col md:flex-row gap-2.5 items-start justify-between">
             <section className="lk-button-group">
                 <TrackToggle source={Track.Source.Microphone}>Microphone</TrackToggle>
                 <div className="lk-button-group-menu">

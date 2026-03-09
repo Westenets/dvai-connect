@@ -102,11 +102,36 @@
 .lk-agent-button:hover {
     background-color: #22c55e; /* green-500 */
 }
+.lk-settings-menu-modal {
+    background: transparent !important;
+    border: 0 !important; 
+}
 
 @media (max-width: 600px) {
+    .EmojiPickerReact {
+        height: 100px !important;
+        border-radius: 0.25rem !important;
+        border: 0 !important;
+        background-color: rgba(0, 0, 0, 0) !important; 
+    }
+    .EmojiPickerReact ul {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
     .lk-agent-button-container {
         bottom: 90px;
         right: 10px;
+    }
+    .lk-device-menu {
+        width: calc(100vw - 10px) !important;
+        overflow: hidden !important;
+    }
+    .lk-media-device-select li > .lk-button {
+        padding-left: 0 !important; 
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
     }
 }
 
@@ -225,6 +250,67 @@ button[data-rounded-r='true'] {
     transform-origin: bottom right;
 }
 
+/* Animations */
+@keyframes enter {
+    from {
+        opacity: var(--tw-enter-opacity, 1);
+        transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0)
+            scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), var(--tw-enter-scale, 1));
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    }
+}
+
+.animate-in {
+    animation-name: enter;
+    animation-duration: 150ms;
+    animation-fill-mode: both;
+}
+
+@keyframes exit {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    }
+    to {
+        opacity: var(--tw-exit-opacity, 1);
+        transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0)
+            scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1));
+    }
+}
+
+.animate-out {
+    animation-name: exit;
+    animation-duration: 150ms;
+    animation-fill-mode: both;
+}
+
+.fade-in {
+    --tw-enter-opacity: 0;
+}
+
+.fade-out {
+    --tw-exit-opacity: 0;
+}
+
+.zoom-in {
+    --tw-enter-scale: 0.95;
+}
+
+.zoom-out {
+    --tw-exit-scale: 0.95;
+}
+
+.slide-in-from-bottom-4 {
+    --tw-enter-translate-y: 1rem;
+}
+
+.slide-out-to-bottom-4 {
+    --tw-exit-translate-y: 1rem;
+}
+
 /* LiveKit Badge Styles for Participants Button */
 button[data-lk-unread-msgs]:not([data-lk-unread-msgs='0']) {
     position: relative;
@@ -259,6 +345,7 @@ button[data-lk-unread-msgs]:not([data-lk-unread-msgs='0']) {
 
 .lk-chat {
     width: max(200px, 40ch) !important;
+    z-index: 1 !important;
 }
 
 /* scrollbar */

@@ -33,6 +33,7 @@ import {
     LoaderCircle,
     Check,
     X,
+    ChevronUp,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
@@ -153,7 +154,12 @@ export function ControlBar({
     const [isChatOpen, setIsChatOpen] = React.useState(false);
     const [agentOpen, setAgentOpen] = React.useState(false);
     const [isEmojiMenuOpen, setIsEmojiMenuOpen] = React.useState(false);
+    const [isMoreMenuOpen, setIsMoreMenuOpen] = React.useState(false);
+    const [isMoreMenuClosing, setIsMoreMenuClosing] = React.useState(false);
+    const isMobile = useMediaQuery('(max-width: 767px)');
     const emojiMenuRef = React.useRef<HTMLDivElement>(null);
+    const mobileMenuRef = React.useRef<HTMLDivElement>(null);
+    const moreTriggerRef = React.useRef<HTMLButtonElement>(null);
     const layoutContext = useMaybeLayoutContext();
     const roomContext = useMaybeRoomContext();
     const room = useRoomContext();
@@ -279,15 +285,37 @@ export function ControlBar({
         }
     }, [layoutContext?.widget.state?.showChat]);
 
+    const handleCloseMoreMenu = React.useCallback(() => {
+        if (!isMoreMenuOpen || isMoreMenuClosing) return;
+        setIsMoreMenuClosing(true);
+        setTimeout(() => {
+            setIsMoreMenuOpen(false);
+            setIsMoreMenuClosing(false);
+        }, 150); // matching animation-duration in globals.css
+    }, [isMoreMenuOpen, isMoreMenuClosing]);
+
     React.useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
+            // Handle Emoji Menu click outside
             if (emojiMenuRef.current && !emojiMenuRef.current.contains(event.target as Node)) {
                 setIsEmojiMenuOpen(false);
+            }
+            // Handle Mobile More Menu click outside
+            if (
+                isMobile &&
+                isMoreMenuOpen &&
+                !isMoreMenuClosing &&
+                mobileMenuRef.current &&
+                !mobileMenuRef.current.contains(event.target as Node) &&
+                moreTriggerRef.current &&
+                !moreTriggerRef.current.contains(event.target as Node)
+            ) {
+                handleCloseMoreMenu();
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [isMobile, isMoreMenuOpen, isMoreMenuClosing, handleCloseMoreMenu]);
 
     const handleReaction = React.useCallback(
         async (reaction: any) => {
@@ -402,6 +430,238 @@ export function ControlBar({
 
     return (
         <div {...htmlProps} data-pip-mode={pipMode}>
+            {/* Mobile More Menu Sheet */}
+            {isMobile && (isMoreMenuOpen || isMoreMenuClosing) && (
+                <div
+                    ref={mobileMenuRef}
+                    className={`absolute bottom-[66px] left-0 right-0 p-4 bg-(--lk-bg)/75 backdrop-blur-xl rounded-t-2xl shadow-2xl border border-slate-200/50 dark:border-white/10 z-100 ${
+                        isMoreMenuClosing
+                            ? 'animate-out fade-out slide-out-to-bottom-4 duration-150'
+                            : 'animate-in fade-in slide-in-from-bottom-4 duration-150'
+                    }`}
+                >
+                    <div className="flex items-center justify-between mb-4 px-2">
+                        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            More Options
+                        </span>
+                        <button
+                            onClick={handleCloseMoreMenu}
+                            className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-transparent border-0 text-slate-500"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto lk-scrollbar px-1 pb-2">
+                        {visibleControls.agent && (
+                            <div className="flex flex-col gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                {visibleControls.agent && (
+                                    <button
+                                        className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10"
+                                        onClick={() => {
+                                            fetch('/api/agent', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    roomName: roomContext?.name,
+                                                }),
+                                            })
+                                                .then(() => {
+                                                    toast.success('AI Agent dispatched!');
+                                                    setAgentOpen(true);
+                                                    setIsMoreMenuOpen(false);
+                                                })
+                                                .catch((err) =>
+                                                    console.error('Failed to dispatch agent', err),
+                                                );
+                                        }}
+                                        disabled={agentOpen}
+                                    >
+                                        <Bot size={18} />
+                                        <span className="text-sm font-medium">AI Agent</span>
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                        {visibleControls.recording && recordingEndpoint && (
+                            <div className="flex flex-col gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                {visibleControls.recording && recordingEndpoint && (
+                                    <button
+                                        className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10"
+                                        onClick={() => {
+                                            toggleRoomRecording();
+                                            setIsMoreMenuOpen(false);
+                                        }}
+                                        disabled={processingRecRequest}
+                                    >
+                                        {processingRecRequest ? (
+                                            <LoaderCircle size={18} className="animate-spin" />
+                                        ) : isRecording ? (
+                                            <Square
+                                                size={18}
+                                                className="fill-red-500 text-red-500"
+                                            />
+                                        ) : (
+                                            <Circle size={18} />
+                                        )}
+                                        <span className="text-sm font-medium">
+                                            {isRecording ? 'Stop Rec' : 'Record'}
+                                        </span>
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {visibleControls.screenShare && browserSupportsScreenSharing && (
+                            <div className="flex flex-col gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <TrackToggle
+                                    className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10"
+                                    source={Track.Source.ScreenShare}
+                                    captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
+                                    showIcon={false}
+                                    onChange={setIsScreenShareEnabled}
+                                    onClick={() => {
+                                        setIsMoreMenuOpen(false);
+                                        if (pipMode) onPipToggle?.();
+                                        else if (!isScreenShareEnabled) onPipToggle?.();
+                                    }}
+                                >
+                                    <MonitorUp
+                                        size={18}
+                                        className={isScreenShareEnabled ? 'text-red-500' : ''}
+                                    />
+                                    <span className="text-sm font-medium">Screen Share</span>
+                                </TrackToggle>
+                            </div>
+                        )}
+
+                        {visibleControls.hand && (
+                            <div className="flex flex-col gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <button
+                                    className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10"
+                                    onClick={() => {
+                                        localParticipant?.setAttributes({
+                                            handRaised: isHandRaised ? 'false' : 'true',
+                                        });
+                                        setIsMoreMenuOpen(false);
+                                    }}
+                                >
+                                    <span
+                                        className={`material-symbols-outlined text-[18px]! ${isHandRaised ? 'text-red-500' : 'text-white'}`}
+                                    >
+                                        back_hand
+                                    </span>
+                                    <span className="text-sm font-medium">Hand</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {visibleControls.transcription && (
+                            <div className="flex flex-col gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <button
+                                    className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10"
+                                    onClick={() => {
+                                        onTranscriptionToggle?.(!showTranscription);
+                                        setIsMoreMenuOpen(false);
+                                    }}
+                                    aria-pressed={showTranscription}
+                                >
+                                    <span className="material-symbols-outlined text-lg">
+                                        subtitles
+                                    </span>
+                                    <span className="text-sm font-medium">Subtitles</span>
+                                </button>
+                            </div>
+                        )}
+                        {visibleControls.pip && (
+                            <div className="flex flex-col gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <button
+                                    className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10"
+                                    onClick={() => {
+                                        onPipToggle?.();
+                                        setIsMoreMenuOpen(false);
+                                    }}
+                                >
+                                    <PictureInPicture size={18} />
+                                    <span className="text-sm font-medium">PIP Mode</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {visibleControls.participants && (
+                            <div className="flex flex-col gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <button
+                                    className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10 relative"
+                                    onClick={() => {
+                                        onParticipantsToggle?.(!showParticipants);
+                                        setIsMoreMenuOpen(false);
+                                    }}
+                                >
+                                    <UsersRound size={18} />
+                                    <span className="text-sm font-medium">People</span>
+                                    {isAdmin && waitingCount > 0 && (
+                                        <span className="absolute right-3 top-3 flex size-4 items-center justify-center bg-red-500 text-[10px] text-white rounded-full">
+                                            {waitingCount}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
+                        )}
+                        {visibleControls.chat && (
+                            <div className="flex flex-col gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <ChatToggle
+                                    className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10"
+                                    onClick={() => setIsMoreMenuOpen(false)}
+                                >
+                                    <MessageSquareText size={18} />
+                                    <span className="text-sm font-medium">Chat</span>
+                                </ChatToggle>
+                            </div>
+                        )}
+
+                        {visibleControls.settings && (
+                            <div className="flex flex-col gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                <button
+                                    className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10"
+                                    onClick={() => {
+                                        layoutContext?.widget.dispatch?.({
+                                            msg: 'toggle_settings',
+                                        });
+                                        setIsMoreMenuOpen(false);
+                                    }}
+                                >
+                                    <SettingsIcon size={18} />
+                                    <span className="text-sm font-medium">Settings</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    {visibleControls.emoji && (
+                        <div className="py-1">
+                            <EmojiPicker
+                                theme={Theme.DARK}
+                                reactionsDefaultOpen={true}
+                                reactions={[
+                                    '1f44d', //like
+                                    '2764-fe0f', //heart
+                                    '1f603', //smile
+                                    '1f973', //excited
+                                    '1f923', //laugh
+                                    '1f622', //cry
+                                    '1f621', //angry
+                                    '1f614', //sad
+                                    '1f64f', //thanks
+                                    '1f44e', //dislike
+                                ]}
+                                onReactionClick={handleReaction}
+                                allowExpandReactions={false}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Standard Bar (or Mobile Bottom Bar) */}
             {visibleControls.invite && (
                 <button
                     className="lk-button rounded-full!"
@@ -417,6 +677,7 @@ export function ControlBar({
                     {showText && 'Invite'}
                 </button>
             )}
+
             <div className="flex items-center justify-center gap-2">
                 {visibleControls.microphone && (
                     <div className="lk-button-group">
@@ -466,209 +727,248 @@ export function ControlBar({
                         </div>
                     </div>
                 )}
-                {(visibleControls.agent || (visibleControls.recording && recordingEndpoint)) && (
-                    <div className="lk-button-group">
-                        {visibleControls.agent && (
-                            <button
-                                className={`lk-button ${visibleControls.recording && recordingEndpoint ? 'rounded-l-full!' : 'rounded-full!'}`}
-                                title="Add DVAI Agent"
-                                aria-pressed={agentOpen}
-                                disabled={agentOpen}
-                                onClick={() => {
-                                    fetch('/api/agent', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ roomName: roomContext?.name }),
-                                    })
-                                        .then(() => {
-                                            toast.success('AI Agent dispatched to the room!');
-                                            setAgentOpen(true);
-                                        })
-                                        .catch((err) =>
-                                            console.error('Failed to dispatch agent', err),
-                                        );
-                                }}
-                            >
-                                {showIcon && <Bot size={16} />}
-                                {showText && 'Add AI Agent'}
-                            </button>
-                        )}
-                        {visibleControls.recording && recordingEndpoint && (
-                            <button
-                                className={`lk-button ${visibleControls.agent ? 'rounded-r-full!' : 'rounded-full!'}`}
-                                disabled={processingRecRequest}
-                                onClick={() => toggleRoomRecording()}
-                                title={isRecording ? 'Stop Recording' : 'Start Recording'}
-                            >
-                                {showIcon &&
-                                    (processingRecRequest ? (
-                                        <LoaderCircle size={16} className="animate-spin" />
-                                    ) : isRecording ? (
-                                        <Square size={16} className="fill-red-500 text-red-500" />
-                                    ) : (
-                                        <Circle size={16} />
-                                    ))}
-                                {showText && (isRecording ? 'Stop Rec' : 'Record')}
-                            </button>
-                        )}
-                    </div>
-                )}
-                {visibleControls.screenShare && browserSupportsScreenSharing && (
-                    <TrackToggle
-                        className="rounded-full!"
-                        source={Track.Source.ScreenShare}
-                        captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
-                        showIcon={false}
-                        onChange={setIsScreenShareEnabled}
+
+                {/* More Button (Mobile Only) */}
+                {isMobile && (
+                    <button
+                        ref={moreTriggerRef}
+                        className={`lk-button rounded-full! transition-all ${isMoreMenuOpen ? 'bg-[#00a8a8] text-white border-[#00a8a8]' : ''}`}
                         onClick={() => {
-                            if (pipMode) {
-                                // In PiP mode, clicking should close the window
-                                onPipToggle?.();
-                            } else if (!isScreenShareEnabled) {
-                                // Open PiP immediately to capture the gesture
-                                onPipToggle?.();
+                            if (isMoreMenuOpen) {
+                                handleCloseMoreMenu();
+                            } else {
+                                setIsMoreMenuOpen(true);
                             }
                         }}
-                        onDeviceError={(error) =>
-                            onDeviceError?.({ source: Track.Source.ScreenShare, error })
-                        }
-                        title={pipMode ? 'Stop Presenting' : 'Share Screen'}
+                        disabled={isMoreMenuClosing}
+                        title="More Options"
                     >
-                        {showIcon && (
-                            <MonitorUp
-                                size={16}
-                                className={isScreenShareEnabled ? 'text-red-500' : ''}
-                            />
-                        )}
-                        {showText &&
-                            (isScreenShareEnabled
-                                ? pipMode
-                                    ? 'Stop Presenting'
-                                    : 'Stop screen share'
-                                : 'Share screen')}
-                    </TrackToggle>
+                        <ChevronUp
+                            size={20}
+                            className={`transition-transform duration-300 ${isMoreMenuOpen ? 'rotate-180' : ''}`}
+                        />
+                    </button>
                 )}
-                {(visibleControls.hand || visibleControls.emoji) && (
-                    <div className="lk-button-group">
-                        {visibleControls.hand && (
-                            <button
-                                className={`lk-button ${visibleControls.emoji ? 'rounded-l-full!' : 'rounded-full!'}`}
-                                aria-pressed={isHandRaised}
-                                onClick={() =>
-                                    localParticipant?.setAttributes({
-                                        handRaised: isHandRaised ? 'false' : 'true',
-                                    })
-                                }
-                                title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
-                            >
-                                {/* {showIcon && <Hand size={16} color={isHandRaised ? '#f91f31' : '#fff'} />} */}
-                                {showIcon && (
-                                    <span
-                                        className={`material-symbols-outlined text-[16px]! ${isHandRaised ? 'text-red-500' : 'text-white'}`}
+
+                {!isMobile && (
+                    <>
+                        {(visibleControls.agent ||
+                            (visibleControls.recording && recordingEndpoint)) && (
+                            <div className="lk-button-group">
+                                {visibleControls.agent && (
+                                    <button
+                                        className={`lk-button ${visibleControls.recording && recordingEndpoint ? 'rounded-l-full!' : 'rounded-full!'}`}
+                                        title="Add DVAI Agent"
+                                        aria-pressed={agentOpen}
+                                        disabled={agentOpen}
+                                        onClick={() => {
+                                            fetch('/api/agent', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    roomName: roomContext?.name,
+                                                }),
+                                            })
+                                                .then(() => {
+                                                    toast.success(
+                                                        'AI Agent dispatched to the room!',
+                                                    );
+                                                    setAgentOpen(true);
+                                                })
+                                                .catch((err) =>
+                                                    console.error('Failed to dispatch agent', err),
+                                                );
+                                        }}
                                     >
-                                        back_hand
-                                    </span>
+                                        {showIcon && <Bot size={16} />}
+                                        {showText && 'Add AI Agent'}
+                                    </button>
                                 )}
-                                {showText && (isHandRaised ? 'Lower Hand' : 'Raise Hand')}
-                            </button>
-                        )}
-                        {visibleControls.emoji && (
-                            <div className="relative" ref={emojiMenuRef}>
-                                <button
-                                    className={`lk-button ${visibleControls.hand ? 'rounded-r-full!' : 'rounded-full!'}`}
-                                    aria-pressed={isEmojiMenuOpen}
-                                    onClick={() => setIsEmojiMenuOpen(!isEmojiMenuOpen)}
-                                    title="Send emoji"
-                                >
-                                    {showIcon && <Smile size={16} />}
-                                    {showText && 'emoji'}
-                                </button>
-                                {isEmojiMenuOpen && (
-                                    <div
-                                        className="absolute left-1/2 -translate-x-1/2 mb-2 z-50 lk-device-menu -top-[80px]! p-0! bg-transparent! border-0! shadow-none!"
-                                        style={{ visibility: 'visible' }}
+                                {visibleControls.recording && recordingEndpoint && (
+                                    <button
+                                        className={`lk-button ${visibleControls.agent ? 'rounded-r-full!' : 'rounded-full!'}`}
+                                        disabled={processingRecRequest}
+                                        onClick={() => toggleRoomRecording()}
+                                        title={isRecording ? 'Stop Recording' : 'Start Recording'}
                                     >
-                                        <EmojiPicker
-                                            theme={Theme.DARK}
-                                            reactionsDefaultOpen={true}
-                                            reactions={[
-                                                '1f44d', //like
-                                                '2764-fe0f', //heart
-                                                '1f603', //smile
-                                                '1f973', //excited
-                                                '1f923', //laugh
-                                                '1f622', //cry
-                                                '1f621', //angry
-                                                '1f614', //sad
-                                                '1f64f', //thanks
-                                                '1f44e', //dislike
-                                            ]}
-                                            onReactionClick={handleReaction}
-                                            allowExpandReactions={false}
-                                        />
+                                        {showIcon &&
+                                            (processingRecRequest ? (
+                                                <LoaderCircle size={16} className="animate-spin" />
+                                            ) : isRecording ? (
+                                                <Square
+                                                    size={16}
+                                                    className="fill-red-500 text-red-500"
+                                                />
+                                            ) : (
+                                                <Circle size={16} />
+                                            ))}
+                                        {showText && (isRecording ? 'Stop Rec' : 'Record')}
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                        {visibleControls.screenShare && browserSupportsScreenSharing && (
+                            <TrackToggle
+                                className="rounded-full!"
+                                source={Track.Source.ScreenShare}
+                                captureOptions={{ audio: true, selfBrowserSurface: 'include' }}
+                                showIcon={false}
+                                onChange={setIsScreenShareEnabled}
+                                onClick={() => {
+                                    if (pipMode) {
+                                        // In PiP mode, clicking should close the window
+                                        onPipToggle?.();
+                                    } else if (!isScreenShareEnabled) {
+                                        // Open PiP immediately to capture the gesture
+                                        onPipToggle?.();
+                                    }
+                                }}
+                                onDeviceError={(error) =>
+                                    onDeviceError?.({ source: Track.Source.ScreenShare, error })
+                                }
+                                title={pipMode ? 'Stop Presenting' : 'Share Screen'}
+                            >
+                                {showIcon && (
+                                    <MonitorUp
+                                        size={16}
+                                        className={isScreenShareEnabled ? 'text-red-500' : ''}
+                                    />
+                                )}
+                                {showText &&
+                                    (isScreenShareEnabled
+                                        ? pipMode
+                                            ? 'Stop Presenting'
+                                            : 'Stop screen share'
+                                        : 'Share screen')}
+                            </TrackToggle>
+                        )}
+                        {(visibleControls.hand || visibleControls.emoji) && (
+                            <div className="lk-button-group">
+                                {visibleControls.hand && (
+                                    <button
+                                        className={`lk-button ${visibleControls.emoji ? 'rounded-l-full!' : 'rounded-full!'}`}
+                                        aria-pressed={isHandRaised}
+                                        onClick={() =>
+                                            localParticipant?.setAttributes({
+                                                handRaised: isHandRaised ? 'false' : 'true',
+                                            })
+                                        }
+                                        title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
+                                    >
+                                        {/* {showIcon && <Hand size={16} color={isHandRaised ? '#f91f31' : '#fff'} />} */}
+                                        {showIcon && (
+                                            <span
+                                                className={`material-symbols-outlined text-[16px]! ${isHandRaised ? 'text-red-500' : 'text-white'}`}
+                                            >
+                                                back_hand
+                                            </span>
+                                        )}
+                                        {showText && (isHandRaised ? 'Lower Hand' : 'Raise Hand')}
+                                    </button>
+                                )}
+                                {visibleControls.emoji && (
+                                    <div className="relative" ref={emojiMenuRef}>
+                                        <button
+                                            className={`lk-button ${visibleControls.hand ? 'rounded-r-full!' : 'rounded-full!'}`}
+                                            aria-pressed={isEmojiMenuOpen}
+                                            onClick={() => setIsEmojiMenuOpen(!isEmojiMenuOpen)}
+                                            title="Send emoji"
+                                        >
+                                            {showIcon && <Smile size={16} />}
+                                            {showText && 'emoji'}
+                                        </button>
+                                        {isEmojiMenuOpen && (
+                                            <div
+                                                className="absolute left-1/2 -translate-x-1/2 mb-2 z-50 lk-device-menu -top-[80px]! p-0! bg-transparent! border-0! shadow-none!"
+                                                style={{ visibility: 'visible' }}
+                                            >
+                                                <EmojiPicker
+                                                    theme={Theme.DARK}
+                                                    reactionsDefaultOpen={true}
+                                                    reactions={[
+                                                        '1f44d', //like
+                                                        '2764-fe0f', //heart
+                                                        '1f603', //smile
+                                                        '1f973', //excited
+                                                        '1f923', //laugh
+                                                        '1f622', //cry
+                                                        '1f621', //angry
+                                                        '1f614', //sad
+                                                        '1f64f', //thanks
+                                                        '1f44e', //dislike
+                                                    ]}
+                                                    onReactionClick={handleReaction}
+                                                    allowExpandReactions={false}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
                         )}
-                    </div>
-                )}
-                {visibleControls.transcription && (
-                    <button
-                        className="lk-button rounded-full!"
-                        aria-pressed={showTranscription ?? false}
-                        onClick={() => onTranscriptionToggle?.(!showTranscription)}
-                        title="Show Transcriptions"
-                    >
-                        {showIcon && (
-                            <span className="material-symbols-outlined text-xl">subtitles</span>
+                        {visibleControls.transcription && (
+                            <button
+                                className="lk-button rounded-full!"
+                                aria-pressed={showTranscription ?? false}
+                                onClick={() => onTranscriptionToggle?.(!showTranscription)}
+                                title="Show Transcriptions"
+                            >
+                                {showIcon && (
+                                    <span className="material-symbols-outlined text-xl">
+                                        subtitles
+                                    </span>
+                                )}
+                                {showText && 'Transcriptions'}
+                            </button>
                         )}
-                        {showText && 'Transcriptions'}
-                    </button>
-                )}
-                {visibleControls.pip && (
-                    <button
-                        className="lk-button rounded-full!"
-                        onClick={() => onPipToggle?.()}
-                        title="Open Mini Player (PiP)"
-                    >
-                        {showIcon && <PictureInPicture size={16} />}
-                        {showText && 'Mini Player'}
-                    </button>
-                )}
-                {visibleControls.participants && (
-                    <button
-                        className="lk-button rounded-full!"
-                        aria-pressed={showParticipants ?? false}
-                        onClick={() => onParticipantsToggle?.(!showParticipants)}
-                        title="Participants"
-                        data-lk-unread-msgs={
-                            isAdmin && waitingCount > 0
-                                ? waitingCount < 10
-                                    ? waitingCount.toString()
-                                    : '9+'
-                                : '0'
-                        }
-                    >
-                        {showIcon && <UsersRound size={16} />}
-                        {showText && 'Participants'}
-                    </button>
-                )}
-                {visibleControls.chat && (
-                    <ChatToggle className="rounded-full!">
-                        {showIcon && <MessageSquareText size={16} />}
-                        {showText && 'Chat'}
-                    </ChatToggle>
-                )}
-                {visibleControls.settings && (
-                    <button
-                        className="lk-button rounded-full!"
-                        aria-pressed={layoutContext?.widget.state?.showSettings ?? false}
-                        onClick={() => layoutContext?.widget.dispatch?.({ msg: 'toggle_settings' })}
-                        title="Media Settings"
-                    >
-                        {showIcon && <SettingsIcon size={16} />}
-                        {showText && 'Settings'}
-                    </button>
+                        {visibleControls.pip && (
+                            <button
+                                className="lk-button rounded-full!"
+                                onClick={() => onPipToggle?.()}
+                                title="Open Mini Player (PiP)"
+                            >
+                                {showIcon && <PictureInPicture size={16} />}
+                                {showText && 'Mini Player'}
+                            </button>
+                        )}
+                        {visibleControls.participants && (
+                            <button
+                                className="lk-button rounded-full!"
+                                aria-pressed={showParticipants ?? false}
+                                onClick={() => onParticipantsToggle?.(!showParticipants)}
+                                title="Participants"
+                                data-lk-unread-msgs={
+                                    isAdmin && waitingCount > 0
+                                        ? waitingCount < 10
+                                            ? waitingCount.toString()
+                                            : '9+'
+                                        : '0'
+                                }
+                            >
+                                {showIcon && <UsersRound size={16} />}
+                                {showText && 'Participants'}
+                            </button>
+                        )}
+                        {visibleControls.chat && (
+                            <ChatToggle className="rounded-full!">
+                                {showIcon && <MessageSquareText size={16} />}
+                                {showText && 'Chat'}
+                            </ChatToggle>
+                        )}
+                        {visibleControls.settings && (
+                            <button
+                                className="lk-button rounded-full!"
+                                aria-pressed={layoutContext?.widget.state?.showSettings ?? false}
+                                onClick={() =>
+                                    layoutContext?.widget.dispatch?.({ msg: 'toggle_settings' })
+                                }
+                                title="Media Settings"
+                            >
+                                {showIcon && <SettingsIcon size={16} />}
+                                {showText && 'Settings'}
+                            </button>
+                        )}
+                    </>
                 )}
             </div>
             {visibleControls.leave && (
