@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { Lock } from 'lucide-react';
 import { decodePassphrase } from '@/lib/client-utils';
@@ -41,6 +41,21 @@ const CONN_DETAILS_ENDPOINT =
     process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
 const SHOW_SETTINGS_MENU = process.env.NEXT_PUBLIC_SHOW_SETTINGS_MENU == 'true';
 
+/**
+ * Requests camera and microphone permissions from the browser.
+ * Returns true if granted, false otherwise.
+ */
+async function requestMediaPermissions(): Promise<boolean> {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        // Stop all tracks immediately — we only needed the permission grant
+        stream.getTracks().forEach((t) => t.stop());
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 export function PageClientImpl(props: {
     roomName: string;
     region?: string;
@@ -50,8 +65,56 @@ export function PageClientImpl(props: {
     const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
         undefined,
     );
+    const [mediaPermissionGranted, setMediaPermissionGranted] = useState(false);
     const { user } = useAuth();
     const prefs = user?.prefs as Record<string, any> | undefined;
+
+    // ── Request camera/mic permissions before showing PreJoin ──
+    useEffect(() => {
+        let cancelled = false;
+
+        const askPermission = async () => {
+            const granted = await requestMediaPermissions();
+            if (cancelled) return;
+
+            if (granted) {
+                setMediaPermissionGranted(true);
+                return;
+            }
+
+            // Permission denied — show a Swal dialog and let the user retry
+            const retry = async (): Promise<void> => {
+                const result = await Swal.fire({
+                    title: 'Camera & Microphone Access',
+                    text: 'We need access to your camera and microphone to join the meeting. Please allow the permission when prompted.',
+                    icon: 'warning',
+                    confirmButtonText: 'Grant Permission',
+                    showCancelButton: false,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                });
+
+                if (result.isConfirmed) {
+                    const retryGranted = await requestMediaPermissions();
+                    if (cancelled) return;
+
+                    if (retryGranted) {
+                        setMediaPermissionGranted(true);
+                    } else {
+                        // Still denied — ask again
+                        return retry();
+                    }
+                }
+            };
+
+            await retry();
+        };
+
+        askPermission();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const preJoinDefaults = React.useMemo(() => {
         return {
@@ -117,12 +180,21 @@ export function PageClientImpl(props: {
         >
             {connectionDetails === undefined || preJoinChoices === undefined ? (
                 <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
-                    <PreJoin
-                        defaults={preJoinDefaults}
-                        onSubmit={handlePreJoinSubmit}
-                        onError={handlePreJoinError}
-                        joinLabel="Join"
-                    />
+                    {mediaPermissionGranted ? (
+                        <PreJoin
+                            defaults={preJoinDefaults}
+                            onSubmit={handlePreJoinSubmit}
+                            onError={handlePreJoinError}
+                            joinLabel="Join"
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center">
+                            <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                            <p className="text-slate-600 dark:text-slate-400 font-medium">
+                                Requesting camera &amp; microphone access…
+                            </p>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <VideoConferenceComponent
@@ -266,6 +338,33 @@ function VideoConferenceComponent(props: {
         };
     }, [room]);
 
+    // Track whether we have already enabled devices so we don't double-fire
+    const devicesEnabledRef = useRef(false);
+
+    /**
+     * Enable camera/mic only when the participant actually has canPublish permission.
+     * This prevents the PublishTrackError that occurs when a waiting-room user
+     * tries to publish before the admin admits them.
+     */
+    const enableDevicesIfAllowed = useCallback(() => {
+        const p = room.localParticipant;
+        if (!p || devicesEnabledRef.current) return;
+        if (!p.permissions?.canPublish) return; // still waiting for admin approval
+
+        devicesEnabledRef.current = true;
+
+        if (props.userChoices.videoEnabled) {
+            p.setCameraEnabled(true).catch((error) => {
+                handleError(error);
+            });
+        }
+        if (props.userChoices.audioEnabled) {
+            p.setMicrophoneEnabled(true).catch((error) => {
+                handleError(error);
+            });
+        }
+    }, [room, props.userChoices, handleError]);
+
     useEffect(() => {
         room.on(RoomEvent.Disconnected, handleOnLeave);
         room.on(RoomEvent.EncryptionError, handleEncryptionError);
@@ -278,16 +377,11 @@ function VideoConferenceComponent(props: {
                 connectOptions,
             )
                 .then(() => {
-                    if (props.userChoices.videoEnabled) {
-                        room.localParticipant.setCameraEnabled(true).catch((error) => {
-                            handleError(error);
-                        });
-                    }
-                    if (props.userChoices.audioEnabled) {
-                        room.localParticipant.setMicrophoneEnabled(true).catch((error) => {
-                            handleError(error);
-                        });
-                    }
+                    // Try enabling immediately (creator will already have canPublish)
+                    enableDevicesIfAllowed();
+
+                    // For non-creators in a waiting room, listen for the permission grant
+                    room.on(RoomEvent.ParticipantPermissionsChanged, enableDevicesIfAllowed);
                 })
                 .catch((error) => {
                     handleError(error);
@@ -297,6 +391,7 @@ function VideoConferenceComponent(props: {
             room.off(RoomEvent.Disconnected, handleOnLeave);
             room.off(RoomEvent.EncryptionError, handleEncryptionError);
             room.off(RoomEvent.MediaDevicesError, handleError);
+            room.off(RoomEvent.ParticipantPermissionsChanged, enableDevicesIfAllowed);
         };
     }, [
         e2eeSetupComplete,
@@ -307,6 +402,7 @@ function VideoConferenceComponent(props: {
         handleOnLeave,
         handleEncryptionError,
         handleError,
+        enableDevicesIfAllowed,
     ]);
 
     const isConnecting =

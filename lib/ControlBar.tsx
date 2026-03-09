@@ -1,4 +1,4 @@
-import { Track } from 'livekit-client';
+import { Track, ParticipantKind } from 'livekit-client';
 import * as React from 'react';
 import { MediaDeviceMenu } from '@livekit/components-react';
 import { DisconnectButton } from '@livekit/components-react';
@@ -148,6 +148,19 @@ export function ControlBar({
             }
         }).length;
     }, [participants]);
+
+    // Reset agentOpen when the agent participant is removed from the room
+    React.useEffect(() => {
+        if (!agentOpen) return;
+
+        const hasAgent = participants.some(
+            (p) => p.kind === ParticipantKind.AGENT || p.identity.includes('dvai-support'),
+        );
+
+        if (!hasAgent) {
+            setAgentOpen(false);
+        }
+    }, [participants, agentOpen]);
 
     // Manage local hand-raise state via participant attributes
     const { localParticipant } = useLocalParticipant();
