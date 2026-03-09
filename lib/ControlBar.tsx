@@ -193,7 +193,10 @@ export function ControlBar({
 
         let loadingToastId: string | undefined;
         if (isRecording) {
-            loadingToastId = toast.loading('Processing recorded video...');
+            loadingToastId = toast.loading('Processing recorded video...', {
+                duration: Infinity,
+                position: 'top-center',
+            });
         }
 
         try {
@@ -216,7 +219,7 @@ export function ControlBar({
                     if (recordingUrl) {
                         toast.custom(
                             (t) => <RecordingSuccessToast t={t} recordingUrl={recordingUrl} />,
-                            { duration: 10000, position: 'bottom-right' },
+                            { duration: 10000, position: 'bottom-left' },
                         );
                     } else {
                         toast.success('Recording stopped successfully');
@@ -685,7 +688,7 @@ function RecordingSuccessToast({ t, recordingUrl }: { t: any; recordingUrl: stri
 
     return (
         <div
-            className={`max-w-md w-full bg-white dark:bg-[#1e2936] shadow-2xl rounded-xl pointer-events-auto flex flex-col p-6 animate-in fade-in slide-in-from-bottom-5 duration-300 ${
+            className={`max-w-md w-full mb-[64px]! bg-white dark:bg-[#1e2936] shadow-2xl rounded-xl pointer-events-auto flex flex-col p-6 animate-in fade-in slide-in-from-bottom-5 duration-300 ${
                 t.visible ? 'opacity-100' : 'opacity-0'
             }`}
         >

@@ -59,7 +59,6 @@ watcher.on('add', async (filePath) => {
                 Key: `${fileOrigin}/${fileName}`,
                 Body: fileStream,
                 ContentType: filePath.endsWith('.mp4') ? 'video/mp4' : 'audio/ogg',
-                ACL: 'public-read',
             },
             // Optional: configuration for the upload
             queueSize: 4, // Number of concurrent parts
