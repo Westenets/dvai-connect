@@ -42,8 +42,8 @@ importers:
         specifier: ^17.3.1
         version: 17.3.1
       emoji-picker-react:
-        specifier: github:DK013/emoji-picker-react
-        version: https://codeload.github.com/DK013/emoji-picker-react/tar.gz/ff09fabe2d144479453549861a50fa6c3d383368(react@19.2.4)
+        specifier: ^4.18.0
+        version: 4.18.0(react@19.2.4)
       iconsax-react:
         specifier: ^0.0.8
         version: 0.0.8(react@19.2.4)
@@ -2241,9 +2241,8 @@ packages:
   electron-to-chromium@1.5.307:
     resolution: {integrity: sha512-5z3uFKBWjiNR44nFcYdkcXjKMbg5KXNdciu7mhTPo9tB7NbqSNP2sSnGR+fqknZSCwKkBN+oxiiajWs4dT6ORg==}
 
-  emoji-picker-react@https://codeload.github.com/DK013/emoji-picker-react/tar.gz/ff09fabe2d144479453549861a50fa6c3d383368:
-    resolution: {tarball: https://codeload.github.com/DK013/emoji-picker-react/tar.gz/ff09fabe2d144479453549861a50fa6c3d383368}
-    version: 4.12.2
+  emoji-picker-react@4.18.0:
+    resolution: {integrity: sha512-vLTrLfApXAIciguGE57pXPWs9lPLBspbEpPMiUq03TIli2dHZBiB+aZ0R9/Wat0xmTfcd4AuEzQgSYxEZ8C88Q==}
     engines: {node: '>=10'}
     peerDependencies:
       react: '>=16'
@@ -6593,7 +6592,7 @@ snapshots:
 
   electron-to-chromium@1.5.307: {}
 
-  emoji-picker-react@https://codeload.github.com/DK013/emoji-picker-react/tar.gz/ff09fabe2d144479453549861a50fa6c3d383368(react@19.2.4):
+  emoji-picker-react@4.18.0(react@19.2.4):
     dependencies:
       flairup: 1.0.0
       react: 19.2.4
