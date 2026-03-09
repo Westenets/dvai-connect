@@ -5,7 +5,6 @@ import '@livekit/components-styles/prefabs';
 import type { Metadata, Viewport } from 'next';
 import { Toaster } from 'react-hot-toast';
 
-
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
@@ -55,6 +54,7 @@ export const viewport: Viewport = {
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/components/AuthProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { PageTransition } from '@/components/PageTransition';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -65,7 +65,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <body>
                 <Toaster />
                 <AuthProvider>
-                    <ThemeProvider>{children}</ThemeProvider>
+                    <ThemeProvider>
+                        <PageTransition>{children}</PageTransition>
+                    </ThemeProvider>
                 </AuthProvider>
             </body>
         </html>
