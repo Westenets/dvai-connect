@@ -38,10 +38,15 @@ export async function GET(req: NextRequest) {
         console.log('All active egresses stop request sent');
 
         // Construct the public URLs
-        const { S3_ENDPOINT, S3_BUCKET } = process.env;
+        const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID || 'mvc-files';
+        const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+        const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
+
         const urls = activeEgresses.map((info) => {
             const fileName = info.fileResults?.[0]?.filename?.split('/').pop() || info.egressId;
-            return `${S3_ENDPOINT?.trim()}/${S3_BUCKET?.trim()}/meet/${fileName}`;
+            // Appwrite fileId allows alphanumeric, underscore, hyphen, and period.
+            const fileId = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+            return `${endpoint}/storage/buckets/${BUCKET_ID}/files/${fileId}/view?project=${project}`;
         });
 
         return NextResponse.json({ urls }, { status: 200 });

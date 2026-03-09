@@ -20,11 +20,6 @@ export async function GET(req: NextRequest) {
             LIVEKIT_API_KEY,
             LIVEKIT_API_SECRET,
             LIVEKIT_URL,
-            S3_KEY_ID,
-            S3_KEY_SECRET,
-            S3_BUCKET,
-            S3_ENDPOINT,
-            S3_REGION,
         } = process.env;
 
         const hostURL = new URL(LIVEKIT_URL!);
@@ -38,28 +33,12 @@ export async function GET(req: NextRequest) {
         }
 
         console.log('Starting egress for room:', roomName);
-        console.log('S3 Config:', {
-            endpoint: S3_ENDPOINT,
-            bucket: S3_BUCKET,
-            region: S3_REGION,
-        });
 
         const filename = `/out/meet-${new Date(Date.now()).toISOString().replace(/:/g, '-')}-${roomName}.mp4`;
         console.log('Target filename:', filename);
 
         const fileOutput = new EncodedFileOutput({
             filepath: filename,
-            // output: {
-            //   case: 's3',
-            //   value: new S3Upload({
-            //     endpoint: S3_ENDPOINT,
-            //     accessKey: S3_KEY_ID,
-            //     secret: S3_KEY_SECRET,
-            //     region: S3_REGION,
-            //     bucket: S3_BUCKET,
-            //     forcePathStyle: true,
-            //   }),
-            // },
         });
 
         const egressInfo = await egressClient.startRoomCompositeEgress(

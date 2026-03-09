@@ -2,18 +2,21 @@ require('dotenv').config({ path: './.env.local' });
 const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const {
+    Client: AppwriteClient,
+    Storage: AppwriteStorage,
+    InputFile,
+    ID,
+} = require('node-appwrite');
 
-// 1. Initialize your S3 Client (using the config that worked for you!)
-const s3Client = new S3Client({
-    region: process.env.S3_REGION.trim(),
-    endpoint: process.env.S3_ENDPOINT.trim(),
-    credentials: {
-        accessKeyId: process.env.S3_KEY_ID.trim(),
-        secretAccessKey: process.env.S3_KEY_SECRET.trim(),
-    },
-    forcePathStyle: true, // Crucial for Linode!
-});
+// 1. Initialize Appwrite Client
+const client = new AppwriteClient()
+    .setEndpoint((process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || '').trim())
+    .setProject((process.env.NEXT_PUBLIC_APPWRITE_PROJECT || '').trim())
+    .setKey((process.env.APPWRITE_API_KEY || '').trim());
+
+const storage = new AppwriteStorage(client);
+const BUCKET_ID = (process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID || 'mvc-files').trim();
 
 // The bridge directory you created in your home folder
 const WATCH_DIR =
@@ -48,39 +51,27 @@ watcher.on('add', async (filePath) => {
             console.log(`File is empty: ${filePath}`);
             return;
         }
-        // For Production: Using lib-storage Upload for robust streaming
-        const { Upload } = require('@aws-sdk/lib-storage');
-        const fileStream = fs.createReadStream(filePath);
-
-        const parallelUploads3 = new Upload({
-            client: s3Client,
-            params: {
-                Bucket: process.env.S3_BUCKET.trim(),
-                Key: `${fileOrigin}/${fileName}`,
-                Body: fileStream,
-                ContentType: filePath.endsWith('.mp4') ? 'video/mp4' : 'audio/ogg',
-            },
-            // Optional: configuration for the upload
-            queueSize: 4, // Number of concurrent parts
-            partSize: 5 * 1024 * 1024, // 5MB per part
-            leavePartsOnError: false, // Clean up failed parts
-        });
 
         console.log(
-            `🚀 [STREAM] Uploading to Linode via lib-storage (${(fileStats.size / 1024 / 1024).toFixed(2)} MB)...`,
+            `🚀 [UPLOAD] Uploading to Appwrite Storage (${(fileStats.size / 1024 / 1024).toFixed(2)} MB)...`,
         );
 
-        parallelUploads3.on('httpUploadProgress', (progress) => {
-            const percentage = Math.round((progress.loaded / progress.total) * 100);
-            process.stdout.write(`\r   - Upload progress: ${percentage}%`);
-        });
+        // For Appwrite, we'll use the fileName as the fileId (cleansed) if possible
+        // or just a unique ID. To stay deterministic for the Stop API, let's use fileName
+        // which matches what the Stop API will look for.
+        // Appwrite fileId allows alphanumeric, underscore, hyphen, and period.
+        const fileId = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
 
-        await parallelUploads3.done();
-        process.stdout.write('\n');
-        console.log(`✅ [SUCCESS] Streaming upload complete: ${fileName}`);
+        const result = await storage.createFile(
+            BUCKET_ID,
+            fileId,
+            InputFile.fromPath(filePath, fileName),
+        );
+
+        console.log(`✅ [SUCCESS] Appwrite upload complete: ${fileName} ($id: ${result.$id})`);
 
         // Construct and log the public URL
-        const publicUrl = `${process.env.S3_ENDPOINT.trim()}/${process.env.S3_BUCKET.trim()}/${fileOrigin}/${fileName}`;
+        const publicUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${result.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
         console.log(`🔗 Public URL: ${publicUrl}`);
 
         // 4. Safely delete the local copy to save your server's disk space
