@@ -37,7 +37,14 @@ export async function GET(req: NextRequest) {
 
         console.log('All active egresses stop request sent');
 
-        return new NextResponse(null, { status: 200 });
+        // Construct the public URLs
+        const { S3_ENDPOINT, S3_BUCKET } = process.env;
+        const urls = activeEgresses.map((info) => {
+            const fileName = info.fileResults?.[0]?.filename?.split('/').pop() || info.egressId;
+            return `${S3_ENDPOINT?.trim()}/${S3_BUCKET?.trim()}/meet/${fileName}`;
+        });
+
+        return NextResponse.json({ urls }, { status: 200 });
     } catch (error) {
         console.error('Error stopping egress:', error);
         if (error instanceof Error) {

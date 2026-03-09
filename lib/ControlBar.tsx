@@ -31,9 +31,18 @@ import {
     Square,
     Smile,
     LoaderCircle,
+    Check,
+    X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
+import {
+    WhatsappShareButton,
+    LinkedinShareButton,
+    TwitterShareButton,
+    TelegramShareButton,
+} from 'react-share';
+import { SocialIcon } from 'react-social-icons';
 
 export function useMediaQuery(query: string): boolean {
     const getMatches = (query: string): boolean => {
@@ -181,21 +190,54 @@ export function ControlBar({
         }
         setProcessingRecRequest(true);
         setInitialRecStatus(isRecording);
-        let response: Response;
+
+        let loadingToastId: string | undefined;
         if (isRecording) {
-            response = await fetch(recordingEndpoint + `/stop?roomName=${room.name}`);
-        } else {
-            response = await fetch(recordingEndpoint + `/start?roomName=${room.name}`);
+            loadingToastId = toast.loading('Processing recorded video...');
         }
-        if (response.ok) {
-        } else {
-            console.error(
-                'Error handling recording request, check server logs:',
-                response.status,
-                response.statusText,
-            );
+
+        try {
+            let response: Response;
+            if (isRecording) {
+                response = await fetch(recordingEndpoint + `/stop?roomName=${room.name}`);
+            } else {
+                response = await fetch(recordingEndpoint + `/start?roomName=${room.name}`);
+            }
+
+            if (loadingToastId) {
+                toast.dismiss(loadingToastId);
+            }
+
+            if (response.ok) {
+                if (isRecording) {
+                    const data = await response.json();
+                    const recordingUrl = data.urls?.[0];
+
+                    if (recordingUrl) {
+                        toast.custom(
+                            (t) => <RecordingSuccessToast t={t} recordingUrl={recordingUrl} />,
+                            { duration: 10000, position: 'bottom-right' },
+                        );
+                    } else {
+                        toast.success('Recording stopped successfully');
+                    }
+                } else {
+                    toast.success('Recording started successfully');
+                }
+            } else {
+                console.error(
+                    'Error handling recording request, check server logs:',
+                    response.status,
+                    response.statusText,
+                );
+                setProcessingRecRequest(false);
+                toast.error('Recording Feature is not available');
+            }
+        } catch (error) {
+            if (loadingToastId) toast.dismiss(loadingToastId);
+            console.error('Recording request failed:', error);
             setProcessingRecRequest(false);
-            toast.error('Recording Feature is not available');
+            toast.error('Failed to process recording request');
         }
     };
 
@@ -633,6 +675,100 @@ export function ControlBar({
                 </DisconnectButton>
             )}
             <StartMediaButton />
+        </div>
+    );
+}
+
+function RecordingSuccessToast({ t, recordingUrl }: { t: any; recordingUrl: string }) {
+    const [isCopied, setIsCopied] = React.useState(false);
+    const displayUrl = recordingUrl.replace(/^https?:\/\//, '');
+
+    return (
+        <div
+            className={`max-w-md w-full bg-white dark:bg-[#1e2936] shadow-2xl rounded-xl pointer-events-auto flex flex-col p-6 animate-in fade-in slide-in-from-bottom-5 duration-300 ${
+                t.visible ? 'opacity-100' : 'opacity-0'
+            }`}
+        >
+            <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="size-2 bg-red-500 rounded-full animate-pulse" />
+                    <h3 className="text-slate-900 dark:text-white text-lg font-medium m-0">
+                        Recording saved
+                    </h3>
+                </div>
+                <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors bg-transparent border-0 p-1 flex items-center justify-center cursor-pointer"
+                >
+                    <X size={20} />
+                </button>
+            </div>
+
+            <p className="text-slate-600 dark:text-slate-200 text-sm mb-4 leading-relaxed text-left">
+                The recording file will be available in a few minutes once it's done saving to cloud
+                storage.
+            </p>
+
+            <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 mb-6">
+                <span className="text-slate-600 dark:text-slate-200 text-xs truncate font-mono">
+                    {displayUrl}
+                </span>
+                <button
+                    onClick={async () => {
+                        await navigator.clipboard.writeText(recordingUrl);
+                        setIsCopied(true);
+                        setTimeout(() => setIsCopied(false), 3000);
+                    }}
+                    className="text-slate-500 hover:text-slate-900 transition-all bg-transparent border-0 p-1 flex items-center justify-center cursor-pointer shrink-0"
+                    title="Copy link"
+                >
+                    {isCopied ? (
+                        <Check
+                            size={18}
+                            className="text-emerald-500 animate-in zoom-in duration-200"
+                        />
+                    ) : (
+                        <Copy size={18} />
+                    )}
+                </button>
+            </div>
+
+            <div>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] tracking-wider font-semibold mb-3 uppercase">
+                    Share recording URL
+                </p>
+                <div className="flex gap-3 overflow-x-auto pb-2 lk-scrollbar snap-x">
+                    <div className="snap-start shrink-0">
+                        <TelegramShareButton
+                            url={recordingUrl}
+                            title="Check out the recording of our meeting"
+                        >
+                            <SocialIcon network="telegram" style={{ height: 32, width: 32 }} />
+                        </TelegramShareButton>
+                    </div>
+                    <div className="snap-start shrink-0">
+                        <WhatsappShareButton
+                            url={recordingUrl}
+                            title="Check out the recording of our meeting"
+                        >
+                            <SocialIcon network="whatsapp" style={{ height: 32, width: 32 }} />
+                        </WhatsappShareButton>
+                    </div>
+                    <div className="snap-start shrink-0">
+                        <TwitterShareButton
+                            url={recordingUrl}
+                            title="Check out the recording of our meeting"
+                        >
+                            <SocialIcon network="x" style={{ height: 32, width: 32 }} />
+                        </TwitterShareButton>
+                    </div>
+                    <div className="snap-start shrink-0">
+                        <LinkedinShareButton url={recordingUrl}>
+                            <SocialIcon network="linkedin" style={{ height: 32, width: 32 }} />
+                        </LinkedinShareButton>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
