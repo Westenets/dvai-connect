@@ -606,12 +606,15 @@ export function VideoConference({
     React.useEffect(() => {
         if (isAdmin && !hasShownToast.current) {
             hasShownToast.current = true;
-            toast.custom(
+            const toastId = toast.custom(
                 (t) => (
                     <HostInviteToast
                         t={t}
                         e2e={e2eeEnabled}
-                        onInviteClick={() => setIsInviteModalOpen(true)}
+                        onInviteClick={() => {
+                            setIsInviteModalOpen(true);
+                            toast.dismiss(toastId);
+                        }}
                     />
                 ),
                 { duration: Infinity, position: 'bottom-left' },
