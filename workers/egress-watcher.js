@@ -2,12 +2,8 @@ require('dotenv').config({ path: './.env.local' });
 const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
-const {
-    Client: AppwriteClient,
-    Storage: AppwriteStorage,
-    InputFile,
-    ID,
-} = require('node-appwrite');
+const { Client: AppwriteClient, Storage: AppwriteStorage, ID } = require('node-appwrite');
+const { InputFile } = require('node-appwrite/file');
 
 // 1. Initialize Appwrite Client
 const client = new AppwriteClient()
@@ -16,7 +12,6 @@ const client = new AppwriteClient()
     .setKey((process.env.APPWRITE_API_KEY || '').trim());
 
 const storage = new AppwriteStorage(client);
-const BUCKET_ID = (process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID || 'mvc-files').trim();
 
 // The bridge directory you created in your home folder
 const WATCH_DIR =
@@ -42,7 +37,9 @@ watcher.on('add', async (filePath) => {
     if (!filePath.endsWith('.mp4') && !filePath.endsWith('.ogg')) return;
 
     const fileName = path.basename(filePath);
-    const fileOrigin = filePath.endsWith('.mp4') ? 'meet' : 'call';
+    const BUCKET_ID = filePath.endsWith('.mp4')
+        ? process.env.NEXT_PUBLIC_APPWRITE_MEET_BUCKET_ID
+        : process.env.NEXT_PUBLIC_APPWRITE_DVAI_BUCKET_ID;
     console.log(`\n🎬 New recording finished rendering: ${fileName}`);
 
     try {
@@ -59,8 +56,12 @@ watcher.on('add', async (filePath) => {
         // For Appwrite, we'll use the fileName as the fileId (cleansed) if possible
         // or just a unique ID. To stay deterministic for the Stop API, let's use fileName
         // which matches what the Stop API will look for.
-        // Appwrite fileId allows alphanumeric, underscore, hyphen, and period.
-        const fileId = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+        // Appwrite fileId allows alphanumeric, underscore, hyphen.
+        const fileExtension = fileName.split('.').pop();
+        const fileId = fileName
+            .replace(`.${fileExtension}`, '')
+            .replace(/[^a-zA-Z0-9_-]/g, '_');
+        console.log(fileId);
 
         const result = await storage.createFile(
             BUCKET_ID,

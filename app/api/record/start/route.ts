@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 
         console.log('Starting egress for room:', roomName);
 
-        const filename = `/out/meet-${new Date(Date.now()).toISOString().replace(/:/g, '-')}-${roomName}.mp4`;
+        const filename = `/out/${new Date(Date.now()).toISOString().replace(/:/g, '-')}-${roomName}.mp4`;
         console.log('Target filename:', filename);
 
         const fileOutput = new EncodedFileOutput({

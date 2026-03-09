@@ -38,14 +38,17 @@ export async function GET(req: NextRequest) {
         console.log('All active egresses stop request sent');
 
         // Construct the public URLs
-        const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID || 'mvc-files';
+        const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_MEET_BUCKET_ID || 'mvc-files';
         const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
         const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
         const urls = activeEgresses.map((info) => {
             const fileName = info.fileResults?.[0]?.filename?.split('/').pop() || info.egressId;
-            // Appwrite fileId allows alphanumeric, underscore, hyphen, and period.
-            const fileId = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const fileExtension = fileName.split('.').pop();
+            // Appwrite fileId allows alphanumeric, underscore, and hyphen. Periods are NOT supported.
+            const fileId = fileName
+                .replace(`.${fileExtension}`, '')
+                .replace(/[^a-zA-Z0-9_-]/g, '_');
             return `${endpoint}/storage/buckets/${BUCKET_ID}/files/${fileId}/view?project=${project}`;
         });
 
