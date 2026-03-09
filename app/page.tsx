@@ -16,6 +16,7 @@ import 'swiper/css/pagination';
 export default function Dashboard() {
     const router = useRouter();
     const { user, isLoading, logout } = useAuth();
+    const prefs = user?.prefs as Record<string, any>;
 
     const [roomCode, setRoomCode] = useState('');
     const [currentTime, setCurrentTime] = useState('');
@@ -23,8 +24,8 @@ export default function Dashboard() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [newMeetingOpen, setNewMeetingOpen] = useState(false);
 
-    // E2EE configuration from .env
-    const e2eeEnabled = process.env.NEXT_PUBLIC_E2EE_ENABLED === 'true';
+    // E2EE configuration from settings or .env
+    const e2eeEnabled = prefs?.e2e || process.env.NEXT_PUBLIC_E2EE_ENABLED === 'true';
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -99,7 +100,6 @@ export default function Dashboard() {
     };
 
     const initialLetter = user.name ? user.name.charAt(0).toUpperCase() : '?';
-    const prefs = user.prefs as Record<string, any>;
     const avatarUrl = prefs?.avatarUrl;
     const avatarThumbUrl = prefs?.avatarThumbUrl;
 
@@ -340,12 +340,12 @@ export default function Dashboard() {
                                     <div className="absolute bottom-10 left-10 size-3 bg-[#00a8a8] rounded-full"></div>
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                                    Your meeting is safe
+                                    Your meeting is secure
                                 </h3>
                                 <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
                                     No one can join a meeting unless invited or admitted by the
-                                    host. E2EE is {e2eeEnabled ? 'enabled' : 'disabled'} by
-                                    administrator.
+                                    host. End-to-end encryption ensures privacy, event the host
+                                    cannot access your meeting.
                                 </p>
                             </div>
                         </SwiperSlide>

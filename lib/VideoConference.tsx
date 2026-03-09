@@ -100,6 +100,7 @@ function MeetingUI({
     setShowParticipants,
     onPipToggle,
     setIsWaitingForShare,
+    e2eeEnabled,
 }: {
     tracks: any[];
     focusTrack: any;
@@ -120,6 +121,7 @@ function MeetingUI({
     setShowParticipants: (show: boolean) => void;
     onPipToggle?: () => void;
     setIsWaitingForShare?: (waiting: boolean) => void;
+    e2eeEnabled?: boolean;
 }) {
     return (
         <div
@@ -185,6 +187,7 @@ function MeetingUI({
                 <ControlBar
                     controls={{
                         settings: !!SettingsComponent,
+                        recording: !e2eeEnabled,
                         transcription: false,
                         pip: false,
                     }}
@@ -655,6 +658,7 @@ export function VideoConference({
                             setShowParticipants={setShowParticipants}
                             onPipToggle={togglePip}
                             setIsWaitingForShare={setIsWaitingForShare}
+                            e2eeEnabled={e2eeEnabled}
                         />
                     </div>
 
@@ -692,6 +696,7 @@ export function VideoConference({
                                     setShowParticipants={setShowParticipants}
                                     onPipToggle={togglePip}
                                     setIsWaitingForShare={setIsWaitingForShare}
+                                    e2eeEnabled={e2eeEnabled}
                                 />
                             </PipWindow>
                         </>
