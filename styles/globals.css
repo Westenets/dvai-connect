@@ -261,25 +261,29 @@ button[data-lk-unread-msgs]:not([data-lk-unread-msgs='0']) {
     width: max(200px, 40ch) !important;
 }
 
-
 /* scrollbar */
 ::-webkit-scrollbar {
-	width: 8px;
-	height: 8px;
+    width: 8px;
+    height: 8px;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-	background: transparent;
+    background: transparent;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-	background: rgba(255,255,255, 0.16);
-	border-radius: 25px;
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 25px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-	background: rgba(255,255,255, 0.25);
+    background: rgba(255, 255, 255, 0.25);
+}
+
+body.swal2-shown > [aria-hidden='true'] {
+    transition: 0.1s filter;
+    filter: blur(3px);
 }

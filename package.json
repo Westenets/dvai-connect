@@ -42,6 +42,8 @@
         "react-share": "^5.2.2",
         "react-social-icons": "^6.25.0",
         "react-use": "^17.6.0",
+        "sweetalert2": "^11.26.22",
+        "sweetalert2-react-content": "^5.1.1",
         "swiper": "^12.1.2",
         "tinykeys": "^3.0.0"
     },

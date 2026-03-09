@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import { Lock } from 'lucide-react';
 import { decodePassphrase } from '@/lib/client-utils';
 import { useAuth } from '@/components/AuthProvider';
@@ -199,9 +200,11 @@ function VideoConferenceComponent(props: {
                 .then(() => {
                     room.setE2EEEnabled(true).catch((e) => {
                         if (e instanceof DeviceUnsupportedError) {
-                            alert(
-                                `You're trying to join an encrypted meeting, but your browser does not support it. Please update it to the latest version and try again.`,
-                            );
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'You are trying to join an encrypted meeting, but your browser does not support it. Please update it to the latest version and try again.',
+                                icon: 'error',
+                            });
                             console.error(e);
                         } else {
                             throw e;
@@ -226,15 +229,9 @@ function VideoConferenceComponent(props: {
     const handleOnLeave = React.useCallback(() => router.push('/'), [router]);
     const handleError = React.useCallback((error: Error) => {
         console.error(error);
-        alert(
-            `Encountered an unexpected error, check the console logs for details: ${error.message}`,
-        );
     }, []);
     const handleEncryptionError = React.useCallback((error: Error) => {
         console.error(error);
-        alert(
-            `Encountered an unexpected encryption error, check the console logs for details: ${error.message}`,
-        );
     }, []);
 
     const [isWaiting, setIsWaiting] = useState(false);
