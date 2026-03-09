@@ -449,42 +449,46 @@ export function ParticipantsSidebar({
                                                             ? 'Unpin for everyone'
                                                             : 'Pin for everyone'}
                                                     </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleAction(
-                                                                participant.identity,
-                                                                participant.isMicrophoneEnabled
-                                                                    ? 'mute'
-                                                                    : 'unmute',
-                                                            )
-                                                        }
-                                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 transition-colors border-0 bg-transparent text-left"
-                                                    >
-                                                        {participant.isMicrophoneEnabled ? (
-                                                            <MicOff size={16} />
-                                                        ) : (
-                                                            <Mic size={16} />
-                                                        )}
-                                                        {participant.isMicrophoneEnabled
-                                                            ? 'Mute for everyone'
-                                                            : 'Request unmute'}
-                                                    </button>
-                                                    <hr className="my-1 border-white/10" />
-                                                    {((isAdmin && !isLocal) ||
-                                                        (localParticipant?.permissions as any)
-                                                            ?.canManageAgentSession) && (
+                                                    {isAdmin && !isLocal && (
                                                         <button
                                                             onClick={() =>
                                                                 handleAction(
                                                                     participant.identity,
-                                                                    'remove',
+                                                                    participant.isMicrophoneEnabled
+                                                                        ? 'mute'
+                                                                        : 'unmute',
                                                                 )
                                                             }
-                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors border-0 bg-transparent text-left"
+                                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 transition-colors border-0 bg-transparent text-left"
                                                         >
-                                                            <UserX size={16} />
-                                                            Remove participant
+                                                            {participant.isMicrophoneEnabled ? (
+                                                                <MicOff size={16} />
+                                                            ) : (
+                                                                <Mic size={16} />
+                                                            )}
+                                                            {participant.isMicrophoneEnabled
+                                                                ? 'Mute for everyone'
+                                                                : 'Request unmute'}
                                                         </button>
+                                                    )}
+                                                    {((isAdmin && !isLocal) ||
+                                                        (localParticipant?.permissions as any)
+                                                            ?.canManageAgentSession) && (
+                                                        <>
+                                                            <hr className="my-1 border-white/10" />
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleAction(
+                                                                        participant.identity,
+                                                                        'remove',
+                                                                    )
+                                                                }
+                                                                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors border-0 bg-transparent text-left"
+                                                            >
+                                                                <UserX size={16} />
+                                                                Remove participant
+                                                            </button>
+                                                        </>
                                                     )}
                                                 </div>
                                             )}
