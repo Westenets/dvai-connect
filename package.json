@@ -20,6 +20,7 @@
         "@livekit/components-styles": "1.2.0",
         "@livekit/krisp-noise-filter": "0.4.1",
         "@livekit/track-processors": "^0.7.2",
+        "@microsoft/clarity": "^1.0.2",
         "appwrite": "^23.0.0",
         "chokidar": "^5.0.0",
         "dotenv": "^17.3.1",

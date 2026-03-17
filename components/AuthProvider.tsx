@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { account } from '@/lib/appwrite';
 import { Models } from 'appwrite';
+import Clarity from '@microsoft/clarity';
 
 interface AuthContextType {
     user: Models.User<Models.Preferences> | null;
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsLoading(true);
             const session = await account.get();
             setUser(session);
+            Clarity.identify(session.$id);
         } catch (error) {
             setUser(null);
         } finally {
