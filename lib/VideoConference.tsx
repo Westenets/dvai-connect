@@ -60,6 +60,7 @@ export interface VideoConferenceProps extends React.HTMLAttributes<HTMLDivElemen
     chatMessageDecoder?: MessageDecoder;
     /** @alpha */
     SettingsComponent?: React.ComponentType;
+    isRecordingView?: boolean;
 }
 
 /**
@@ -104,6 +105,7 @@ function MeetingUI({
     setIsWaitingForShare,
     e2eeEnabled,
     e2eePassphrase,
+    isRecordingView = false,
 }: {
     tracks: any[];
     focusTrack: any;
@@ -126,6 +128,7 @@ function MeetingUI({
     setIsWaitingForShare?: (waiting: boolean) => void;
     e2eeEnabled?: boolean;
     e2eePassphrase?: string;
+    isRecordingView?: boolean;
 }) {
     useLocalTranscriptionBroadcaster();
 
@@ -174,58 +177,60 @@ function MeetingUI({
                     </div>
                 )}
                 {showTranscription && !pipMode && <CaptionsOverlay />}
-                <ControlBar
-                    controls={{
-                        settings: !!SettingsComponent,
-                        recording: !e2eeEnabled,
-                        transcription: true,
-                        pip: false,
-                        agent: true,
-                    }}
-                    e2eePassphrase={e2eePassphrase}
-                    showTranscription={showTranscription}
-                    onTranscriptionToggle={setShowTranscription}
-                    showParticipants={showParticipants}
-                    onParticipantsToggle={handleParticipantsToggle}
-                    onPipToggle={onPipToggle}
-                    onDeviceError={(error) => {
-                        if (error.source === Track.Source.ScreenShare) {
-                            console.log('Screen share device error:', error);
-                            setIsPipOpen(false);
-                            setIsWaitingForShare?.(false);
-                            if (error.error.name === 'NotAllowedError') {
-                                toast.error('Screen sharing was cancelled or denied', { duration: 5000 });
+                {!isRecordingView && (
+                    <ControlBar
+                        controls={{
+                            settings: !!SettingsComponent,
+                            recording: true,
+                            transcription: true,
+                            pip: false,
+                            agent: true,
+                        }}
+                        e2eePassphrase={e2eePassphrase}
+                        showTranscription={showTranscription}
+                        onTranscriptionToggle={setShowTranscription}
+                        showParticipants={showParticipants}
+                        onParticipantsToggle={handleParticipantsToggle}
+                        onPipToggle={onPipToggle}
+                        onDeviceError={(error) => {
+                            if (error.source === Track.Source.ScreenShare) {
+                                console.log('Screen share device error:', error);
+                                setIsPipOpen(false);
+                                setIsWaitingForShare?.(false);
+                                if (error.error.name === 'NotAllowedError') {
+                                    toast.error('Screen sharing was cancelled or denied', { duration: 5000 });
+                                }
                             }
-                        }
-                    }}
-                    variation="minimal"
-                    className="justify-between!"
-                    pipMode={pipMode}
-                />
+                        }}
+                        variation="minimal"
+                        className="justify-between!"
+                        pipMode={pipMode}
+                    />
+                )}
             </div>
 
-            {!pipMode && (
-                <>
-                    <Chat
-                        style={{ display: widgetState.showChat ? 'grid' : 'none' }}
-                        messageFormatter={chatMessageFormatter}
-                        messageEncoder={chatMessageEncoder}
-                        messageDecoder={chatMessageDecoder}
-                    />
-                    <ParticipantsSidebar
-                        style={{ display: showParticipants ? 'flex' : 'none' }}
-                        onClose={() => setShowParticipants(false)}
-                    />
-                    {SettingsComponent && (
-                        <div
-                            className="lk-settings-menu-modal"
-                            style={{ display: widgetState.showSettings ? 'block' : 'none' }}
-                        >
-                            <SettingsComponent />
-                        </div>
-                    )}
-                </>
-            )}
+                {!pipMode && !isRecordingView && (
+                    <>
+                        <Chat
+                            style={{ display: widgetState.showChat ? 'grid' : 'none' }}
+                            messageFormatter={chatMessageFormatter}
+                            messageEncoder={chatMessageEncoder}
+                            messageDecoder={chatMessageDecoder}
+                        />
+                        <ParticipantsSidebar
+                            style={{ display: showParticipants ? 'flex' : 'none' }}
+                            onClose={() => setShowParticipants(false)}
+                        />
+                        {SettingsComponent && (
+                            <div
+                                className="lk-settings-menu-modal"
+                                style={{ display: widgetState.showSettings ? 'block' : 'none' }}
+                            >
+                                <SettingsComponent />
+                            </div>
+                        )}
+                    </>
+                )}
         </div>
     );
 }
@@ -318,6 +323,7 @@ export function VideoConference({
     chatMessageDecoder,
     chatMessageEncoder,
     SettingsComponent,
+    isRecordingView = false,
     ...props
 }: VideoConferenceProps) {
     const [widgetState, setWidgetState] = React.useState<WidgetState>({
@@ -658,6 +664,7 @@ export function VideoConference({
                             setIsWaitingForShare={setIsWaitingForShare}
                             e2eeEnabled={e2eeEnabled}
                             e2eePassphrase={e2eePassphrase}
+                            isRecordingView={isRecordingView}
                         />
                     </div>
 
@@ -697,6 +704,7 @@ export function VideoConference({
                                     setIsWaitingForShare={setIsWaitingForShare}
                                     e2eeEnabled={e2eeEnabled}
                                     e2eePassphrase={e2eePassphrase}
+                                    isRecordingView={isRecordingView}
                                 />
                             </PipWindow>
                         </>

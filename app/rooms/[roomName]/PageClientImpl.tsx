@@ -61,13 +61,42 @@ export function PageClientImpl(props: {
     region?: string;
     hq: boolean;
     codec: VideoCodec;
+    isRecordingView?: boolean;
 }) {
+    const [isRecordingView, setIsRecordingView] = useState(props.isRecordingView ?? false);
     const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
         undefined,
     );
     const [mediaPermissionGranted, setMediaPermissionGranted] = useState(false);
     const { user } = useAuth();
     const prefs = user?.prefs as Record<string, any> | undefined;
+
+    // ── Check for token in URL for auto-join ──
+    useEffect(() => {
+        const query = new URLSearchParams(window.location.search);
+        const token = query.get('token');
+        const serverUrl = query.get('serverUrl');
+        const recording = query.get('recording') === 'true';
+
+        if (token && serverUrl) {
+            setConnectionDetails({
+                serverUrl,
+                roomName: props.roomName,
+                participantToken: token,
+                participantName: 'Recorder',
+            });
+            setPreJoinChoices({
+                username: 'Recorder',
+                videoEnabled: false,
+                audioEnabled: false,
+                videoDeviceId: '',
+                audioDeviceId: '',
+            });
+            if (recording) {
+                setIsRecordingView(true);
+            }
+        }
+    }, [props.roomName]);
 
     // ── Request camera/mic permissions before showing PreJoin ──
     useEffect(() => {
@@ -210,6 +239,7 @@ export function PageClientImpl(props: {
                     connectionDetails={connectionDetails}
                     userChoices={preJoinChoices}
                     options={videoConferenceOptions}
+                    isRecordingView={isRecordingView}
                 />
             )}
         </main>
@@ -224,6 +254,7 @@ function VideoConferenceComponent(props: {
         hq: boolean;
         codec: VideoCodec;
     };
+    isRecordingView?: boolean;
 }) {
     const keyProvider = useMemo(() => new ExternalE2EEKeyProvider(), []);
     const { worker, e2eePassphrase } = useSetupE2EE();
@@ -454,6 +485,7 @@ function VideoConferenceComponent(props: {
                         <VideoConference
                             chatMessageFormatter={formatChatMessageLinks}
                             SettingsComponent={SHOW_SETTINGS_MENU ? SettingsMenu : undefined}
+                            isRecordingView={props.isRecordingView}
                         />
                         <DebugMode />
                         <RecordingIndicator />

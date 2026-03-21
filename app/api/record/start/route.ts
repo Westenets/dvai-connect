@@ -1,9 +1,10 @@
-import { EgressClient, EncodedFileOutput, S3Upload } from 'livekit-server-sdk';
+import { AccessToken, EgressClient, EncodedFileOutput, VideoGrant } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
     try {
         const roomName = req.nextUrl.searchParams.get('roomName');
+        const e2eePassphrase = req.nextUrl.searchParams.get('e2eePassphrase');
 
         /**
          * CAUTION:
@@ -23,7 +24,8 @@ export async function GET(req: NextRequest) {
         } = process.env;
 
         const hostURL = new URL(LIVEKIT_URL!);
-        hostURL.protocol = 'https:';
+        if (hostURL.protocol === 'ws:') hostURL.protocol = 'http:';
+        if (hostURL.protocol === 'wss:') hostURL.protocol = 'https:';
 
         const egressClient = new EgressClient(hostURL.origin, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
 
@@ -41,15 +43,44 @@ export async function GET(req: NextRequest) {
             filepath: filename,
         });
 
-        const egressInfo = await egressClient.startRoomCompositeEgress(
-            roomName,
-            {
+        let egressInfo;
+        if (e2eePassphrase) {
+            const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+                identity: `recorder_${roomName}_${Date.now()}`,
+                name: 'Recorder',
+            });
+            at.addGrant({
+                room: roomName,
+                roomJoin: true,
+                canPublish: false,
+                canSubscribe: true,
+            });
+            const token = await at.toJwt();
+
+            const appUrl = new URL(`/rooms/${roomName}`, req.nextUrl.origin);
+            appUrl.searchParams.append('recording', 'true');
+            appUrl.searchParams.append('token', token);
+            appUrl.searchParams.append('serverUrl', LIVEKIT_URL!);
+            // We use the hash to pass the passphrase so it's not sent to the server (even though this is our server)
+            appUrl.hash = e2eePassphrase;
+
+            const webUrl = appUrl.toString();
+            console.log('Starting Web Egress with URL:', webUrl);
+
+            egressInfo = await egressClient.startWebEgress(webUrl, {
                 file: fileOutput,
-            },
-            {
-                layout: 'speaker',
-            },
-        );
+            });
+        } else {
+            egressInfo = await egressClient.startRoomCompositeEgress(
+                roomName,
+                {
+                    file: fileOutput,
+                },
+                {
+                    layout: 'speaker',
+                },
+            );
+        }
 
         console.log('Egress started successfully:', egressInfo.egressId);
 

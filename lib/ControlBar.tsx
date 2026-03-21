@@ -274,9 +274,6 @@ export function ControlBar({
         if (!recordingEndpoint) {
             throw TypeError('No recording endpoint specified');
         }
-        if (room.isE2EEEnabled) {
-            throw Error('Recording of encrypted meetings is currently not supported');
-        }
         setProcessingRecRequest(true);
         setInitialRecStatus(isRecording);
 
@@ -293,7 +290,11 @@ export function ControlBar({
             if (isRecording) {
                 response = await fetch(recordingEndpoint + `/stop?roomName=${room.name}`);
             } else {
-                response = await fetch(recordingEndpoint + `/start?roomName=${room.name}`);
+                let url = recordingEndpoint + `/start?roomName=${room.name}`;
+                if (e2eePassphrase) {
+                    url += `&e2eePassphrase=${encodeURIComponent(e2eePassphrase)}`;
+                }
+                response = await fetch(url);
             }
 
             if (loadingToastId) {
