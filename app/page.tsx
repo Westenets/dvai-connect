@@ -67,7 +67,7 @@ export default function Dashboard() {
                     'recordings',
                     [
                         Query.contains('participant_ids', user.$id),
-                        Query.orderDesc('created_at'),
+                        Query.orderDesc('$createdAt'),
                         Query.limit(10)
                     ]
                 );
