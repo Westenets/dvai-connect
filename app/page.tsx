@@ -489,18 +489,26 @@ export default function Dashboard() {
                                 key={rec.$id} 
                                 className="group bg-white dark:bg-[#15202b] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-[#00a8a8] dark:hover:border-[#00a8a8] transition-all hover:shadow-md"
                             >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-[#00a8a8]">
-                                        <span className="material-symbols-outlined">videocam</span>
+                                <div className="relative w-full aspect-video mb-4 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
+                                    {rec.thumbnail_url ? (
+                                        <img 
+                                            src={rec.thumbnail_url} 
+                                            alt={rec.room_name}
+                                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                            <span className="material-symbols-outlined text-4xl">videocam</span>
+                                        </div>
+                                    )}
+                                    <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 backdrop-blur-md rounded-lg text-[10px] text-white font-semibold">
+                                        {new Date(rec.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                     </div>
-                                    <span className="text-xs font-medium text-slate-400">
-                                        {new Date(rec.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    </span>
                                 </div>
-                                <h3 className="font-semibold text-slate-900 dark:text-white mb-1 truncate">
+                                <h3 className="font-semibold text-slate-900 dark:text-white mb-1 truncate leading-tight">
                                     {rec.room_name}
                                 </h3>
-                                <p className="text-xs text-slate-500 mb-4 flex items-center gap-1">
+                                <p className="text-[11px] text-slate-500 mb-4 flex items-center gap-1 opacity-80">
                                     <span className="material-symbols-outlined text-[14px]">person</span>
                                     Started by {rec.started_by === (user as any).name ? 'You' : rec.started_by}
                                 </p>

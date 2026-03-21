@@ -2,8 +2,9 @@ require('dotenv').config({ path: './.env.local' });
 const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
-const { Client: AppwriteClient, Storage: AppwriteStorage, ID } = require('node-appwrite');
+const { Client: AppwriteClient, Storage: AppwriteStorage, Databases: AppwriteDatabases, Query, ID } = require('node-appwrite');
 const { InputFile } = require('node-appwrite/file');
+const ffmpeg = require('fluent-ffmpeg');
 
 // 1. Initialize Appwrite Client
 const client = new AppwriteClient()
@@ -12,6 +13,7 @@ const client = new AppwriteClient()
     .setKey((process.env.APPWRITE_API_KEY || '').trim());
 
 const storage = new AppwriteStorage(client);
+const databases = new AppwriteDatabases(client);
 
 // The bridge directory you created in your home folder
 const WATCH_DIR =
@@ -74,6 +76,76 @@ watcher.on('add', async (filePath) => {
         // Construct and log the public URL
         const publicUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${result.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
         console.log(`🔗 Public URL: ${publicUrl}`);
+
+        // --- Thumbnail Extraction (New) ---
+        if (filePath.endsWith('.mp4')) {
+            const thumbName = `thumb_${fileId}.jpg`;
+            const thumbPath = path.join(path.dirname(filePath), thumbName);
+            
+            console.log(`🖼️ [THUMBNAIL] Extracting frame from ${fileName}...`);
+            
+            await new Promise((resolve, reject) => {
+                ffmpeg(filePath)
+                    .screenshots({
+                        timestamps: [1], // Capture at 1 second
+                        filename: thumbName,
+                        folder: path.dirname(filePath),
+                        size: '640x360'
+                    })
+                    .on('end', resolve)
+                    .on('error', (err) => {
+                        console.error(`❌ Thumbnail extraction failed: ${err.message}`);
+                        reject(err);
+                    });
+            });
+
+            if (fs.existsSync(thumbPath)) {
+                try {
+                    console.log(`🚀 [UPLOAD] Uploading thumbnail ${thumbName} to Appwrite...`);
+                    const thumbId = `${fileId}_thumb`;
+                    
+                    // Try to delete existing thumbnail if it exists (for retries)
+                    try { await storage.deleteFile(BUCKET_ID, thumbId); } catch (e) {}
+
+                    const thumbResult = await storage.createFile(
+                        BUCKET_ID,
+                        thumbId,
+                        InputFile.fromPath(thumbPath, thumbName),
+                    );
+
+                    const thumbnailUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${thumbResult.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
+                    console.log(`✅ [SUCCESS] Thumbnail uploaded: ${thumbnailUrl}`);
+
+                    // Update the Database document
+                    console.log(`🗄️ [DATABASE] Updating recording document for ${fileName}...`);
+                    const docs = await databases.listDocuments(
+                        'dvai-connect',
+                        'recordings',
+                        [Query.equal('file_name', fileName)]
+                    );
+
+                    if (docs.total > 0) {
+                        await databases.updateDocument(
+                            'dvai-connect',
+                            'recordings',
+                            docs.documents[0].$id,
+                            { thumbnail_url: thumbnailUrl }
+                        );
+                        console.log(`✨ [UPDATED] Database document updated with thumbnail.`);
+                    } else {
+                        console.log(`⚠️ [DATABASE] No matching document found in 'recordings' for file_name: ${fileName}`);
+                    }
+                } catch (err) {
+                    console.error(`❌ Thumbnail process failed:`, err);
+                } finally {
+                    // Cleanup local thumbnail
+                    if (fs.existsSync(thumbPath)) {
+                        fs.unlinkSync(thumbPath);
+                        console.log(`🗑️ Deleted local thumbnail: ${thumbName}`);
+                    }
+                }
+            }
+        }
 
         // 4. Safely delete the local copy to save your server's disk space
         fs.unlink(filePath, (err) => {
