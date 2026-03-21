@@ -316,6 +316,7 @@ export function ControlBar({
                     }
                 } else {
                     toast.success('Recording started successfully', { duration: 5000 });
+                    setProcessingRecRequest(false);
                 }
             } else {
                 console.error(
