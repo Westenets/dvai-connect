@@ -1,7 +1,8 @@
 'use client';
 import * as React from 'react';
 import { useMaybeLayoutContext, MediaDeviceMenu } from '@livekit/components-react';
-import { Camera, Mic, Speaker, X, Settings2 } from 'lucide-react';
+import { Camera, Mic, Speaker, X, Settings2, Subtitles } from 'lucide-react';
+import { useAuth } from '@/components/AuthProvider';
 import { CameraSettings } from './CameraSettings';
 import { MicrophoneSettings } from './MicrophoneSettings';
 import { SpeakerSettings } from './SpeakerSettings';
@@ -17,6 +18,17 @@ export interface SettingsMenuProps extends React.HTMLAttributes<HTMLDivElement> 
 export function SettingsMenu(props: SettingsMenuProps) {
     const layoutContext = useMaybeLayoutContext();
     const settingsRef = React.useRef<null | HTMLDivElement>(null);
+    const { user, updatePrefs } = useAuth();
+    const prefs = user?.prefs as Record<string, any>;
+    const [captionSize, setCaptionSize] = React.useState(prefs?.captionSize ?? 1);
+
+    const handleCaptionSizeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = parseInt(e.target.value);
+        setCaptionSize(val);
+        if (user) {
+            await updatePrefs({ ...prefs, captionSize: val });
+        }
+    };
 
     return (
         <div
@@ -78,6 +90,49 @@ export function SettingsMenu(props: SettingsMenuProps) {
                             <span>Speaker & Headphones</span>
                         </div>
                         <SpeakerSettings settingsRef={settingsRef} />
+                    </div>
+
+                    {/* Captions Section */}
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                            <Subtitles className="w-4 h-4" />
+                            <span>Closed Captions</span>
+                        </div>
+                        <div className="bg-slate-100/50 dark:bg-white/5 rounded-xl p-3 border border-slate-200/30 dark:border-white/5">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm text-slate-700 dark:text-slate-300">
+                                    Caption Size
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                    {
+                                        [
+                                            'Small',
+                                            'Medium',
+                                            'Large',
+                                            'Extra Large',
+                                            '2XL',
+                                            '3XL',
+                                            '4XL',
+                                        ][captionSize]
+                                    }
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs font-medium text-slate-500">A</span>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="6"
+                                    step="1"
+                                    value={captionSize}
+                                    onChange={handleCaptionSizeChange}
+                                    className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-[#00a8a8]"
+                                />
+                                <span className="text-lg font-medium leading-none text-slate-500">
+                                    A
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

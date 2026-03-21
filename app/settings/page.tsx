@@ -113,6 +113,7 @@ export default function Settings() {
     const [audioOutputDevice, setAudioOutputDevice] = useState('default');
     const [noiseCancellation, setNoiseCancellation] = useState(false);
     const [echoReduction, setEchoReduction] = useState(false);
+    const [captionSize, setCaptionSize] = useState(1);
 
     // Video Settings State
     const [videoInputDevice, setVideoInputDevice] = useState('default');
@@ -163,6 +164,7 @@ export default function Settings() {
             if (prefs?.noiseCancellation !== undefined)
                 setNoiseCancellation(prefs.noiseCancellation);
             if (prefs?.echoReduction !== undefined) setEchoReduction(prefs.echoReduction);
+            if (prefs?.captionSize !== undefined) setCaptionSize(prefs.captionSize);
             if (prefs?.videoInputDevice) setVideoInputDevice(prefs.videoInputDevice);
             if (prefs?.videoQuality) setVideoQuality(prefs.videoQuality);
             if (prefs?.adjustForLowLight !== undefined)
@@ -199,6 +201,7 @@ export default function Settings() {
                     audioOutputDevice,
                     noiseCancellation,
                     echoReduction,
+                    captionSize,
                     videoInputDevice,
                     videoQuality,
                     adjustForLowLight,
@@ -233,6 +236,7 @@ export default function Settings() {
         audioOutputDevice,
         noiseCancellation,
         echoReduction,
+        captionSize,
         videoInputDevice,
         videoQuality,
         adjustForLowLight,
@@ -1250,6 +1254,51 @@ export default function Settings() {
                                                 />
                                                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                             </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
+                                        Accessibility
+                                    </h3>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-start gap-4">
+                                                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400">
+                                                        <span className="material-symbols-outlined text-[24px]">
+                                                            format_size
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-medium text-slate-900 my-0 dark:text-white">
+                                                            Closed Caption Size
+                                                        </h4>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                            Adjust the text size for meeting transcriptions.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4 px-2 mt-4">
+                                                <span className="text-sm font-medium text-slate-500">A</span>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="6"
+                                                    step="1"
+                                                    value={captionSize}
+                                                    onChange={(e) => setCaptionSize(parseInt(e.target.value))}
+                                                    className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-[#00a8a8]"
+                                                />
+                                                <span className="text-2xl font-medium leading-none text-slate-500">A</span>
+                                            </div>
+                                            <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 text-center min-h-[80px] flex items-center justify-center">
+                                                <span className={`${['text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl'][captionSize]} text-slate-900 dark:text-white font-medium transition-all`}>
+                                                    Preview Caption Text
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

@@ -48,6 +48,8 @@ import { ParticipantsSidebar } from './ParticipantsSidebar';
 import { PipWindow } from './PipWindow';
 import { InviteModal } from './InviteModal';
 import { useSetupE2EE } from './useSetupE2EE';
+import { useLocalTranscriptionBroadcaster } from './hooks/useLocalTranscriptionBroadcaster';
+import { CaptionsOverlay } from './components/CaptionsOverlay';
 
 /**
  * @public
@@ -123,6 +125,8 @@ function MeetingUI({
     setIsWaitingForShare?: (waiting: boolean) => void;
     e2eeEnabled?: boolean;
 }) {
+    useLocalTranscriptionBroadcaster();
+
     return (
         <div
             className="lk-video-conference-inner flex-1 flex flex-row min-h-0 relative w-full h-full overflow-hidden"
@@ -167,28 +171,12 @@ function MeetingUI({
                         )}
                     </div>
                 )}
-                {showTranscription && transcriptions.length > 0 && !pipMode && (
-                    <div className="absolute bottom-[80px] left-0 right-0 flex justify-center pointer-events-none mb-2 z-10">
-                        <div className="bg-black/70 backdrop-blur-md rounded-lg p-3 max-w-2xl w-full max-h-48 overflow-y-auto lk-transcription-container pointer-events-auto shadow-lg">
-                            {transcriptions.map((t) => (
-                                <div
-                                    key={t.streamInfo?.id || Math.random().toString()}
-                                    className="text-white text-sm mb-1 last:mb-0"
-                                >
-                                    <span className="font-semibold text-gray-300 mr-2">
-                                        {t.participantInfo?.identity || 'System'}:
-                                    </span>
-                                    <span className="opacity-100">{t.text}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                {showTranscription && !pipMode && <CaptionsOverlay />}
                 <ControlBar
                     controls={{
                         settings: !!SettingsComponent,
                         recording: !e2eeEnabled,
-                        transcription: false,
+                        transcription: true,
                         pip: false,
                     }}
                     showTranscription={showTranscription}
@@ -460,6 +448,12 @@ export function VideoConference({
 
     const room = useMaybeRoomContext();
     const { isScreenShareEnabled, localParticipant } = useLocalParticipant();
+
+    React.useEffect(() => {
+        if (localParticipant) {
+            localParticipant.setAttributes({ ccEnabled: showTranscription ? 'true' : 'false' });
+        }
+    }, [showTranscription, localParticipant]);
 
     const { chatMessages } = useChat();
     const [pipWindow, setPipWindow] = React.useState<Window | null>(null);

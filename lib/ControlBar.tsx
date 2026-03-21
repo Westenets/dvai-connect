@@ -14,6 +14,7 @@ import {
     useParticipants,
     useIsRecording,
     useRoomContext,
+    useTrackToggle,
 } from '@livekit/components-react';
 import { supportsScreenSharing } from '@livekit/components-core';
 import { StartMediaButton } from '@livekit/components-react';
@@ -34,6 +35,11 @@ import {
     Check,
     X,
     ChevronUp,
+    Mic,
+    MicOff,
+    Video,
+    VideoOff,
+    ClosedCaption,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
@@ -138,6 +144,81 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
  * ```
  * @public
  */
+
+function CustomMicToggle({
+    showText,
+    onChange,
+    onDeviceError,
+    showIcon,
+    className,
+    isMobile,
+}: {
+    showText: boolean;
+    onChange?: (enabled: boolean, isUserInitiated: boolean) => void;
+    onDeviceError?: (error: Error) => void;
+    showIcon: boolean;
+    className?: string;
+    isMobile: boolean;
+}) {
+    const { buttonProps, enabled } = useTrackToggle({
+        source: Track.Source.Microphone,
+        onChange,
+        onDeviceError,
+    });
+    return (
+        <button
+            {...buttonProps}
+            className={`lk-button ${className || ''}`}
+            title={`${enabled ? 'Mute' : 'Unmute'} Microphone`}
+        >
+            {showIcon &&
+                (enabled ? (
+                    <Mic size={isMobile ? 18 : 20} />
+                ) : (
+                    <MicOff size={isMobile ? 18 : 20} className="text-red-500" />
+                ))}
+            {showText && 'Microphone'}
+        </button>
+    );
+}
+
+function CustomCameraToggle({
+    showText,
+    onChange,
+    onDeviceError,
+    showIcon,
+    className,
+    isMobile,
+}: {
+    showText: boolean;
+    onChange?: (enabled: boolean, isUserInitiated: boolean) => void;
+    onDeviceError?: (error: Error) => void;
+    showIcon: boolean;
+    className?: string;
+    isMobile: boolean;
+}) {
+    const { buttonProps, enabled } = useTrackToggle({
+        source: Track.Source.Camera,
+        onChange,
+        onDeviceError,
+    });
+    return (
+        <button
+            {...buttonProps}
+            className={`lk-button ${className || ''}`}
+            title={`${enabled ? 'Stop' : 'Start'} Camera`}
+        >
+            {showIcon &&
+                (enabled ? (
+                    <Video size={isMobile ? 18 : 20} />
+                ) : (
+                    <VideoOff size={isMobile ? 18 : 20} className="text-red-500" />
+                ))}
+            {showText && 'Camera'}
+        </button>
+    );
+}
+
 export function ControlBar({
     variation,
     controls,
@@ -434,7 +515,7 @@ export function ControlBar({
             {isMobile && (isMoreMenuOpen || isMoreMenuClosing) && (
                 <div
                     ref={mobileMenuRef}
-                    className={`absolute bottom-[66px] left-0 right-0 p-4 bg-(--lk-bg)/75 backdrop-blur-xl rounded-t-2xl shadow-2xl border border-slate-200/50 dark:border-white/10 z-100 ${
+                    className={`absolute bottom-(--lk-mobile-menu-bottom) left-0 right-0 p-4 bg-(--lk-bg)/75 backdrop-blur-xl rounded-t-2xl shadow-2xl border border-slate-200/50 dark:border-white/10 z-100 ${
                         isMoreMenuClosing
                             ? 'animate-out fade-out slide-out-to-bottom-4 duration-150'
                             : 'animate-in fade-in slide-in-from-bottom-4 duration-150'
@@ -528,9 +609,11 @@ export function ControlBar({
                                 >
                                     <MonitorUp
                                         size={18}
-                                        className={isScreenShareEnabled ? 'text-red-500' : ''}
+                                        color={isScreenShareEnabled ? '#f91f31' : '#fff'}
                                     />
-                                    <span className="text-sm font-medium">Screen Share</span>
+                                    <span className="text-sm font-medium">
+                                        {isScreenShareEnabled ? 'Stop Presenting' : 'Screen Share'}
+                                    </span>
                                 </TrackToggle>
                             </div>
                         )}
@@ -551,7 +634,9 @@ export function ControlBar({
                                     >
                                         back_hand
                                     </span>
-                                    <span className="text-sm font-medium">Hand</span>
+                                    <span className="text-sm font-medium">
+                                        {isHandRaised ? 'Lower' : 'Raise'} Hand
+                                    </span>
                                 </button>
                             </div>
                         )}
@@ -566,10 +651,13 @@ export function ControlBar({
                                     }}
                                     aria-pressed={showTranscription}
                                 >
-                                    <span className="material-symbols-outlined text-lg">
-                                        subtitles
+                                    <ClosedCaption
+                                        size={isMobile ? 16 : 20}
+                                        color={showTranscription ? '#f91f31' : '#fff'}
+                                    />
+                                    <span className="text-sm font-medium">
+                                        {showTranscription ? 'Hide' : 'Show'} Subtitles
                                     </span>
-                                    <span className="text-sm font-medium">Subtitles</span>
                                 </button>
                             </div>
                         )}
@@ -637,10 +725,11 @@ export function ControlBar({
                         )}
                     </div>
                     {visibleControls.emoji && (
-                        <div className="py-1">
+                        <div className="py-1 bg-[#151516] rounded-xl flex items-center justify-center">
                             <EmojiPicker
                                 theme={Theme.DARK}
                                 reactionsDefaultOpen={true}
+                                autoFocusSearch={false}
                                 reactions={[
                                     '1f44d', //like
                                     '2764-fe0f', //heart
@@ -673,25 +762,24 @@ export function ControlBar({
                             .catch(() => toast.error('Failed to copy link'))
                     }
                 >
-                    {showIcon && <Copy size={16} />}
+                    {showIcon && <Copy size={isMobile ? 18 : 20} />}
                     {showText && 'Invite'}
                 </button>
             )}
 
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-(--lk-control-bar-button-gap)">
                 {visibleControls.microphone && (
                     <div className="lk-button-group">
-                        <TrackToggle
+                        <CustomMicToggle
                             className="rounded-l-full!"
-                            source={Track.Source.Microphone}
+                            showText={showText}
                             showIcon={showIcon}
+                            isMobile={isMobile}
                             onChange={microphoneOnChange}
                             onDeviceError={(error) =>
                                 onDeviceError?.({ source: Track.Source.Microphone, error })
                             }
-                        >
-                            {showText && 'Microphone'}
-                        </TrackToggle>
+                        />
                         <div className="lk-button-group-menu">
                             <MediaDeviceMenu
                                 kind="audioinput"
@@ -705,17 +793,16 @@ export function ControlBar({
                 )}
                 {visibleControls.camera && (
                     <div className="lk-button-group">
-                        <TrackToggle
+                        <CustomCameraToggle
                             className="rounded-l-full!"
-                            source={Track.Source.Camera}
+                            showText={showText}
                             showIcon={showIcon}
+                            isMobile={isMobile}
                             onChange={cameraOnChange}
                             onDeviceError={(error) =>
                                 onDeviceError?.({ source: Track.Source.Camera, error })
                             }
-                        >
-                            {showText && 'Camera'}
-                        </TrackToggle>
+                        />
                         <div className="lk-button-group-menu">
                             <MediaDeviceMenu
                                 kind="videoinput"
@@ -744,7 +831,7 @@ export function ControlBar({
                         title="More Options"
                     >
                         <ChevronUp
-                            size={20}
+                            size={18}
                             className={`transition-transform duration-300 ${isMoreMenuOpen ? 'rotate-180' : ''}`}
                         />
                     </button>
@@ -780,7 +867,7 @@ export function ControlBar({
                                                 );
                                         }}
                                     >
-                                        {showIcon && <Bot size={16} />}
+                                        {showIcon && <Bot size={isMobile ? 16 : 20} />}
                                         {showText && 'Add AI Agent'}
                                     </button>
                                 )}
@@ -793,10 +880,13 @@ export function ControlBar({
                                     >
                                         {showIcon &&
                                             (processingRecRequest ? (
-                                                <LoaderCircle size={16} className="animate-spin" />
+                                                <LoaderCircle
+                                                    size={isMobile ? 16 : 20}
+                                                    className="animate-spin"
+                                                />
                                             ) : isRecording ? (
                                                 <Square
-                                                    size={16}
+                                                    size={isMobile ? 16 : 20}
                                                     className="fill-red-500 text-red-500"
                                                 />
                                             ) : (
@@ -830,8 +920,8 @@ export function ControlBar({
                             >
                                 {showIcon && (
                                     <MonitorUp
-                                        size={16}
-                                        className={isScreenShareEnabled ? 'text-red-500' : ''}
+                                        size={isMobile ? 16 : 20}
+                                        color={showTranscription ? '#f91f31' : '#fff'}
                                     />
                                 )}
                                 {showText &&
@@ -858,7 +948,7 @@ export function ControlBar({
                                         {/* {showIcon && <Hand size={16} color={isHandRaised ? '#f91f31' : '#fff'} />} */}
                                         {showIcon && (
                                             <span
-                                                className={`material-symbols-outlined text-[16px]! ${isHandRaised ? 'text-red-500' : 'text-white'}`}
+                                                className={`material-symbols-outlined ${isMobile ? 'text-[16px]!' : 'text-[20px]!'} ${isHandRaised ? 'text-red-500' : 'text-white'}`}
                                             >
                                                 back_hand
                                             </span>
@@ -874,7 +964,7 @@ export function ControlBar({
                                             onClick={() => setIsEmojiMenuOpen(!isEmojiMenuOpen)}
                                             title="Send emoji"
                                         >
-                                            {showIcon && <Smile size={16} />}
+                                            {showIcon && <Smile size={isMobile ? 16 : 20} />}
                                             {showText && 'emoji'}
                                         </button>
                                         {isEmojiMenuOpen && (
@@ -911,14 +1001,16 @@ export function ControlBar({
                                 className="lk-button rounded-full!"
                                 aria-pressed={showTranscription ?? false}
                                 onClick={() => onTranscriptionToggle?.(!showTranscription)}
-                                title="Show Transcriptions"
+                                title={`${showTranscription ? 'Hide' : 'Show'} Transcriptions`}
                             >
                                 {showIcon && (
-                                    <span className="material-symbols-outlined text-xl">
-                                        subtitles
-                                    </span>
+                                    <ClosedCaption
+                                        size={isMobile ? 16 : 20}
+                                        color={showTranscription ? '#f91f31' : '#fff'}
+                                    />
                                 )}
-                                {showText && 'Transcriptions'}
+                                {showText &&
+                                    `${showTranscription ? 'Hide' : 'Show'} Transcriptions`}
                             </button>
                         )}
                         {visibleControls.pip && (
@@ -927,7 +1019,7 @@ export function ControlBar({
                                 onClick={() => onPipToggle?.()}
                                 title="Open Mini Player (PiP)"
                             >
-                                {showIcon && <PictureInPicture size={16} />}
+                                {showIcon && <PictureInPicture size={isMobile ? 16 : 20} />}
                                 {showText && 'Mini Player'}
                             </button>
                         )}
@@ -945,13 +1037,13 @@ export function ControlBar({
                                         : '0'
                                 }
                             >
-                                {showIcon && <UsersRound size={16} />}
+                                {showIcon && <UsersRound size={isMobile ? 16 : 20} />}
                                 {showText && 'Participants'}
                             </button>
                         )}
                         {visibleControls.chat && (
-                            <ChatToggle className="rounded-full!">
-                                {showIcon && <MessageSquareText size={16} />}
+                            <ChatToggle className="rounded-full!" title="Chat">
+                                {showIcon && <MessageSquareText size={isMobile ? 16 : 20} />}
                                 {showText && 'Chat'}
                             </ChatToggle>
                         )}
@@ -964,7 +1056,7 @@ export function ControlBar({
                                 }
                                 title="Media Settings"
                             >
-                                {showIcon && <SettingsIcon size={16} />}
+                                {showIcon && <SettingsIcon size={isMobile ? 16 : 20} />}
                                 {showText && 'Settings'}
                             </button>
                         )}
@@ -973,7 +1065,7 @@ export function ControlBar({
             </div>
             {visibleControls.leave && (
                 <DisconnectButton className="rounded-full!" title="Leave">
-                    {showIcon && <PhoneOff size={16} />}
+                    {showIcon && <PhoneOff size={isMobile ? 16 : 20} />}
                     {showText && 'Leave'}
                 </DisconnectButton>
             )}

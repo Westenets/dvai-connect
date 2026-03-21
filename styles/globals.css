@@ -33,6 +33,9 @@
     --lk-control-bar-height: 69px;
     --lk-chat-header-height: 69px;
 
+    --lk-control-bar-button-gap: 0.5rem;
+    --lk-mobile-menu-bottom: 66px;
+
     --swiper-theme-color: #00a8a8 !important;
 }
 
@@ -102,9 +105,13 @@
 .lk-agent-button:hover {
     background-color: #22c55e; /* green-500 */
 }
+div.lk-settings-menu-modal,
+[data-lk-theme] .lk-settings-menu-modal,
 .lk-settings-menu-modal {
     background: transparent !important;
-    border: 0 !important;
+    border: 0px !important;
+    z-index: 9999 !important;
+    box-shadow: none !important;
 }
 
 @media (max-width: 600px) {
@@ -132,6 +139,32 @@
         overflow: hidden !important;
         white-space: nowrap !important;
         text-overflow: ellipsis !important;
+    }
+}
+
+/* Specific adjustments for narrow mobile devices (iPhone SE etc) */
+@media (max-width: 400px) {
+    div.lk-control-bar,
+    [data-lk-theme] .lk-control-bar,
+    .lk-control-bar {
+        padding: 0.25rem !important;
+    }
+    :root {
+        --lk-mobile-menu-bottom: 45px;
+    }
+}
+
+/* Very narrow devices (Galaxy Z Fold 5 etc) */
+@media (max-width: 350px) {
+    div.lk-control-bar,
+    [data-lk-theme] .lk-control-bar,
+    .lk-control-bar {
+        gap: 1px !important;
+        padding: 0.25rem 0.15rem !important;
+    }
+    :root {
+        --lk-control-bar-button-gap: 1px;
+        --lk-mobile-menu-bottom: 45px;
     }
 }
 

@@ -171,6 +171,19 @@ export const ParticipantTile: (
                                 </picture>
                             </div>
                         )}
+                        {handRaised === 'true' && (
+                            <div className="absolute top-2 left-2 z-10 pointer-events-none">
+                                <span
+                                    className="material-symbols-outlined ml-0.5 text-4xl! animate-wave"
+                                    style={{
+                                        fontVariationSettings: '"FILL" 1',
+                                        color: '#ffd500',
+                                    }}
+                                >
+                                    back_hand
+                                </span>
+                            </div>
+                        )}
                         {children ?? (
                             <>
                                 {isTrackReference(trackReference) &&
@@ -230,7 +243,7 @@ export const ParticipantTile: (
                                                     show={'muted'}
                                                 ></TrackMutedIndicator>
                                                 <ParticipantName />
-                                                {handRaised === 'true' && (
+                                                {/* {handRaised === 'true' && (
                                                     <span
                                                         className="material-symbols-outlined ml-0.5 text-[16px]! animate-wave"
                                                         style={{
@@ -240,7 +253,7 @@ export const ParticipantTile: (
                                                     >
                                                         back_hand
                                                     </span>
-                                                )}
+                                                )} */}
                                             </>
                                         ) : (
                                             <>
