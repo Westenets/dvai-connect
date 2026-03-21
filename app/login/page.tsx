@@ -14,6 +14,7 @@ export default function LoginPage() {
     const [isRegistering, setIsRegistering] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -32,10 +33,22 @@ export default function LoginPage() {
         try {
             if (isRegistering) {
                 await account.create(ID.unique(), email, password, name || undefined);
-                // Automatically log in after registration
+            }
+
+            try {
+                // Automatically log in or log in existing user
                 await account.createEmailPasswordSession(email, password);
-            } else {
-                await account.createEmailPasswordSession(email, password);
+            } catch (err: any) {
+                if (
+                    err instanceof AppwriteException &&
+                    err.type === 'user_session_already_exists'
+                ) {
+                    // Delete the current session and try again
+                    await account.deleteSession('current');
+                    await account.createEmailPasswordSession(email, password);
+                } else {
+                    throw err;
+                }
             }
 
             await checkSession();
@@ -194,7 +207,7 @@ export default function LoginPage() {
                                                 ? 'Create a strong password'
                                                 : 'Enter your password'
                                         }
-                                        type="password"
+                                        type={showPassword ? 'text' : 'password'}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
@@ -203,6 +216,13 @@ export default function LoginPage() {
                                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">
                                         lock
                                     </span>
+                                    <button
+                                        className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 bg-transparent border-none cursor-pointer text-[20px]"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        type="button"
+                                    >
+                                        {showPassword ? 'visibility_off' : 'visibility'}
+                                    </button>
                                 </div>
                             </div>
 
