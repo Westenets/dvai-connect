@@ -2,7 +2,13 @@ require('dotenv').config({ path: './.env.local' });
 const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
-const { Client: AppwriteClient, Storage: AppwriteStorage, Databases: AppwriteDatabases, Query, ID } = require('node-appwrite');
+const {
+    Client: AppwriteClient,
+    Storage: AppwriteStorage,
+    Databases: AppwriteDatabases,
+    Query,
+    ID,
+} = require('node-appwrite');
 const { InputFile } = require('node-appwrite/file');
 const ffmpeg = require('fluent-ffmpeg');
 
@@ -60,10 +66,9 @@ watcher.on('add', async (filePath) => {
         // which matches what the Stop API will look for.
         // Appwrite fileId allows alphanumeric, underscore, hyphen.
         const fileExtension = fileName.split('.').pop();
-        const fileId = fileName
-            .replace(`.${fileExtension}`, '')
-            .replace(/[^a-zA-Z0-9_-]/g, '_');
-        console.log(fileId);
+        const baseId = fileName.replace(`.${fileExtension}`, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const fileId = baseId.substring(0, 36); // Appwrite limit is 36
+        console.log(`📡 [WORKER] Using fileId: ${fileId}`);
 
         const result = await storage.createFile(
             BUCKET_ID,
@@ -81,16 +86,16 @@ watcher.on('add', async (filePath) => {
         if (filePath.endsWith('.mp4')) {
             const thumbName = `thumb_${fileId}.jpg`;
             const thumbPath = path.join(path.dirname(filePath), thumbName);
-            
+
             console.log(`🖼️ [THUMBNAIL] Extracting frame from ${fileName}...`);
-            
+
             await new Promise((resolve, reject) => {
                 ffmpeg(filePath)
                     .screenshots({
                         timestamps: [1], // Capture at 1 second
                         filename: thumbName,
                         folder: path.dirname(filePath),
-                        size: '640x360'
+                        size: '640x360',
                     })
                     .on('end', resolve)
                     .on('error', (err) => {
@@ -102,10 +107,12 @@ watcher.on('add', async (filePath) => {
             if (fs.existsSync(thumbPath)) {
                 try {
                     console.log(`🚀 [UPLOAD] Uploading thumbnail ${thumbName} to Appwrite...`);
-                    const thumbId = `${fileId}_thumb`;
-                    
+                    const thumbId = `thumb-${baseId}`.substring(0, 36);
+
                     // Try to delete existing thumbnail if it exists (for retries)
-                    try { await storage.deleteFile(BUCKET_ID, thumbId); } catch (e) {}
+                    try {
+                        await storage.deleteFile(BUCKET_ID, thumbId);
+                    } catch (e) {}
 
                     const thumbResult = await storage.createFile(
                         BUCKET_ID,
@@ -118,41 +125,38 @@ watcher.on('add', async (filePath) => {
 
                     // Update the Database document
                     console.log(`🗄️ [DATABASE] Updating recording document for ${fileName}...`);
-                    const docs = await databases.listDocuments(
-                        'dvai-connect',
-                        'recordings',
-                        [Query.equal('file_name', fileName)]
-                    );
+                    const docs = await databases.listDocuments('dvai-connect', 'recordings', [
+                        Query.equal('file_name', fileName),
+                    ]);
 
                     if (docs.total > 0) {
                         await databases.updateDocument(
                             'dvai-connect',
                             'recordings',
                             docs.documents[0].$id,
-                            { 
-                                thumbnail_url: thumbnailUrl,
-                                recording_url: publicUrl,
-                                status: 'completed'
-                            }
-                        );
-                        console.log(`✨ [UPDATED] Database document finalized with video and thumbnail.`);
-                    } else {
-                        console.log(`⚠️ [DATABASE] No matching document found in 'recordings' for file_name: ${fileName}. Creating new fallback...`);
-                        await databases.createDocument(
-                            'dvai-connect',
-                            'recordings',
-                            ID.unique(),
                             {
-                                room_name: fileName.split('-').pop().replace('.mp4', ''), // Fallback room name from filename
-                                file_name: fileName,
-                                recording_url: publicUrl,
                                 thumbnail_url: thumbnailUrl,
+                                recording_url: publicUrl,
                                 status: 'completed',
-                                created_at: new Date().toISOString(),
-                                started_by: 'unknown',
-                                egress_id: fileId
-                            }
+                            },
                         );
+                        console.log(
+                            `✨ [UPDATED] Database document finalized with video and thumbnail.`,
+                        );
+                    } else {
+                        console.log(
+                            `⚠️ [DATABASE] No matching document found in 'recordings' for file_name: ${fileName}. Creating new fallback...`,
+                        );
+                        await databases.createDocument('dvai-connect', 'recordings', ID.unique(), {
+                            room_name: fileName.split('-').pop().replace('.mp4', ''), // Fallback room name from filename
+                            file_name: fileName,
+                            recording_url: publicUrl,
+                            thumbnail_url: thumbnailUrl,
+                            status: 'completed',
+                            created_at: new Date().toISOString(),
+                            started_by: 'unknown',
+                            egress_id: fileId,
+                        });
                     }
                 } catch (err) {
                     console.error(`❌ Thumbnail process failed:`, err);
