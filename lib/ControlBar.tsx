@@ -126,6 +126,7 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
     onParticipantsToggle?: (show: boolean) => void;
     onPipToggle?: () => void;
     pipMode?: boolean;
+    e2eePassphrase?: string;
 }
 
 /**
@@ -230,6 +231,7 @@ export function ControlBar({
     onPipToggle,
     pipMode,
     onDeviceError,
+    e2eePassphrase,
     ...props
 }: ControlBarProps) {
     const [isChatOpen, setIsChatOpen] = React.useState(false);
@@ -330,6 +332,33 @@ export function ControlBar({
             toast.error('Failed to process recording request');
         }
     };
+
+    const handleDispatchAgent = React.useCallback(async () => {
+        try {
+            const payload = {
+                roomName: roomContext?.name,
+                ...(e2eePassphrase && { e2eePassphrase }),
+            };
+
+            const response = await fetch('/api/agent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                toast.success('AI Agent dispatched to the room!');
+                setAgentOpen(true);
+                setIsMoreMenuOpen(false);
+            } else {
+                const errorData = await response.json();
+                toast.error(`Failed to dispatch: ${errorData.message || 'Unknown error'}`);
+            }
+        } catch (err) {
+            console.error('Failed to dispatch agent', err);
+            toast.error('Failed to dispatch agent. Check console for details.');
+        }
+    }, [roomContext?.name, e2eePassphrase, setAgentOpen, setIsMoreMenuOpen]);
 
     // Reset agentOpen when the agent participant is removed from the room
     React.useEffect(() => {
@@ -539,23 +568,7 @@ export function ControlBar({
                                 {visibleControls.agent && (
                                     <button
                                         className="lk-button w-full justify-start! gap-3 py-3! rounded-lg! border-0! bg-transparent! hover:bg-slate-200 dark:hover:bg-white/10"
-                                        onClick={() => {
-                                            fetch('/api/agent', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    roomName: roomContext?.name,
-                                                }),
-                                            })
-                                                .then(() => {
-                                                    toast.success('AI Agent dispatched!');
-                                                    setAgentOpen(true);
-                                                    setIsMoreMenuOpen(false);
-                                                })
-                                                .catch((err) =>
-                                                    console.error('Failed to dispatch agent', err),
-                                                );
-                                        }}
+                                        onClick={handleDispatchAgent}
                                         disabled={agentOpen}
                                     >
                                         <Bot size={18} />
@@ -848,24 +861,7 @@ export function ControlBar({
                                         title="Add DVAI Agent"
                                         aria-pressed={agentOpen}
                                         disabled={agentOpen}
-                                        onClick={() => {
-                                            fetch('/api/agent', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    roomName: roomContext?.name,
-                                                }),
-                                            })
-                                                .then(() => {
-                                                    toast.success(
-                                                        'AI Agent dispatched to the room!',
-                                                    );
-                                                    setAgentOpen(true);
-                                                })
-                                                .catch((err) =>
-                                                    console.error('Failed to dispatch agent', err),
-                                                );
-                                        }}
+                                        onClick={handleDispatchAgent}
                                     >
                                         {showIcon && <Bot size={isMobile ? 16 : 20} />}
                                         {showText && 'Add AI Agent'}

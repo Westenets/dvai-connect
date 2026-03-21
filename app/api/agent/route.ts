@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const agentDispatchClient = new AgentDispatchClient(livekitServerUrl, API_KEY, API_SECRET);
     try {
         const body = await request.json();
-        const { roomName } = body;
+        const { roomName, e2eePassphrase } = body;
 
         if (!roomName) {
             return NextResponse.json({ error: 'Room name required' }, { status: 400 });
@@ -26,7 +26,9 @@ export async function POST(request: NextRequest) {
 
         // Explicitly dispatch the job to the agent you named "dvai-support".
         // Ensure your agent's WorkerOptions has agentName: 'dvai-support' configured.
-        await agentDispatchClient.createDispatch(roomName, 'dvai-support');
+        await agentDispatchClient.createDispatch(roomName, 'dvai-support', {
+            metadata: e2eePassphrase,
+        });
 
         return NextResponse.json({ success: true, message: 'Agent dispatched' });
     } catch (error) {

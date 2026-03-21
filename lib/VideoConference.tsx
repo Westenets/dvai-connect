@@ -103,6 +103,7 @@ function MeetingUI({
     onPipToggle,
     setIsWaitingForShare,
     e2eeEnabled,
+    e2eePassphrase,
 }: {
     tracks: any[];
     focusTrack: any;
@@ -124,6 +125,7 @@ function MeetingUI({
     onPipToggle?: () => void;
     setIsWaitingForShare?: (waiting: boolean) => void;
     e2eeEnabled?: boolean;
+    e2eePassphrase?: string;
 }) {
     useLocalTranscriptionBroadcaster();
 
@@ -178,7 +180,9 @@ function MeetingUI({
                         recording: !e2eeEnabled,
                         transcription: true,
                         pip: false,
+                        agent: true,
                     }}
+                    e2eePassphrase={e2eePassphrase}
                     showTranscription={showTranscription}
                     onTranscriptionToggle={setShowTranscription}
                     showParticipants={showParticipants}
@@ -653,6 +657,7 @@ export function VideoConference({
                             onPipToggle={togglePip}
                             setIsWaitingForShare={setIsWaitingForShare}
                             e2eeEnabled={e2eeEnabled}
+                            e2eePassphrase={e2eePassphrase}
                         />
                     </div>
 
@@ -691,6 +696,7 @@ export function VideoConference({
                                     onPipToggle={togglePip}
                                     setIsWaitingForShare={setIsWaitingForShare}
                                     e2eeEnabled={e2eeEnabled}
+                                    e2eePassphrase={e2eePassphrase}
                                 />
                             </PipWindow>
                         </>
