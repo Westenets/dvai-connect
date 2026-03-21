@@ -30,7 +30,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsLoading(true);
             const session = await account.get();
             setUser(session);
-            Clarity.identify(session.$id);
+            
+            // Analytics should be non-blocking and safe
+            try {
+                if (session?.$id) {
+                    Clarity.identify(session.$id);
+                }
+            } catch (analyticsError) {
+                // Suppress analytics error to prevent redirect loop
+                console.warn('Clarity identification failed:', analyticsError);
+            }
         } catch (error) {
             setUser(null);
         } finally {
