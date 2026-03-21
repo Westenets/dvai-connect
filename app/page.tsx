@@ -105,7 +105,7 @@ export default function Dashboard() {
 
         const url = `${window.location.origin}/rooms/${roomId}`;
         navigator.clipboard.writeText(url);
-        toast.success('Meeting link copied to clipboard!');
+        toast.success('Meeting link copied to clipboard!', { duration: 5000 });
         setNewMeetingOpen(false);
     };
 

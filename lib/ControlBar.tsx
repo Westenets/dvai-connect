@@ -311,10 +311,10 @@ export function ControlBar({
                             { duration: 10000, position: 'bottom-left' },
                         );
                     } else {
-                        toast.success('Recording stopped successfully');
+                        toast.success('Recording stopped successfully', { duration: 5000 });
                     }
                 } else {
-                    toast.success('Recording started successfully');
+                    toast.success('Recording started successfully', { duration: 5000 });
                 }
             } else {
                 console.error(
@@ -323,13 +323,13 @@ export function ControlBar({
                     response.statusText,
                 );
                 setProcessingRecRequest(false);
-                toast.error('Recording Feature is not available');
+                toast.error('Recording Feature is not available', { duration: 5000 });
             }
         } catch (error) {
             if (loadingToastId) toast.dismiss(loadingToastId);
             console.error('Recording request failed:', error);
             setProcessingRecRequest(false);
-            toast.error('Failed to process recording request');
+            toast.error('Failed to process recording request', { duration: 5000 });
         }
     };
 
@@ -347,16 +347,16 @@ export function ControlBar({
             });
 
             if (response.ok) {
-                toast.success('AI Agent dispatched to the room!');
+                toast.success('AI Agent dispatched to the room!', { duration: 5000 });
                 setAgentOpen(true);
                 setIsMoreMenuOpen(false);
             } else {
                 const errorData = await response.json();
-                toast.error(`Failed to dispatch: ${errorData.message || 'Unknown error'}`);
+                toast.error(`Failed to dispatch: ${errorData.message || 'Unknown error'}`, { duration: 5000 });
             }
         } catch (err) {
             console.error('Failed to dispatch agent', err);
-            toast.error('Failed to dispatch agent. Check console for details.');
+            toast.error('Failed to dispatch agent. Check console for details.', { duration: 5000 });
         }
     }, [roomContext?.name, e2eePassphrase, setAgentOpen, setIsMoreMenuOpen]);
 
@@ -771,8 +771,8 @@ export function ControlBar({
                     onClick={() =>
                         navigator.clipboard
                             .writeText(window.location.href)
-                            .then(() => toast.success('Link copied to clipboard'))
-                            .catch(() => toast.error('Failed to copy link'))
+                            .then(() => toast.success('Link copied to clipboard', { duration: 5000 }))
+                            .catch(() => toast.error('Failed to copy link', { duration: 5000 }))
                     }
                 >
                     {showIcon && <Copy size={isMobile ? 18 : 20} />}

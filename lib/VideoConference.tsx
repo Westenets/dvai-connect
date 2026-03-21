@@ -194,7 +194,7 @@ function MeetingUI({
                             setIsPipOpen(false);
                             setIsWaitingForShare?.(false);
                             if (error.error.name === 'NotAllowedError') {
-                                toast.error('Screen sharing was cancelled or denied');
+                                toast.error('Screen sharing was cancelled or denied', { duration: 5000 });
                             }
                         }
                     }}

@@ -72,10 +72,10 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, roomN
         try {
             await navigator.clipboard.writeText(meetingLink);
             setIsCopying(true);
-            toast.success('Link copied to clipboard');
+            toast.success('Link copied to clipboard', { duration: 5000 });
             setTimeout(() => setIsCopying(false), 2000);
         } catch (err) {
-            toast.error('Failed to copy link');
+            toast.error('Failed to copy link', { duration: 5000 });
         }
     };
 
@@ -99,15 +99,15 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, roomN
             });
 
             if (response.ok) {
-                toast.success(`Invite sent to ${email}`);
+                toast.success(`Invite sent to ${email}`, { duration: 5000 });
                 // Refresh contacts to show the newly added one immediately
                 await fetchContacts();
                 setSearchQuery(''); // Clear search query after success
             } else {
-                toast.error('Failed to send invite');
+                toast.error('Failed to send invite', { duration: 5000 });
             }
         } catch (error) {
-            toast.error('Error sending invite');
+            toast.error('Error sending invite', { duration: 5000 });
             console.error(error);
         } finally {
             setIsInviting(null);

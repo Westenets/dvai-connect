@@ -219,9 +219,9 @@ export default function Settings() {
 
                 // Ensure we actually check if the object differs to prevent endless loops with Appwrite's response delay but `user.prefs` should handle it.
                 await updatePrefs(newPrefs);
-                toast.success('Settings auto-saved');
+                toast.success('Settings auto-saved', { duration: 5000 });
             } catch (error: any) {
-                toast.error(`Auto-save failed: ${error.message}`);
+                toast.error(`Auto-save failed: ${error.message}`, { duration: 5000 });
             }
         }, 1000); // Debounce auto-save by 1 second
 
@@ -294,7 +294,7 @@ export default function Settings() {
             setIsCropping(false);
             setImageToCrop(null);
         } catch (error: any) {
-            toast.error(error.message);
+            toast.error(error.message, { duration: 5000 });
         }
     };
 
@@ -363,19 +363,19 @@ export default function Settings() {
                     await updatePrefs(newPrefs);
                     madeChanges = true;
                 } catch (error: any) {
-                    toast.error(`Failed to upload avatar: ${error.message}`);
+                    toast.error(`Failed to upload avatar: ${error.message}`, { duration: 5000 });
                     setIsSaving(false);
                     return;
                 }
             }
 
             if (madeChanges) {
-                toast.success('Account profile saved successfully!');
+                toast.success('Account profile saved successfully!', { duration: 5000 });
             } else {
-                toast.success('No changes to save.');
+                toast.success('No changes to save.', { duration: 5000 });
             }
         } catch (error: any) {
-            toast.error(error.message || 'Failed to save profile');
+            toast.error(error.message || 'Failed to save profile', { duration: 5000 });
         } finally {
             setIsSaving(false);
         }
@@ -383,29 +383,29 @@ export default function Settings() {
 
     const handleUpdatePassword = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
-            toast.error('Please fill in all password fields');
+            toast.error('Please fill in all password fields', { duration: 5000 });
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            toast.error('New passwords do not match');
+            toast.error('New passwords do not match', { duration: 5000 });
             return;
         }
 
         if (newPassword.length < 8) {
-            toast.error('Password must be at least 8 characters long');
+            toast.error('Password must be at least 8 characters long', { duration: 5000 });
             return;
         }
 
         setIsUpdatingPassword(true);
         try {
             await account.updatePassword(newPassword, oldPassword);
-            toast.success('Password updated successfully!');
+            toast.success('Password updated successfully!', { duration: 5000 });
             setOldPassword('');
             setNewPassword('');
             setConfirmPassword('');
         } catch (error: any) {
-            toast.error(error.message || 'Failed to update password');
+            toast.error(error.message || 'Failed to update password', { duration: 5000 });
         } finally {
             setIsUpdatingPassword(false);
         }

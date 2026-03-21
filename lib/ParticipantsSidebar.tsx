@@ -91,10 +91,10 @@ export function ParticipantsSidebar({
                           ? 'Participant removed'
                           : 'Action performed';
 
-            toast.success(actionText);
+            toast.success(actionText, { duration: 5000 });
         } catch (error) {
             console.error(error);
-            toast.error('Could not process request');
+            toast.error('Could not process request', { duration: 5000 });
         } finally {
             setIsProcessing(null);
         }
