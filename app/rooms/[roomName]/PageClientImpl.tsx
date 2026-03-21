@@ -187,6 +187,9 @@ export function PageClientImpl(props: {
 
             const metaObj = prefs ? { ...prefs } : {};
             metaObj.isCreator = isCreator;
+            if (user?.$id) {
+                metaObj.userId = user.$id;
+            }
 
             url.searchParams.append('metadata', JSON.stringify(metaObj));
 

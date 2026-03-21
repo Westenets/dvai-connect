@@ -28,8 +28,16 @@ export async function GET(req: NextRequest) {
 
         const egressClient = new EgressClient(hostURL.origin, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
 
-        const existingEgresses = await egressClient.listEgress({ roomName });
-        if (existingEgresses.length > 0 && existingEgresses.some((e) => e.status < 2)) {
+        const allEgresses = await egressClient.listEgress();
+        const activeEgresses = allEgresses.filter((e: any) => e.status < 2);
+
+        const isAlreadyRecording = activeEgresses.some((e: any) => {
+            if (e.roomName === roomName) return true;
+            if (e.web && e.web.url.includes(`/rooms/${roomName}`)) return true;
+            return false;
+        });
+
+        if (isAlreadyRecording) {
             return new NextResponse('Meeting is already being recorded', { status: 409 });
         }
 
@@ -44,9 +52,12 @@ export async function GET(req: NextRequest) {
 
         let egressInfo;
         if (e2eePassphrase) {
+            const startedBy = req.nextUrl.searchParams.get('startedBy') || 'unknown';
+
             const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
                 identity: `recorder_${roomName}_${Date.now()}`,
                 name: 'Recorder',
+                metadata: JSON.stringify({ startedBy }),
             });
             at.addGrant({
                 room: roomName,

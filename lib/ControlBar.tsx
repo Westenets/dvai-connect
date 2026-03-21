@@ -1,4 +1,4 @@
-import { Track, ParticipantKind } from 'livekit-client';
+import { Track, ParticipantKind, RoomEvent, DataPacket_Kind } from 'livekit-client';
 import * as React from 'react';
 import { MediaDeviceMenu } from '@livekit/components-react';
 import { DisconnectButton } from '@livekit/components-react';
@@ -247,6 +247,18 @@ export function ControlBar({
     const roomContext = useMaybeRoomContext();
     const room = useRoomContext();
     const participants = useParticipants();
+    const { localParticipant } = useLocalParticipant();
+
+    const localMetadata = React.useMemo(() => {
+        if (!localParticipant?.metadata) return {};
+        try {
+            return JSON.parse(localParticipant.metadata);
+        } catch {
+            return {};
+        }
+    }, [localParticipant?.metadata]);
+
+    const isAdmin = (localParticipant?.permissions as any)?.roomAdmin || localMetadata?.isCreator;
 
     const waitingCount = React.useMemo(() => {
         return participants.filter((p) => {
@@ -260,9 +272,56 @@ export function ControlBar({
     }, [participants]);
 
     const recordingEndpoint = process.env.NEXT_PUBLIC_LK_RECORD_ENDPOINT;
-    const isRecording = useIsRecording();
+    const isE2EERecording = React.useMemo(
+        () => participants.some((p) => p.identity.startsWith('recorder_')),
+        [participants],
+    );
+    const recorderParticipant = React.useMemo(
+        () => participants.find((p) => p.identity.startsWith('recorder_')),
+        [participants],
+    );
+    const startedBy = React.useMemo(() => {
+        if (!recorderParticipant?.metadata) return null;
+        try {
+            return JSON.parse(recorderParticipant.metadata).startedBy;
+        } catch {
+            return null;
+        }
+    }, [recorderParticipant?.metadata]);
+
+    const isRecording = useIsRecording() || isE2EERecording;
     const [initialRecStatus, setInitialRecStatus] = React.useState(isRecording);
     const [processingRecRequest, setProcessingRecRequest] = React.useState(false);
+
+    // Permission check for stopping recording
+    const canStopRecording = React.useMemo(() => {
+        if (!isRecording) return true; // Anyone can start
+        if (isAdmin) return true;
+        return startedBy === localParticipant?.identity;
+    }, [isRecording, isAdmin, startedBy, localParticipant?.identity]);
+
+    // Global listener for recording completion
+    React.useEffect(() => {
+        if (!room) return;
+        const onDataReceived = (payload: Uint8Array, participant: any) => {
+            try {
+                const decoder = new TextDecoder();
+                const data = JSON.parse(decoder.decode(payload));
+                if (data.type === 'RECORDING_STOPPED' && data.url) {
+                    toast.custom(
+                        (t) => <RecordingSuccessToast t={t} recordingUrl={data.url} />,
+                        { duration: 10000, position: 'bottom-left' },
+                    );
+                }
+            } catch (e) {
+                // Ignore non-JSON or other data messages
+            }
+        };
+        room.on(RoomEvent.DataReceived, onDataReceived);
+        return () => {
+            room.off(RoomEvent.DataReceived, onDataReceived);
+        };
+    }, [room]);
 
     React.useEffect(() => {
         if (initialRecStatus !== isRecording) {
@@ -288,9 +347,14 @@ export function ControlBar({
         try {
             let response: Response;
             if (isRecording) {
+                if (!canStopRecording) {
+                    toast.error('Only the room admin or the person who started the recording can stop it.');
+                    setProcessingRecRequest(false);
+                    return;
+                }
                 response = await fetch(recordingEndpoint + `/stop?roomName=${room.name}`);
             } else {
-                let url = recordingEndpoint + `/start?roomName=${room.name}`;
+                let url = recordingEndpoint + `/start?roomName=${room.name}&startedBy=${encodeURIComponent(localParticipant?.identity || '')}`;
                 if (e2eePassphrase) {
                     url += `&e2eePassphrase=${encodeURIComponent(e2eePassphrase)}`;
                 }
@@ -307,6 +371,18 @@ export function ControlBar({
                     const recordingUrl = data.urls?.[0];
 
                     if (recordingUrl) {
+                        // Broadcast completion to everyone in the room
+                        const encoder = new TextEncoder();
+                        const payload = encoder.encode(
+                            JSON.stringify({
+                                type: 'RECORDING_STOPPED',
+                                url: recordingUrl,
+                            }),
+                        );
+                        await localParticipant?.publishData(payload, {
+                            reliable: true,
+                        });
+
                         toast.custom(
                             (t) => <RecordingSuccessToast t={t} recordingUrl={recordingUrl} />,
                             { duration: 10000, position: 'bottom-left' },
@@ -316,8 +392,8 @@ export function ControlBar({
                     }
                 } else {
                     toast.success('Recording started successfully', { duration: 5000 });
-                    setProcessingRecRequest(false);
                 }
+                setProcessingRecRequest(false);
             } else {
                 console.error(
                     'Error handling recording request, check server logs:',
@@ -376,20 +452,8 @@ export function ControlBar({
     }, [participants, agentOpen]);
 
     // Manage local hand-raise state via participant attributes
-    const { localParticipant } = useLocalParticipant();
     const handRaisedAttr = useParticipantAttribute('handRaised', { participant: localParticipant });
     const isHandRaised = handRaisedAttr === 'true';
-
-    const localMetadata = React.useMemo(() => {
-        if (!localParticipant?.metadata) return {};
-        try {
-            return JSON.parse(localParticipant.metadata);
-        } catch {
-            return {};
-        }
-    }, [localParticipant?.metadata]);
-
-    const isAdmin = (localParticipant?.permissions as any)?.roomAdmin || localMetadata?.isCreator;
 
     React.useEffect(() => {
         if (layoutContext?.widget.state?.showChat !== undefined) {

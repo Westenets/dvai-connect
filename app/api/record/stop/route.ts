@@ -22,14 +22,21 @@ export async function GET(req: NextRequest) {
         hostURL.protocol = 'https:';
 
         const egressClient = new EgressClient(hostURL.origin, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
-        const activeEgresses = (await egressClient.listEgress({ roomName })).filter(
-            (info) => info.status < 2,
-        );
+        const allEgresses = await egressClient.listEgress();
+        const activeEgresses = allEgresses.filter((info: any) => {
+            if (info.status >= 2) return false;
+            // Standard RoomComposite
+            if (info.roomName === roomName) return true;
+            // WebEgress for E2EE
+            if (info.web && info.web.url.includes(`/rooms/${roomName}`)) return true;
+            return false;
+        });
+
         if (activeEgresses.length === 0) {
             return new NextResponse('No active recording found', { status: 404 });
         }
         console.log('Stopping egress for room:', roomName);
-        const stopPromises = activeEgresses.map((info) => {
+        const stopPromises = activeEgresses.map((info: any) => {
             console.log('Stopping egress ID:', info.egressId);
             return egressClient.stopEgress(info.egressId);
         });
@@ -42,7 +49,7 @@ export async function GET(req: NextRequest) {
         const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
         const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
-        const urls = activeEgresses.map((info) => {
+        const urls = activeEgresses.map((info: any) => {
             const fileName = info.fileResults?.[0]?.filename?.split('/').pop() || info.egressId;
             const fileExtension = fileName.split('.').pop();
             // Appwrite fileId allows alphanumeric, underscore, and hyphen. Periods are NOT supported.
@@ -52,7 +59,80 @@ export async function GET(req: NextRequest) {
             return `${endpoint}/storage/buckets/${BUCKET_ID}/files/${fileId}/view?project=${project}`;
         });
 
-        return NextResponse.json({ urls }, { status: 200 });
+        // Save to Appwrite DB
+        try {
+            const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY;
+            if (APPWRITE_API_KEY && project && endpoint) {
+                const {
+                    Client: AppwriteClient,
+                    Databases: AppwriteDatabases,
+                    ID: AppwriteID,
+                } = await import('node-appwrite');
+                const appwriteClient = new AppwriteClient()
+                    .setEndpoint(endpoint)
+                    .setProject(project)
+                    .setKey(APPWRITE_API_KEY);
+                const appwriteDatabases = new AppwriteDatabases(appwriteClient);
+
+                // Get all participant userIds from room
+                const { RoomServiceClient } = await import('livekit-server-sdk');
+                const roomServiceClient = new RoomServiceClient(
+                    hostURL.origin,
+                    LIVEKIT_API_KEY,
+                    LIVEKIT_API_SECRET,
+                );
+                const participants = await roomServiceClient.listParticipants(roomName);
+                
+                const participantUserIds = participants
+                    .map((p) => {
+                        if (!p.metadata) return null;
+                        try {
+                            const meta = JSON.parse(p.metadata);
+                            return meta.userId || null;
+                        } catch {
+                            return null;
+                        }
+                    })
+                    .filter((id): id is string => !!id);
+
+                // Get startedBy from recorder participant metadata
+                const recorder = participants.find((p) => p.identity.startsWith('recorder_'));
+                let startedBy = 'unknown';
+                if (recorder && recorder.metadata) {
+                    try {
+                        startedBy = JSON.parse(recorder.metadata).startedBy;
+                    } catch (e) {}
+                }
+
+                for (let i = 0; i < activeEgresses.length; i++) {
+                    const info = activeEgresses[i];
+                    const url = urls[i];
+                    await appwriteDatabases.createDocument(
+                        'dvai-connect', // databaseId
+                        'recordings', // collectionId
+                        AppwriteID.unique(),
+                        {
+                            room_name: roomName,
+                            recording_url: url,
+                            file_name:
+                                info.fileResults?.[0]?.filename?.split('/').pop() || info.egressId,
+                            started_by: startedBy,
+                            egress_id: info.egressId,
+                            created_at: new Date().toISOString(),
+                            participant_ids: participantUserIds, // Array of user IDs for dashboard display
+                        },
+                    );
+                }
+                console.log('Saved recording details with participant IDs to Appwrite DB');
+            }
+        } catch (dbError) {
+            console.error('Failed to save to Appwrite DB:', dbError);
+        }
+
+        return NextResponse.json({
+            message: 'Recording stopped',
+            urls,
+        });
     } catch (error) {
         console.error('Error stopping egress:', error);
         if (error instanceof Error) {

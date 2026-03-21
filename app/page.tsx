@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { generateRoomId, randomString, encodePassphrase } from '@/lib/client-utils';
 import { useAuth } from '@/components/AuthProvider';
 import { databases } from '@/lib/appwrite';
-import { ID } from 'appwrite';
+import { ID, Query } from 'appwrite';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -24,6 +24,8 @@ export default function Dashboard() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [newMeetingOpen, setNewMeetingOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [recordings, setRecordings] = useState<any[]>([]);
+    const [isLoadingRecordings, setIsLoadingRecordings] = useState(true);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -55,6 +57,32 @@ export default function Dashboard() {
         const interval = setInterval(updateTime, 60000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        const fetchRecordings = async () => {
+            if (!user?.$id) return;
+            try {
+                const response = await databases.listDocuments(
+                    'dvai-connect',
+                    'recordings',
+                    [
+                        Query.contains('participant_ids', user.$id),
+                        Query.orderDesc('created_at'),
+                        Query.limit(10)
+                    ]
+                );
+                setRecordings(response.documents);
+            } catch (error) {
+                console.error('Failed to fetch recordings:', error);
+            } finally {
+                setIsLoadingRecordings(false);
+            }
+        };
+
+        if (user?.$id) {
+            fetchRecordings();
+        }
+    }, [user?.$id]);
 
     if (isLoading || !user) {
         return (
@@ -433,6 +461,73 @@ export default function Dashboard() {
                     </Swiper>
                 </div>
             </main>
+
+            {/* Recordings Section */}
+            <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 pb-12">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[#00a8a8]">history</span>
+                        Recent Recordings
+                    </h2>
+                    {recordings.length > 0 && (
+                        <span className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+                            {recordings.length} {recordings.length === 1 ? 'meeting' : 'meetings'}
+                        </span>
+                    )}
+                </div>
+
+                {isLoadingRecordings ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-40 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-2xl"></div>
+                        ))}
+                    </div>
+                ) : recordings.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {recordings.map((rec) => (
+                            <div 
+                                key={rec.$id} 
+                                className="group bg-white dark:bg-[#15202b] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-[#00a8a8] dark:hover:border-[#00a8a8] transition-all hover:shadow-md"
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-[#00a8a8]">
+                                        <span className="material-symbols-outlined">videocam</span>
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-400">
+                                        {new Date(rec.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </span>
+                                </div>
+                                <h3 className="font-semibold text-slate-900 dark:text-white mb-1 truncate">
+                                    {rec.room_name}
+                                </h3>
+                                <p className="text-xs text-slate-500 mb-4 flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[14px]">person</span>
+                                    Started by {rec.started_by === (user as any).name ? 'You' : rec.started_by}
+                                </p>
+                                <a 
+                                    href={rec.recording_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 w-full py-2 bg-slate-50 dark:bg-[#1e2936] hover:bg-[#00a8a8] hover:text-white text-slate-700 dark:text-slate-200 rounded-xl transition-all font-medium text-sm no-underline"
+                                >
+                                    <span className="material-symbols-outlined text-[18px]">play_circle</span>
+                                    Watch Recording
+                                </a>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-white dark:bg-[#15202b] border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center">
+                        <div className="size-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                            <span className="material-symbols-outlined text-[32px]">movie_off</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">No recordings yet</h3>
+                        <p className="text-slate-500 dark:text-slate-500 max-w-xs mx-auto mt-2">
+                            When you record a meeting, it will appear here for you to watch or share.
+                        </p>
+                    </div>
+                )}
+            </div>
 
             <footer className="text-center py-2 text-slate-400 dark:text-slate-600 text-sm">
                 <p>
