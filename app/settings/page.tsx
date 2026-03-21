@@ -107,6 +107,7 @@ export default function Settings() {
     const [appearance, setAppearance] = useState('system');
     const [reportDiagnostics, setReportDiagnostics] = useState(true);
     const [e2e, setE2e] = useState(false);
+    const [endCallForEveryone, setEndCallForEveryone] = useState(true);
 
     // Audio Settings State
     const [audioInputDevice, setAudioInputDevice] = useState('default');
@@ -159,6 +160,8 @@ export default function Settings() {
             if (prefs?.reportDiagnostics !== undefined)
                 setReportDiagnostics(prefs.reportDiagnostics);
             if (prefs?.e2e !== undefined) setE2e(prefs.e2e);
+            if (prefs?.endCallForEveryone !== undefined)
+                setEndCallForEveryone(prefs.endCallForEveryone);
             if (prefs?.audioInputDevice) setAudioInputDevice(prefs.audioInputDevice);
             if (prefs?.audioOutputDevice) setAudioOutputDevice(prefs.audioOutputDevice);
             if (prefs?.noiseCancellation !== undefined)
@@ -197,6 +200,7 @@ export default function Settings() {
                     appearance,
                     reportDiagnostics,
                     e2e,
+                    endCallForEveryone,
                     audioInputDevice,
                     audioOutputDevice,
                     noiseCancellation,
@@ -232,6 +236,7 @@ export default function Settings() {
         appearance,
         reportDiagnostics,
         e2e,
+        endCallForEveryone,
         audioInputDevice,
         audioOutputDevice,
         noiseCancellation,
@@ -1059,21 +1064,18 @@ export default function Settings() {
 
                                 <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
-                                        End-to-End Encryption
+                                        Meeting Controls
                                     </h3>
                                     <div className="flex items-start justify-between">
                                         <div>
+                                            <h4 className="font-medium text-slate-900 my-0 dark:text-white">
+                                                End-to-end encryption
+                                            </h4>
                                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
                                                 End-to-end encryption ensures that only the
                                                 participants in the call can access the audio and
                                                 video streams. No one else, not even the service
                                                 provider, can decrypt the content
-                                            </p>
-                                            <p>
-                                                <span className="text-red-500">
-                                                    Note: Recording feature is not available for
-                                                    end-to-end encrypted calls.
-                                                </span>
                                             </p>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer mt-1">
@@ -1086,11 +1088,28 @@ export default function Settings() {
                                             <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                         </label>
                                     </div>
-                                </div>
-                                <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
-                                        Diagnostics & Usage
-                                    </h3>
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <h4 className="font-medium text-slate-900 my-0 dark:text-white">
+                                                End call for everyone
+                                            </h4>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+                                                When you are the host, leaving the meeting will
+                                                automatically end the session for all participants.
+                                            </p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer mt-1">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={endCallForEveryone}
+                                                onChange={(e) =>
+                                                    setEndCallForEveryone(e.target.checked)
+                                                }
+                                            />
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
+                                        </label>
+                                    </div>
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <h4 className="font-medium text-slate-900 my-0 dark:text-white">

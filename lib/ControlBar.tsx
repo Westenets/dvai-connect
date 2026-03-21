@@ -50,6 +50,7 @@ import {
     TelegramShareButton,
 } from 'react-share';
 import { SocialIcon } from 'react-social-icons';
+import { useAuth } from '@/components/AuthProvider';
 
 export function useMediaQuery(query: string): boolean {
     const getMatches = (query: string): boolean => {
@@ -248,6 +249,7 @@ export function ControlBar({
     const room = useRoomContext();
     const participants = useParticipants();
     const { localParticipant } = useLocalParticipant();
+    const { user } = useAuth();
 
     const localMetadata = React.useMemo(() => {
         if (!localParticipant?.metadata) return {};
@@ -597,6 +599,44 @@ export function ControlBar({
             isUserInitiated ? saveAudioInputEnabled(enabled) : null,
         [saveAudioInputEnabled],
     );
+
+    const handleLeave = React.useCallback(async () => {
+        const isLastParticipant = participants.length === 0;
+        const shouldEndForEveryone = isAdmin && ((user?.prefs as any)?.endCallForEveryone ?? true);
+
+        if (shouldEndForEveryone) {
+            try {
+                await fetch('/api/room-action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        roomName: room.name,
+                        identity: localParticipant?.identity,
+                        action: 'endRoom',
+                    }),
+                });
+            } catch (e) {
+                console.error('Failed to end room', e);
+            }
+        } else {
+            // If not ending room for everyone, but I'm the last one and recording is active, stop it
+            if (isLastParticipant && isRecording) {
+                try {
+                    await fetch(`/api/record/stop?roomName=${room.name}`);
+                } catch (e) {
+                    console.error('Failed to stop recording on leave', e);
+                }
+            }
+        }
+        room.disconnect();
+    }, [
+        isAdmin,
+        (user?.prefs as any)?.endCallForEveryone,
+        room,
+        localParticipant?.identity,
+        participants.length,
+        isRecording,
+    ]);
 
     const cameraOnChange = React.useCallback(
         (enabled: boolean, isUserInitiated: boolean) =>
@@ -1126,10 +1166,14 @@ export function ControlBar({
                 )}
             </div>
             {visibleControls.leave && (
-                <DisconnectButton className="rounded-full!" title="Leave">
+                <button
+                    className="lk-button rounded-full! bg-red-600 hover:bg-red-700 text-white border-0"
+                    onClick={handleLeave}
+                    title="Leave"
+                >
                     {showIcon && <PhoneOff size={isMobile ? 16 : 20} />}
                     {showText && 'Leave'}
-                </DisconnectButton>
+                </button>
             )}
             <StartMediaButton />
         </div>

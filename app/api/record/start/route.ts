@@ -145,7 +145,6 @@ export async function GET(req: NextRequest) {
                         file_name: filename.split('/').pop(),
                         status: 'recording',
                         started_by: startedBy,
-                        created_at: new Date().toISOString(),
                         participant_ids: participantUserIds,
                     },
                 );
