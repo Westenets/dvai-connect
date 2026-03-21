@@ -22,25 +22,74 @@ export async function GET(req: NextRequest) {
         hostURL.protocol = 'https:';
 
         const egressClient = new EgressClient(hostURL.origin, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
+        
+        // 1. Get egresses from LiveKit API (standard RoomComposite)
         const allEgresses = await egressClient.listEgress();
-        const activeEgresses = allEgresses.filter((info: any) => {
+        const activeEgressesFromLiveKit = allEgresses.filter((info: any) => {
             if (info.status >= 2) return false;
-            // Standard RoomComposite
             if (info.roomName === roomName) return true;
-            // WebEgress for E2EE
             if (info.web && info.web.url.includes(`/rooms/${roomName}`)) return true;
             return false;
         });
 
-        if (activeEgresses.length === 0) {
-            return new NextResponse('No active recording found', { status: 404 });
+        // 2. Get egresses from Appwrite DB (reliable fallback for WebEgress/E2EE)
+        const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY;
+        const APPWRITE_ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+        const APPWRITE_PROJECT = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
+
+        let activeEgressIds = new Set(activeEgressesFromLiveKit.map(e => e.egressId));
+        let dbDocsToUpdate: any[] = [];
+
+        if (APPWRITE_API_KEY && APPWRITE_PROJECT && APPWRITE_ENDPOINT) {
+            const { Client: AppwriteClient, Databases: AppwriteDatabases, Query } = await import('node-appwrite');
+            const appwriteClient = new AppwriteClient()
+                .setEndpoint(APPWRITE_ENDPOINT)
+                .setProject(APPWRITE_PROJECT)
+                .setKey(APPWRITE_API_KEY);
+            const appwriteDatabases = new AppwriteDatabases(appwriteClient);
+
+            const activeDocs = await appwriteDatabases.listDocuments(
+                'dvai-connect',
+                'recordings',
+                [
+                    Query.equal('room_name', roomName),
+                    Query.equal('status', 'recording')
+                ]
+            );
+
+            for (const doc of activeDocs.documents) {
+                activeEgressIds.add(doc.egress_id);
+                dbDocsToUpdate.push({ id: doc.$id, egressId: doc.egress_id });
+            }
         }
-        console.log('Stopping egress for room:', roomName);
-        const stopPromises = activeEgresses.map((info: any) => {
-            console.log('Stopping egress ID:', info.egressId);
-            return egressClient.stopEgress(info.egressId);
+
+        if (activeEgressIds.size === 0) {
+            return new NextResponse(`No active recording found for room ${roomName}`, { status: 404 });
+        }
+
+        console.log('Stopping egresses:', Array.from(activeEgressIds));
+        const stopPromises = Array.from(activeEgressIds).map((id) => {
+            console.log('Stopping egress ID:', id);
+            return egressClient.stopEgress(id);
         });
-        await Promise.all(stopPromises);
+        const stopResults = await Promise.all(stopPromises);
+
+        // Update DB status to processing
+        if (dbDocsToUpdate.length > 0) {
+            const { Client: AppwriteClient, Databases: AppwriteDatabases } = await import('node-appwrite');
+            const appwriteClient = new AppwriteClient().setEndpoint(APPWRITE_ENDPOINT!).setProject(APPWRITE_PROJECT!).setKey(APPWRITE_API_KEY!);
+            const appwriteDatabases = new AppwriteDatabases(appwriteClient);
+            
+            for (const doc of dbDocsToUpdate) {
+                try {
+                    await appwriteDatabases.updateDocument('dvai-connect', 'recordings', doc.id, {
+                        status: 'processing'
+                    });
+                } catch (e) {
+                    console.error(`Failed to update doc ${doc.id} to processing:`, e);
+                }
+            }
+        }
 
         console.log('All active egresses stop request sent');
 
@@ -49,7 +98,7 @@ export async function GET(req: NextRequest) {
         const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
         const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
-        const urls = activeEgresses.map((info: any) => {
+        const urls = stopResults.map((info: any) => {
             const fileName = info.fileResults?.[0]?.filename?.split('/').pop() || info.egressId;
             const fileExtension = fileName.split('.').pop();
             // Appwrite fileId allows alphanumeric, underscore, and hyphen. Periods are NOT supported.
@@ -59,75 +108,8 @@ export async function GET(req: NextRequest) {
             return `${endpoint}/storage/buckets/${BUCKET_ID}/files/${fileId}/view?project=${project}`;
         });
 
-        // Save to Appwrite DB
-        try {
-            const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY;
-            if (APPWRITE_API_KEY && project && endpoint) {
-                const {
-                    Client: AppwriteClient,
-                    Databases: AppwriteDatabases,
-                    ID: AppwriteID,
-                } = await import('node-appwrite');
-                const appwriteClient = new AppwriteClient()
-                    .setEndpoint(endpoint)
-                    .setProject(project)
-                    .setKey(APPWRITE_API_KEY);
-                const appwriteDatabases = new AppwriteDatabases(appwriteClient);
-
-                // Get all participant userIds from room
-                const { RoomServiceClient } = await import('livekit-server-sdk');
-                const roomServiceClient = new RoomServiceClient(
-                    hostURL.origin,
-                    LIVEKIT_API_KEY,
-                    LIVEKIT_API_SECRET,
-                );
-                const participants = await roomServiceClient.listParticipants(roomName);
-                
-                const participantUserIds = participants
-                    .map((p) => {
-                        if (!p.metadata) return null;
-                        try {
-                            const meta = JSON.parse(p.metadata);
-                            return meta.userId || null;
-                        } catch {
-                            return null;
-                        }
-                    })
-                    .filter((id): id is string => !!id);
-
-                // Get startedBy from recorder participant metadata
-                const recorder = participants.find((p) => p.identity.startsWith('recorder_'));
-                let startedBy = 'unknown';
-                if (recorder && recorder.metadata) {
-                    try {
-                        startedBy = JSON.parse(recorder.metadata).startedBy;
-                    } catch (e) {}
-                }
-
-                for (let i = 0; i < activeEgresses.length; i++) {
-                    const info = activeEgresses[i];
-                    const url = urls[i];
-                    await appwriteDatabases.createDocument(
-                        'dvai-connect', // databaseId
-                        'recordings', // collectionId
-                        AppwriteID.unique(),
-                        {
-                            room_name: roomName,
-                            recording_url: url,
-                            file_name:
-                                info.fileResults?.[0]?.filename?.split('/').pop() || info.egressId,
-                            started_by: startedBy,
-                            egress_id: info.egressId,
-                            created_at: new Date().toISOString(),
-                            participant_ids: participantUserIds, // Array of user IDs for dashboard display
-                        },
-                    );
-                }
-                console.log('Saved recording details with participant IDs to Appwrite DB');
-            }
-        } catch (dbError) {
-            console.error('Failed to save to Appwrite DB:', dbError);
-        }
+        // Redundant createDocument logic removed because it's now handled in start/route.ts
+        // and finalized in the egress-watcher worker.
 
         return NextResponse.json({
             message: 'Recording stopped',

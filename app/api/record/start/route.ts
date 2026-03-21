@@ -94,6 +94,67 @@ export async function GET(req: NextRequest) {
 
         console.log('Egress started successfully:', egressInfo.egressId);
 
+        // --- Save to Appwrite DB immediately to track active recording ---
+        try {
+            const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+            const project = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
+            const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY;
+
+            if (APPWRITE_API_KEY && project && endpoint) {
+                const {
+                    Client: AppwriteClient,
+                    Databases: AppwriteDatabases,
+                    ID: AppwriteID,
+                } = await import('node-appwrite');
+                const appwriteClient = new AppwriteClient()
+                    .setEndpoint(endpoint)
+                    .setProject(project)
+                    .setKey(APPWRITE_API_KEY);
+                const appwriteDatabases = new AppwriteDatabases(appwriteClient);
+
+                // Get participant userIds and startedBy for initial tracking
+                const { RoomServiceClient } = await import('livekit-server-sdk');
+                const roomServiceClient = new RoomServiceClient(
+                    hostURL.origin,
+                    LIVEKIT_API_KEY,
+                    LIVEKIT_API_SECRET,
+                );
+                const participants = await roomServiceClient.listParticipants(roomName);
+                
+                const participantUserIds = participants
+                    .map((p) => {
+                        if (!p.metadata) return null;
+                        try {
+                            const meta = JSON.parse(p.metadata);
+                            return meta.userId || null;
+                        } catch {
+                            return null;
+                        }
+                    })
+                    .filter((id): id is string => !!id);
+
+                const startedBy = req.nextUrl.searchParams.get('startedBy') || 'unknown';
+
+                await appwriteDatabases.createDocument(
+                    'dvai-connect',
+                    'recordings',
+                    AppwriteID.unique(),
+                    {
+                        room_name: roomName,
+                        egress_id: egressInfo.egressId,
+                        file_name: filename.split('/').pop(),
+                        status: 'recording',
+                        started_by: startedBy,
+                        created_at: new Date().toISOString(),
+                        participant_ids: participantUserIds,
+                    },
+                );
+                console.log('Active recording tracked in Appwrite DB');
+            }
+        } catch (dbError) {
+            console.error('Failed to track active recording in Appwrite DB:', dbError);
+        }
+
         return new NextResponse(null, { status: 200 });
     } catch (error) {
         console.error('Error starting egress:', error);

@@ -129,11 +129,30 @@ watcher.on('add', async (filePath) => {
                             'dvai-connect',
                             'recordings',
                             docs.documents[0].$id,
-                            { thumbnail_url: thumbnailUrl }
+                            { 
+                                thumbnail_url: thumbnailUrl,
+                                recording_url: publicUrl,
+                                status: 'completed'
+                            }
                         );
-                        console.log(`✨ [UPDATED] Database document updated with thumbnail.`);
+                        console.log(`✨ [UPDATED] Database document finalized with video and thumbnail.`);
                     } else {
-                        console.log(`⚠️ [DATABASE] No matching document found in 'recordings' for file_name: ${fileName}`);
+                        console.log(`⚠️ [DATABASE] No matching document found in 'recordings' for file_name: ${fileName}. Creating new fallback...`);
+                        await databases.createDocument(
+                            'dvai-connect',
+                            'recordings',
+                            ID.unique(),
+                            {
+                                room_name: fileName.split('-').pop().replace('.mp4', ''), // Fallback room name from filename
+                                file_name: fileName,
+                                recording_url: publicUrl,
+                                thumbnail_url: thumbnailUrl,
+                                status: 'completed',
+                                created_at: new Date().toISOString(),
+                                started_by: 'unknown',
+                                egress_id: fileId
+                            }
+                        );
                     }
                 } catch (err) {
                     console.error(`❌ Thumbnail process failed:`, err);
