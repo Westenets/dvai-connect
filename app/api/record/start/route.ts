@@ -24,8 +24,7 @@ export async function GET(req: NextRequest) {
         } = process.env;
 
         const hostURL = new URL(LIVEKIT_URL!);
-        if (hostURL.protocol === 'ws:') hostURL.protocol = 'http:';
-        if (hostURL.protocol === 'wss:') hostURL.protocol = 'https:';
+        hostURL.protocol = 'https:';
 
         const egressClient = new EgressClient(hostURL.origin, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
 
