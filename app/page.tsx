@@ -470,14 +470,15 @@ export default function Dashboard() {
                         <span className="material-symbols-outlined text-[#00a8a8]">history</span>
                         Recent Recordings
                         {recordings.length > 0 && (
-                            <span className="text-sm text-white bg-red-100 dark:bg-red-800 px-3 py-1 rounded-full">
-                                {recordings.length > 99 ? '99+' : recordings.length}
+                            <span className="text-sm text-white bg-[#00a8a8] px-1 py-0.5 md:px-2.5 md:py-1 rounded-full">
+                                {/* {recordings.length > 9 ? '9+' : recordings.length} */}
+                                99+
                             </span>
                         )}
                     </h2>
                     <a
                         href="/recordings"
-                        className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full"
+                        className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 hover:bg-[#00a8a8] dark:hover:bg-[#00a8a8] hover:text-white transition-all px-3 py-1 rounded-full no-underline"
                     >
                         View All
                     </a>
