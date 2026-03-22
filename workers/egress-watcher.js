@@ -135,7 +135,7 @@ watcher.on('add', async (filePath) => {
                             'recordings',
                             docs.documents[0].$id,
                             {
-                                thumbnail_url: thumbnailUrl,
+                                thumbnail: thumbnailUrl,
                                 recording_url: publicUrl,
                                 status: 'completed',
                             },
@@ -151,9 +151,8 @@ watcher.on('add', async (filePath) => {
                             room_name: fileName.split('-').pop().replace('.mp4', ''), // Fallback room name from filename
                             file_name: fileName,
                             recording_url: publicUrl,
-                            thumbnail_url: thumbnailUrl,
+                            thumbnail: thumbnailUrl,
                             status: 'completed',
-                            created_at: new Date().toISOString(),
                             started_by: 'unknown',
                             egress_id: fileId,
                         });
