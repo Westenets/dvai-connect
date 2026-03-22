@@ -53,12 +53,14 @@ export const handleDeleteRecording = async (
         title: 'Delete Recording?',
         text: 'This will permanently remove the video and thumbnail. This action cannot be undone.',
         icon: 'warning',
-        theme: 'auto',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it',
-        cancelButtonText: 'Cancel'
+        cancelButtonText: 'Cancel',
+        customClass: {
+            confirmButton: 'border-0 px-6 py-2 bg-[#d33] text-white rounded-xl font-semibold cursor-pointer outline-none transition-all hover:bg-red-600',
+            cancelButton: 'border-0 px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-semibold cursor-pointer outline-none transition-all hover:bg-slate-200 dark:hover:bg-slate-700'
+        },
+        buttonsStyling: false
     });
 
     if (result.isConfirmed) {
