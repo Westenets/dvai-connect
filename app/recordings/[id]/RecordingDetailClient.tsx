@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { storage } from '@/lib/appwrite';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
@@ -30,6 +31,7 @@ import {
 import { format } from 'date-fns';
 import { Header } from '@/lib/components/Header';
 import { Footer } from '@/lib/components/Footer';
+import { ShareRecordingModal } from '@/lib/components/ShareRecordingModal';
 
 interface RecordingDetailClientProps {
     recording: any;
@@ -106,6 +108,7 @@ export default function RecordingDetailClient({ recording, participants }: Recor
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [showSpeedOptions, setShowSpeedOptions] = useState(false);
     const [volume, setVolume] = useState(1);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const speedMenuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -211,12 +214,43 @@ export default function RecordingDetailClient({ recording, participants }: Recor
     };
 
     const handleShare = () => {
-        navigator.clipboard.writeText(window.location.href);
-        alert('Link copied to clipboard!');
+        setIsShareModalOpen(true);
     };
 
     const handleDownload = () => {
-        alert('Download starting... (This is a mock, in production this would trigger the file download)');
+        if (!recording.recording_url) return;
+        
+        try {
+            // Extract bucketId and fileId from the URL
+            // Format example: /v1/storage/buckets/[BUCKET_ID]/files/[FILE_ID]/view
+            const urlObj = new URL(recording.recording_url);
+            const pathParts = urlObj.pathname.split('/');
+            
+            // Appwrite path segments: ["", "v1", "storage", "buckets", "BUCKET_ID", "files", "FILE_ID", "view"]
+            const bucketsIdx = pathParts.indexOf('buckets');
+            const filesIdx = pathParts.indexOf('files');
+            
+            if (bucketsIdx !== -1 && filesIdx !== -1) {
+                const bucketId = pathParts[bucketsIdx + 1];
+                const fileId = pathParts[filesIdx + 1];
+                
+                // Use Appwrite SDK to get a download URL with appropriate headers (Content-Disposition: attachment)
+                const result = storage.getFileDownload(bucketId, fileId);
+                
+                // Trigger browser download manager (result is a string in this SDK version)
+                const downloadUrl = typeof result === 'string' ? result : (result as any).href;
+                window.open(downloadUrl, '_blank');
+            } else {
+                // Parse failed, try a direct string replacement as fallback
+                const downloadUrl = recording.recording_url.replace('/view', '/download');
+                window.open(downloadUrl, '_blank');
+            }
+        } catch (error) {
+            console.error('Download failed:', error);
+            // Last resort fallback
+            const downloadUrl = recording.recording_url?.replace('/view', '/download');
+            if (downloadUrl) window.open(downloadUrl, '_blank');
+        }
     };
 
     const formatTime = (seconds: number) => {
@@ -768,6 +802,13 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                 )}
 
             <Footer />
+            
+            <ShareRecordingModal 
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                recordingUrl={recording.recording_url}
+                roomName={recording.room_name}
+            />
         </div>
     );
 }
