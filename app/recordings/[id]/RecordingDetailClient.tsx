@@ -32,6 +32,10 @@ import { format } from 'date-fns';
 import { Header } from '@/lib/components/Header';
 import { Footer } from '@/lib/components/Footer';
 import { ShareRecordingModal } from '@/lib/components/ShareRecordingModal';
+import { useMeetingIntelligence } from '@/lib/hooks/useMeetingIntelligence';
+import { useMeetingRAG } from '@/lib/hooks/useMeetingRAG';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '@/lib/db';
 
 interface RecordingDetailClientProps {
     recording: any;
@@ -40,60 +44,12 @@ interface RecordingDetailClientProps {
 
 type Tab = 'summary' | 'transcript' | 'questions' | 'chat' | 'tasks' | 'info';
 
-const MOCK_TRANSCRIPT = [
-    {
-        speaker: 'Sarah Chen',
-        time: '00:12',
-        text: "Good morning everyone. Let's start by looking at our Q4 cloud infrastructure goals. We need to ensure that the transition happens without any service disruption.",
-    },
-    {
-        speaker: 'Mike Ross',
-        time: '02:45',
-        text: "I've completed the preliminary security audit. There are a few open items regarding the API gateway configuration, but nothing that should block the initial phase.",
-    },
-    {
-        speaker: 'Sarah Chen',
-        time: '14:02',
-        text: "That's a valid point, Mike. If we look at the latency charts from last night's stress test, we can see where the bottleneck is starting to form.",
-        isHighlighted: true,
-    },
-    {
-        speaker: 'Alex Reed',
-        time: '18:28',
-        text: 'Can we verify the fallback procedure for the EU region? Last time we did a dry run, the DNS propagation took longer than expected.',
-    },
-    {
-        speaker: 'Sarah Chen',
-        time: '19:15',
-        text: 'Excellent question. We have updated the TTL settings for all primary records to 60 seconds to mitigate exactly that risk.',
-    },
-];
 
-const MOCK_ACTION_ITEMS = [
-    {
-        id: 1,
-        text: 'Update roadmap with revised dates',
-        assignee: 'Alex',
-        due: 'Tomorrow',
-        completed: false,
-    },
-    {
-        id: 2,
-        text: 'Coordinate with Design on Glass tokens',
-        assignee: 'Sarah',
-        due: 'Friday',
-        completed: false,
-    },
-    {
-        id: 3,
-        text: 'Send meeting invite to Stakeholders',
-        assignee: 'Mike',
-        due: 'Completed',
-        completed: true,
-    },
-];
 
-export default function RecordingDetailClient({ recording, participants }: RecordingDetailClientProps) {
+export default function RecordingDetailClient({
+    recording,
+    participants,
+}: RecordingDetailClientProps) {
     const router = useRouter();
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -110,6 +66,60 @@ export default function RecordingDetailClient({ recording, participants }: Recor
     const [volume, setVolume] = useState(1);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const speedMenuRef = useRef<HTMLDivElement>(null);
+
+    // AI & Benchmarking Hooks
+    const { isProcessing, flushRemaining } = useMeetingIntelligence(recording.room_name);
+    const {
+        mode: ragMode,
+        toggleMode: toggleRagMode,
+        isLoading: isRagLoading,
+        askQuestion,
+        retrievedContext,
+    } = useMeetingRAG(recording.room_name);
+    const [ragQuery, setRagQuery] = useState('');
+
+    // Fetch from Local DB
+    const rawTranscripts = useLiveQuery(
+        () => recording.room_name ? db.transcripts.where('room_name').equals(recording.room_name).toArray() : [],
+        [recording.room_name]
+    ) || [];
+
+    const rawInsights = useLiveQuery(
+        () => recording.room_name ? db.insights.where('room_name').equals(recording.room_name).toArray() : [],
+        [recording.room_name]
+    ) || [];
+
+    // Process Insights
+    const latestSummary = rawInsights.filter(i => i.type === 'summary').pop()?.content || 'Waiting for AI processing...';
+    const latestActionItemsStr = rawInsights.filter(i => i.type === 'action_items').pop()?.content || '';
+    const latestQuestions = rawInsights.filter(i => i.type === 'questions').pop()?.content || 'No specific questions were identified by the AI in this session.';
+
+    const dbActionItems = latestActionItemsStr.split('\n')
+        .map(s => s.trim().replace(/^-\s*/, '').replace(/^\d+\.\s*/, ''))
+        .filter(s => s.length > 0)
+        .map((text, idx) => ({
+            id: idx,
+            text,
+            assignee: 'Team',
+            due: '',
+            completed: false
+        }));
+
+    const transcriptData = rawTranscripts.map(t => {
+        // Simple relative time format (MM:SS) mock
+        return {
+            speaker: t.speaker || 'Unknown',
+            time: new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            text: t.text,
+        };
+    });
+
+    useEffect(() => {
+        if (recording.room_name) {
+            flushRemaining();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [recording.room_name]);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -219,24 +229,24 @@ export default function RecordingDetailClient({ recording, participants }: Recor
 
     const handleDownload = () => {
         if (!recording.recording_url) return;
-        
+
         try {
             // Extract bucketId and fileId from the URL
             // Format example: /v1/storage/buckets/[BUCKET_ID]/files/[FILE_ID]/view
             const urlObj = new URL(recording.recording_url);
             const pathParts = urlObj.pathname.split('/');
-            
+
             // Appwrite path segments: ["", "v1", "storage", "buckets", "BUCKET_ID", "files", "FILE_ID", "view"]
             const bucketsIdx = pathParts.indexOf('buckets');
             const filesIdx = pathParts.indexOf('files');
-            
+
             if (bucketsIdx !== -1 && filesIdx !== -1) {
                 const bucketId = pathParts[bucketsIdx + 1];
                 const fileId = pathParts[filesIdx + 1];
-                
+
                 // Use Appwrite SDK to get a download URL with appropriate headers (Content-Disposition: attachment)
                 const result = storage.getFileDownload(bucketId, fileId);
-                
+
                 // Trigger browser download manager (result is a string in this SDK version)
                 const downloadUrl = typeof result === 'string' ? result : (result as any).href;
                 window.open(downloadUrl, '_blank');
@@ -279,13 +289,13 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                             )}
                         </button>
                         <div className="flex items-center gap-2">
-                            <button 
+                            <button
                                 onClick={handleShare}
                                 className="size-10 rounded-2xl bg-white dark:bg-slate-800/50 hover:bg-[#00a8a8]/10 text-slate-500 dark:text-slate-400 hover:text-[#00a8a8] flex items-center justify-center border border-slate-200 dark:border-slate-700/50 cursor-pointer transition-all shadow-sm dark:shadow-none"
                             >
                                 <Share2 className="size-4" />
                             </button>
-                            <button 
+                            <button
                                 onClick={handleDownload}
                                 className="size-10 rounded-2xl bg-white dark:bg-slate-800/50 hover:bg-[#00a8a8]/10 text-slate-500 dark:text-slate-400 hover:text-[#00a8a8] flex items-center justify-center border border-slate-200 dark:border-slate-700/50 cursor-pointer transition-all shadow-sm dark:shadow-none"
                             >
@@ -329,7 +339,10 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                                                 title={p.name}
                                             >
                                                 <img
-                                                    src={p.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&color=fff`}
+                                                    src={
+                                                        p.avatarUrl ||
+                                                        `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&color=fff`
+                                                    }
                                                     alt={p.name}
                                                     className="w-full h-full object-cover"
                                                 />
@@ -444,48 +457,55 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                                             </span>
                                         </div>
 
-                                       
-                                            <div className="flex items-center gap-4 text-white/70">
-                                                {!isMobile && (
-                                                    <div className="relative">
-                                                        <button
-                                                            onClick={() => setShowSpeedOptions(!showSpeedOptions)}
-                                                            className="p-1.5 text-white/70 hover:text-white border-0 bg-transparent cursor-pointer text-xs font-bold uppercase tracking-wider min-w-[40px]"
-                                                            title="Playback Speed"
+                                        <div className="flex items-center gap-4 text-white/70">
+                                            {!isMobile && (
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() =>
+                                                            setShowSpeedOptions(!showSpeedOptions)
+                                                        }
+                                                        className="p-1.5 text-white/70 hover:text-white border-0 bg-transparent cursor-pointer text-xs font-bold uppercase tracking-wider min-w-[40px]"
+                                                        title="Playback Speed"
+                                                    >
+                                                        {playbackSpeed}x
+                                                    </button>
+                                                    {showSpeedOptions && (
+                                                        <div
+                                                            ref={speedMenuRef}
+                                                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900/90 backdrop-blur-md rounded-xl border border-slate-800 p-1 flex flex-col min-w-[60px] z-50 shadow-2xl"
                                                         >
-                                                            {playbackSpeed}x
-                                                        </button>
-                                                        {showSpeedOptions && (
-                                                            <div 
-                                                                ref={speedMenuRef}
-                                                                className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900/90 backdrop-blur-md rounded-xl border border-slate-800 p-1 flex flex-col min-w-[60px] z-50 shadow-2xl"
-                                                            >
-                                                                {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
+                                                            {[0.5, 0.75, 1, 1.25, 1.5, 2].map(
+                                                                (speed) => (
                                                                     <button
                                                                         key={speed}
-                                                                        onClick={() => handleSpeedChange(speed)}
+                                                                        onClick={() =>
+                                                                            handleSpeedChange(speed)
+                                                                        }
                                                                         className={cn(
-                                                                            "px-3 py-1.5 rounded-lg text-xs font-bold border-0 cursor-pointer transition-colors text-left",
-                                                                            playbackSpeed === speed ? "bg-[#00a8a8] text-white" : "bg-transparent text-slate-400 hover:bg-slate-800 hover:text-white"
+                                                                            'px-3 py-1.5 rounded-lg text-xs font-bold border-0 cursor-pointer transition-colors text-left',
+                                                                            playbackSpeed === speed
+                                                                                ? 'bg-[#00a8a8] text-white'
+                                                                                : 'bg-transparent text-slate-400 hover:bg-slate-800 hover:text-white',
                                                                         )}
                                                                     >
                                                                         {speed}x
                                                                     </button>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                                <button
-                                                    onClick={toggleFullscreen}
-                                                    className="p-1.5 text-white/70 hover:text-white border-0 bg-transparent cursor-pointer"
-                                                    title="Fullscreen"
-                                                >
-                                                    <Maximize className="size-5" />
-                                                </button>
-                                            </div>
+                                                                ),
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                            <button
+                                                onClick={toggleFullscreen}
+                                                className="p-1.5 text-white/70 hover:text-white border-0 bg-transparent cursor-pointer"
+                                                title="Fullscreen"
+                                            >
+                                                <Maximize className="size-5" />
+                                            </button>
                                         </div>
                                     </div>
+                                </div>
 
                                 {/* Large Center Play Button */}
                                 {!isPlaying && (
@@ -507,14 +527,12 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                                     <div className="bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-6 border border-slate-200 dark:border-slate-800/50">
                                         <div className="flex items-center gap-2 mb-4">
                                             <Sparkles className="size-5 text-[#00a8a8]" />
-                                            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">Key Summary</h3>
+                                            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                                                Key Summary
+                                            </h3>
                                         </div>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                                            The team discussed the Q4 launch timeline, specifically
-                                            focusing on the new glassmorphism engine. Key technical
-                                            hurdles in mobile rendering were identified, and Sarah
-                                            proposed a new caching strategy to improve performance
-                                            by 40%.
+                                        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">
+                                            {latestSummary}
                                         </p>
                                         <div className="flex flex-wrap gap-2 mt-6">
                                             {[
@@ -536,14 +554,18 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="flex items-center gap-2">
                                                 <CheckCircle2 className="size-5 text-[#00a8a8]" />
-                                                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">Action Items</h3>
+                                                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                                                    Action Items
+                                                </h3>
                                             </div>
                                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-500 font-bold uppercase tracking-tight">
-                                                3 Pending
+                                                {dbActionItems.length} Pending
                                             </span>
                                         </div>
                                         <div className="space-y-4">
-                                            {MOCK_ACTION_ITEMS.map((item) => (
+                                            {dbActionItems.length === 0 ? (
+                                                <p className="text-xs text-slate-500 italic">No action items extracted yet.</p>
+                                            ) : dbActionItems.map((item) => (
                                                 <div
                                                     key={item.id}
                                                     className="flex items-start gap-3 group"
@@ -586,6 +608,70 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                                             ))}
                                         </div>
                                     </div>
+
+                                    {/* Local RAG Benchmarking UI */}
+                                    <div className="col-span-2 bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-6 border border-slate-200 dark:border-slate-800/50">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <Sparkles className="size-5 text-[#00a8a8]" />
+                                                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                                                    Local RAG Benchmarking
+                                                </h3>
+                                            </div>
+                                            <button
+                                                onClick={toggleRagMode}
+                                                className="text-xs px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer border-0 hover:bg-slate-300 dark:hover:bg-slate-700 transition"
+                                            >
+                                                Backend:{' '}
+                                                <span className="text-[#00a8a8]">
+                                                    {ragMode === 'llamaindex'
+                                                        ? 'LlamaIndex.ts'
+                                                        : 'Web Worker'}
+                                                </span>
+                                            </button>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={ragQuery}
+                                                onChange={(e) => setRagQuery(e.target.value)}
+                                                onKeyDown={(e) =>
+                                                    e.key === 'Enter' && askQuestion(ragQuery)
+                                                }
+                                                placeholder="Ask a question about this meeting..."
+                                                className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00a8a8]"
+                                            />
+                                            <button
+                                                onClick={() => askQuestion(ragQuery)}
+                                                disabled={isRagLoading || !ragQuery.trim()}
+                                                className="bg-[#00a8a8] hover:bg-[#00a8a8]/90 disabled:opacity-50 text-white border-0 px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition"
+                                            >
+                                                {isRagLoading ? 'Searching...' : 'Search'}
+                                            </button>
+                                        </div>
+                                        {retrievedContext.length > 0 && (
+                                            <div className="mt-4 space-y-2">
+                                                <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+                                                    Retrieved Chunks (Top 3)
+                                                </p>
+                                                {retrievedContext.map((ctx, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="p-3 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300"
+                                                    >
+                                                        <div className="flex justify-between items-center mb-1">
+                                                            <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">
+                                                                Score: {ctx.score.toFixed(4)}
+                                                            </span>
+                                                        </div>
+                                                        <p className="leading-relaxed">
+                                                            {ctx.text}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -595,22 +681,22 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                             {isMobile ? (
                                 <div className="flex flex-col gap-4">
                                     <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-x-auto no-scrollbar">
-                                        {(['summary', 'transcript', 'questions'] as const).map(
-                                            (tab) => (
-                                                <button
-                                                    key={tab}
-                                                    onClick={() => setActiveTab(tab)}
-                                                    className={cn(
-                                                        'flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-0 cursor-pointer capitalize',
-                                                        activeTab === tab
-                                                            ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xl'
-                                                            : 'bg-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
-                                                    )}
-                                                >
-                                                    {tab}
-                                                </button>
-                                            ),
-                                        )}
+                                        {(
+                                            ['summary', 'transcript', 'questions', 'chat'] as const
+                                        ).map((tab) => (
+                                            <button
+                                                key={tab}
+                                                onClick={() => setActiveTab(tab)}
+                                                className={cn(
+                                                    'flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-0 cursor-pointer capitalize',
+                                                    activeTab === tab
+                                                        ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xl'
+                                                        : 'bg-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
+                                                )}
+                                            >
+                                                {tab}
+                                            </button>
+                                        ))}
                                     </div>
                                     <div className="mt-2">
                                         {activeTab === 'summary' && (
@@ -643,31 +729,46 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                                                             3 PENDING
                                                         </span>
                                                     </div>
-                                                    {MOCK_ACTION_ITEMS.map((item) => (
+                                                    {dbActionItems.length === 0 ? (
+                                                        <p className="text-xs text-slate-500 italic">No action items extracted yet.</p>
+                                                    ) : dbActionItems.map((item) => (
                                                         <div
                                                             key={item.id}
                                                             className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-3xl border border-slate-200 dark:border-slate-800/50 flex items-start gap-4 shadow-sm"
                                                         >
-                                                            <div className={cn(
-                                                                "size-6 rounded-full border-2 flex items-center justify-center mt-0.5",
-                                                                item.completed ? "bg-[#00a8a8] border-[#00a8a8]" : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
-                                                            )}>
-                                                                {item.completed && <CheckCircle2 className="size-3 text-white" />}
+                                                            <div
+                                                                className={cn(
+                                                                    'size-6 rounded-full border-2 flex items-center justify-center mt-0.5',
+                                                                    item.completed
+                                                                        ? 'bg-[#00a8a8] border-[#00a8a8]'
+                                                                        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800',
+                                                                )}
+                                                            >
+                                                                {item.completed && (
+                                                                    <CheckCircle2 className="size-3 text-white" />
+                                                                )}
                                                             </div>
                                                             <div className="grow">
-                                                                <p className={cn(
-                                                                    "text-sm font-semibold",
-                                                                    item.completed ? "text-slate-400 line-through" : "text-slate-800 dark:text-slate-200"
-                                                                )}>{item.text}</p>
+                                                                <p
+                                                                    className={cn(
+                                                                        'text-sm font-semibold',
+                                                                        item.completed
+                                                                            ? 'text-slate-400 line-through'
+                                                                            : 'text-slate-800 dark:text-slate-200',
+                                                                    )}
+                                                                >
+                                                                    {item.text}
+                                                                </p>
                                                                 <div className="flex items-center gap-3 mt-1.5">
                                                                     <span className="text-[10px] text-slate-500">
                                                                         Assigned to: {item.assignee}
                                                                     </span>
-                                                                    {item.due && !item.completed && (
-                                                                        <span className="text-[10px] text-[#00a8a8] font-bold">
-                                                                            Due {item.due}
-                                                                        </span>
-                                                                    )}
+                                                                    {item.due &&
+                                                                        !item.completed && (
+                                                                            <span className="text-[10px] text-[#00a8a8] font-bold">
+                                                                                Due {item.due}
+                                                                            </span>
+                                                                        )}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -678,7 +779,7 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                                         {activeTab === 'transcript' && (
                                             <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
                                                 <TranscriptList
-                                                    transcript={MOCK_TRANSCRIPT}
+                                                    transcript={transcriptData}
                                                     onSeek={handleTranscriptSeek}
                                                 />
                                             </div>
@@ -692,118 +793,190 @@ export default function RecordingDetailClient({ recording, participants }: Recor
                                                 </p>
                                             </div>
                                         )}
+                                        {activeTab === 'chat' && (
+                                            <div className="bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-5 border border-slate-200 dark:border-slate-800/50">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <Sparkles className="size-5 text-[#00a8a8]" />
+                                                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                                                            Local RAG Benchmark
+                                                        </h3>
+                                                    </div>
+                                                    <button
+                                                        onClick={toggleRagMode}
+                                                        className="text-[10px] px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer border-0"
+                                                    >
+                                                        Backend:{' '}
+                                                        <span className="text-[#00a8a8]">
+                                                            {ragMode === 'llamaindex'
+                                                                ? 'LlamaIndex'
+                                                                : 'Worker'}
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={ragQuery}
+                                                        onChange={(e) =>
+                                                            setRagQuery(e.target.value)
+                                                        }
+                                                        onKeyDown={(e) =>
+                                                            e.key === 'Enter' &&
+                                                            askQuestion(ragQuery)
+                                                        }
+                                                        placeholder="Ask a question..."
+                                                        className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00a8a8]"
+                                                    />
+                                                    <button
+                                                        onClick={() => askQuestion(ragQuery)}
+                                                        disabled={isRagLoading || !ragQuery.trim()}
+                                                        className="bg-[#00a8a8] hover:bg-[#00a8a8]/90 disabled:opacity-50 text-white border-0 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer shrink-0 transition"
+                                                    >
+                                                        {isRagLoading ? '...' : 'Search'}
+                                                    </button>
+                                                </div>
+                                                {retrievedContext.length > 0 && (
+                                                    <div className="mt-4 space-y-2">
+                                                        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+                                                            Top 3 Chunks
+                                                        </p>
+                                                        {retrievedContext.map((ctx, i) => (
+                                                            <div
+                                                                key={i}
+                                                                className="p-3 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300"
+                                                            >
+                                                                <div className="flex justify-between items-center mb-1">
+                                                                    <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">
+                                                                        Score:{' '}
+                                                                        {ctx.score.toFixed(4)}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="leading-relaxed text-xs">
+                                                                    {ctx.text}
+                                                                </p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ) : (
                                 <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl flex flex-col h-[700px] border border-slate-200 dark:border-slate-800/50 overflow-hidden sticky top-24 shadow-sm dark:shadow-none">
                                     <div className="p-6 border-b border-slate-200 dark:border-slate-800/50">
-                                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">Meeting Details</h3>
-                                            <div className="flex items-center gap-1.5 mt-1">
-                                                <div className="size-2 rounded-full bg-[#00a8a8] animate-pulse" />
-                                                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase">
-                                                    AI Insights Ready
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-950/30 mx-4 mt-4 rounded-2xl border border-slate-200 dark:border-transparent">
-                                            {(['transcript', 'insights', 'questions'] as const).map(
-                                                (tab) => (
-                                                    <button
-                                                        key={tab}
-                                                        onClick={() =>
-                                                            setActiveTab(
-                                                                tab === 'insights'
-                                                                    ? 'summary'
-                                                                    : (tab as any),
-                                                            )
-                                                        }
-                                                        className={cn(
-                                                            'flex-1 py-2 rounded-xl text-[10px] font-bold tracking-widest uppercase transition-all border-0 cursor-pointer',
-                                                            activeTab ===
-                                                                (tab === 'insights' ? 'summary' : tab)
-                                                                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
-                                                                : 'bg-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-400',
-                                                        )}
-                                                    >
-                                                        {tab}
-                                                    </button>
-                                                ),
-                                            )}
-                                        </div>
-                                        <div className="grow overflow-y-auto p-4 custom-scrollbar">
-                                            {activeTab === 'transcript' || activeTab === 'summary' ? (
-                                                <TranscriptList 
-                                                    transcript={MOCK_TRANSCRIPT} 
-                                                    onSeek={handleTranscriptSeek}
-                                                />
-                                            ) : (
-                                                <div className="h-full flex items-center justify-center p-8 text-center text-slate-400 dark:text-slate-600">
-                                                    <p className="text-xs italic">
-                                                        No specific questions were identified.
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="p-4 bg-slate-50 dark:bg-slate-950/20 border-t border-slate-100 dark:border-transparent">
-                                            <div className="bg-white dark:bg-[#00a8a8]/10 hover:bg-slate-100 dark:hover:bg-[#00a8a8]/20 transition-all p-4 rounded-2xl flex items-center justify-between group cursor-pointer border border-slate-200 dark:border-[#00a8a8]/20 shadow-sm dark:shadow-none">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="size-8 rounded-lg bg-[#00a8a8]/20 flex items-center justify-center">
-                                                        <Info className="size-4 text-[#00a8a8]" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                                            4 Questions Identified
-                                                        </p>
-                                                        <p className="text-[10px] text-slate-500">
-                                                            Asked during the session
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <ChevronRight className="size-4 text-slate-400 dark:text-slate-600 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
-                                            </div>
+                                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                                            Meeting Details
+                                        </h3>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <div className="size-2 rounded-full bg-[#00a8a8] animate-pulse" />
+                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase">
+                                                AI Insights Ready
+                                            </span>
                                         </div>
                                     </div>
+                                    <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-950/30 mx-4 mt-4 rounded-2xl border border-slate-200 dark:border-transparent">
+                                        {(['transcript', 'insights', 'questions'] as const).map(
+                                            (tab) => (
+                                                <button
+                                                    key={tab}
+                                                    onClick={() =>
+                                                        setActiveTab(
+                                                            tab === 'insights'
+                                                                ? 'summary'
+                                                                : (tab as any),
+                                                        )
+                                                    }
+                                                    className={cn(
+                                                        'flex-1 py-2 rounded-xl text-[10px] font-bold tracking-widest uppercase transition-all border-0 cursor-pointer',
+                                                        activeTab ===
+                                                            (tab === 'insights' ? 'summary' : tab)
+                                                            ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                                                            : 'bg-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-400',
+                                                    )}
+                                                >
+                                                    {tab}
+                                                </button>
+                                            ),
+                                        )}
+                                    </div>
+                                    <div className="grow overflow-y-auto p-4 custom-scrollbar">
+                                        {activeTab === 'transcript' || activeTab === 'summary' ? (
+                                            <TranscriptList
+                                                transcript={transcriptData}
+                                                onSeek={handleTranscriptSeek}
+                                            />
+                                        ) : (
+                                            <div className="h-full flex items-center justify-center p-8 text-center text-slate-400 dark:text-slate-600">
+                                                <p className="text-xs italic">
+                                                    No specific questions were identified.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="p-4 bg-slate-50 dark:bg-slate-950/20 border-t border-slate-100 dark:border-transparent">
+                                        <div className="bg-white dark:bg-[#00a8a8]/10 hover:bg-slate-100 dark:hover:bg-[#00a8a8]/20 transition-all p-4 rounded-2xl flex items-center justify-between group cursor-pointer border border-slate-200 dark:border-[#00a8a8]/20 shadow-sm dark:shadow-none">
+                                            <div className="flex items-center gap-3">
+                                                <div className="size-8 rounded-lg bg-[#00a8a8]/20 flex items-center justify-center">
+                                                    <Info className="size-4 text-[#00a8a8]" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                                        4 Questions Identified
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-500">
+                                                        Asked during the session
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <ChevronRight className="size-4 text-slate-400 dark:text-slate-600 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
+                                        </div>
+                                    </div>
+                                </div>
                             )}
-                            </div>
                         </div>
                     </div>
+                </div>
             </main>
 
-                {/* Mobile Bottom Navigation Bar */}
-                {isMobile && (
-                    <div className="fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-800/80 px-6 pt-2 pb-6 flex items-center justify-between z-50 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
-                        {[
-                            { id: 'video', label: 'Video', icon: Play },
-                            { id: 'chat', label: 'Chat', icon: MessageSquare },
-                            { id: 'tasks', label: 'Tasks', icon: CheckCircle2 },
-                            { id: 'info', label: 'Info', icon: Info },
-                        ].map((nav) => (
-                            <button
-                                key={nav.id}
-                                onClick={() => setActiveTab(nav.id as Tab)}
+            {/* Mobile Bottom Navigation Bar */}
+            {isMobile && (
+                <div className="fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-800/80 px-6 pt-2 pb-6 flex items-center justify-between z-50 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+                    {[
+                        { id: 'video', label: 'Video', icon: Play },
+                        { id: 'chat', label: 'Chat', icon: MessageSquare },
+                        { id: 'tasks', label: 'Tasks', icon: CheckCircle2 },
+                        { id: 'info', label: 'Info', icon: Info },
+                    ].map((nav) => (
+                        <button
+                            key={nav.id}
+                            onClick={() => setActiveTab(nav.id as Tab)}
+                            className={cn(
+                                'flex flex-col items-center gap-1.5 p-2 transition-all border-0 bg-transparent cursor-pointer',
+                                activeTab === nav.id
+                                    ? 'text-[#00a8a8]'
+                                    : 'text-slate-500 dark:text-slate-500',
+                            )}
+                            title={nav.label}
+                        >
+                            <nav.icon
                                 className={cn(
-                                    'flex flex-col items-center gap-1.5 p-2 transition-all border-0 bg-transparent cursor-pointer',
-                                    activeTab === nav.id ? 'text-[#00a8a8]' : 'text-slate-500 dark:text-slate-500',
+                                    'size-6',
+                                    activeTab === nav.id && 'fill-[#00a8a8]/20',
                                 )}
-                                title={nav.label}
-                            >
-                                <nav.icon
-                                    className={cn(
-                                        'size-6',
-                                        activeTab === nav.id && 'fill-[#00a8a8]/20',
-                                    )}
-                                />
-                                <span className="text-[10px] font-bold uppercase tracking-widest">
-                                    {nav.label}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                )}
+                            />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">
+                                {nav.label}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            )}
 
             <Footer />
-            
-            <ShareRecordingModal 
+
+            <ShareRecordingModal
                 isOpen={isShareModalOpen}
                 onClose={() => setIsShareModalOpen(false)}
                 recordingUrl={recording.recording_url}
@@ -813,7 +986,13 @@ export default function RecordingDetailClient({ recording, participants }: Recor
     );
 }
 
-function TranscriptList({ transcript, onSeek }: { transcript: any[]; onSeek?: (time: string) => void }) {
+function TranscriptList({
+    transcript,
+    onSeek,
+}: {
+    transcript: any[];
+    onSeek?: (time: string) => void;
+}) {
     return (
         <div className="space-y-6 px-2">
             {transcript.map((item, idx) => (
@@ -831,15 +1010,15 @@ function TranscriptList({ transcript, onSeek }: { transcript: any[]; onSeek?: (t
                         <span className="text-xs font-bold text-[#00a8a8]">{item.speaker}</span>
                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 text-[#00a8a8] group-hover/item:border-[#00a8a8]/30 transition-colors">
                             <Clock className="size-3" />
-                            <span className="text-[10px] font-mono font-bold">
-                                {item.time}
-                            </span>
+                            <span className="text-[10px] font-mono font-bold">{item.time}</span>
                         </div>
                     </div>
                     <p
                         className={cn(
                             'text-sm leading-relaxed',
-                            item.isHighlighted ? 'text-slate-900 dark:text-slate-200' : 'text-slate-600 dark:text-slate-400',
+                            item.isHighlighted
+                                ? 'text-slate-900 dark:text-slate-200'
+                                : 'text-slate-600 dark:text-slate-400',
                         )}
                     >
                         {item.text}

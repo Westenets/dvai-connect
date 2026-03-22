@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ isMobile }) => {
                 <img
                     src="/images/livekit-meet-home.svg"
                     alt="DVAI Connect"
-                    className="h-8 md:h-10 object-contain hidden dark:block cursor-pointer"
+                    className="h-6 md:h-8 object-contain hidden dark:block cursor-pointer"
                     onClick={() => router.push('/')}
                 />
                 <img

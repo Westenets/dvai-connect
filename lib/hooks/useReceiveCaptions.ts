@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRoomContext } from '@livekit/components-react';
 import { RoomEvent, RemoteParticipant, LocalParticipant } from 'livekit-client';
+import { ingestTranscript } from '../db';
 
 export interface CaptionLineData {
     utteranceId: string;
@@ -13,6 +14,7 @@ export interface CaptionLineData {
 export function useReceiveCaptions() {
     const [captions, setCaptions] = useState<CaptionLineData[]>([]);
     const room = useRoomContext();
+    const ingestedIds = useRef<Set<string>>(new Set());
 
     useEffect(() => {
         if (!room) return;
@@ -26,6 +28,12 @@ export function useReceiveCaptions() {
                 
                 if (data.utteranceId && data.text !== undefined) {
                     const speakerName = participant?.name || participant?.identity || 'Unknown';
+                    
+                    if (data.isFinal && !ingestedIds.current.has(data.utteranceId)) {
+                        ingestedIds.current.add(data.utteranceId);
+                        ingestTranscript(speakerName, data.text, room.name);
+                    }
+                    
                     console.log(`[RECEIVE] from ${speakerName}: id: ${data.utteranceId}, isFinal: ${data.isFinal}, text: "${data.text}"`);
                     
                     setCaptions(prev => {

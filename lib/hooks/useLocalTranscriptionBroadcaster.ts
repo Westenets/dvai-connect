@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useRoomContext, useLocalParticipant, useRemoteParticipants } from '@livekit/components-react';
+import { ingestTranscript } from '../db';
 
 export function useLocalTranscriptionBroadcaster() {
     const room = useRoomContext();
@@ -7,8 +8,9 @@ export function useLocalTranscriptionBroadcaster() {
     const remoteParticipants = useRemoteParticipants();
     
     const isCcNeeded = remoteParticipants.some((p: any) => p.attributes?.ccEnabled === 'true');
+    const isRecording = room.isRecording;
     const isMicEnabled = localParticipant.isMicrophoneEnabled;
-    const shouldRunBroadcaster = isCcNeeded && isMicEnabled;
+    const shouldRunBroadcaster = (isCcNeeded || isRecording) && isMicEnabled;
 
     const recognitionRef = useRef<any>(null);
 
@@ -65,6 +67,11 @@ export function useLocalTranscriptionBroadcaster() {
             
             const data = encoder.encode(JSON.stringify(payload));
             room.localParticipant.publishData(data, { topic: 'transcription' });
+            
+            // Ingest to local DB if final
+            if (anyFinal) {
+                ingestTranscript(localParticipant.name || localParticipant.identity || 'You', fullTranscript, room.name);
+            }
         };
 
         recognition.onerror = (event: any) => {
