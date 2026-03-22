@@ -66,7 +66,7 @@ watcher.on('add', async (filePath) => {
         // which matches what the Stop API will look for.
         // Appwrite fileId allows alphanumeric, underscore, hyphen.
         const fileExtension = fileName.split('.').pop();
-        const baseId = fileName.replace(`.${fileExtension}`, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const baseId = fileName.replace(`.${fileExtension}`, '').replace(/[^a-zA-Z0-9_-]/g, '-');
         const fileId = baseId.substring(0, 36); // Appwrite limit is 36
         console.log(`📡 [WORKER] Using fileId: ${fileId}`);
 
@@ -84,7 +84,7 @@ watcher.on('add', async (filePath) => {
 
         // --- Thumbnail Extraction (New) ---
         if (filePath.endsWith('.mp4')) {
-            const thumbName = `thumb_${fileId}.jpg`;
+            const thumbName = `thumb-${fileId}.jpg`;
             const thumbPath = path.join(path.dirname(filePath), thumbName);
 
             console.log(`🖼️ [THUMBNAIL] Extracting frame from ${fileName}...`);
@@ -107,7 +107,7 @@ watcher.on('add', async (filePath) => {
             if (fs.existsSync(thumbPath)) {
                 try {
                     console.log(`🚀 [UPLOAD] Uploading thumbnail ${thumbName} to Appwrite...`);
-                    const thumbId = `thumb-${baseId}`.substring(0, 36);
+                    const thumbId = `thumb-${fileId}`.substring(0, 36);
 
                     // Try to delete existing thumbnail if it exists (for retries)
                     try {
