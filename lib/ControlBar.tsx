@@ -327,7 +327,8 @@ export function ControlBar({
     }, [room]);
 
     React.useEffect(() => {
-        if (initialRecStatus !== isRecording) {
+        // Automatically clear loading state when recording starts (recorder joins)
+        if (initialRecStatus === false && isRecording === true) {
             setProcessingRecRequest(false);
         }
     }, [isRecording, initialRecStatus]);
@@ -397,10 +398,10 @@ export function ControlBar({
                     } else {
                         toast.success('Recording stopped successfully', { duration: 5000 });
                     }
+                    setProcessingRecRequest(false);
                 } else {
                     toast.success('Recording started successfully', { duration: 5000 });
                 }
-                setProcessingRecRequest(false);
             } else {
                 console.error(
                     'Error handling recording request, check server logs:',
