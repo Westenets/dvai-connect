@@ -51,6 +51,7 @@ import {
 } from 'react-share';
 import { SocialIcon } from 'react-social-icons';
 import { useAuth } from '@/components/AuthProvider';
+import Swal from 'sweetalert2';
 
 export function useMediaQuery(query: string): boolean {
     const getMatches = (query: string): boolean => {
@@ -310,10 +311,10 @@ export function ControlBar({
                 const decoder = new TextDecoder();
                 const data = JSON.parse(decoder.decode(payload));
                 if (data.type === 'RECORDING_STOPPED' && data.url) {
-                    toast.custom(
-                        (t) => <RecordingSuccessToast t={t} recordingUrl={data.url} />,
-                        { duration: 10000, position: 'bottom-left' },
-                    );
+                    toast.custom((t) => <RecordingSuccessToast t={t} recordingUrl={data.url} />, {
+                        duration: 10000,
+                        position: 'bottom-left',
+                    });
                 }
             } catch (e) {
                 // Ignore non-JSON or other data messages
@@ -350,13 +351,17 @@ export function ControlBar({
             let response: Response;
             if (isRecording) {
                 if (!canStopRecording) {
-                    toast.error('Only the room admin or the person who started the recording can stop it.');
+                    toast.error(
+                        'Only the room admin or the person who started the recording can stop it.',
+                    );
                     setProcessingRecRequest(false);
                     return;
                 }
                 response = await fetch(recordingEndpoint + `/stop?roomName=${room.name}`);
             } else {
-                let url = recordingEndpoint + `/start?roomName=${room.name}&startedBy=${encodeURIComponent(localParticipant?.identity || '')}`;
+                let url =
+                    recordingEndpoint +
+                    `/start?roomName=${room.name}&startedBy=${encodeURIComponent(localParticipant?.identity || '')}`;
                 if (e2eePassphrase) {
                     url += `&e2eePassphrase=${encodeURIComponent(e2eePassphrase)}`;
                 }
@@ -432,7 +437,9 @@ export function ControlBar({
                 setIsMoreMenuOpen(false);
             } else {
                 const errorData = await response.json();
-                toast.error(`Failed to dispatch: ${errorData.message || 'Unknown error'}`, { duration: 5000 });
+                toast.error(`Failed to dispatch: ${errorData.message || 'Unknown error'}`, {
+                    duration: 5000,
+                });
             }
         } catch (err) {
             console.error('Failed to dispatch agent', err);
@@ -601,22 +608,34 @@ export function ControlBar({
     );
 
     const handleLeave = React.useCallback(async () => {
-        const isLastParticipant = participants.length === 0;
+        const isLastParticipant = participants.length === 1;
         const shouldEndForEveryone = isAdmin && ((user?.prefs as any)?.endCallForEveryone ?? true);
 
         if (shouldEndForEveryone) {
-            try {
-                await fetch('/api/room-action', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        roomName: room.name,
-                        identity: localParticipant?.identity,
-                        action: 'endRoom',
-                    }),
-                });
-            } catch (e) {
-                console.error('Failed to end room', e);
+            const result = await Swal.fire({
+                title: 'End Call for Everyone',
+                text: 'Are you sure you want to end the call for everyone?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No',
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    console.log('room action fired');
+                    await fetch('/api/room-action', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            roomName: room.name,
+                            identity: localParticipant?.identity,
+                            action: 'endRoom',
+                        }),
+                    });
+                } catch (e) {
+                    console.error('Failed to end room', e);
+                }
             }
         } else {
             // If not ending room for everyone, but I'm the last one and recording is active, stop it
@@ -877,7 +896,9 @@ export function ControlBar({
                     onClick={() =>
                         navigator.clipboard
                             .writeText(window.location.href)
-                            .then(() => toast.success('Link copied to clipboard', { duration: 5000 }))
+                            .then(() =>
+                                toast.success('Link copied to clipboard', { duration: 5000 }),
+                            )
                             .catch(() => toast.error('Failed to copy link', { duration: 5000 }))
                     }
                 >
@@ -1167,7 +1188,7 @@ export function ControlBar({
             </div>
             {visibleControls.leave && (
                 <button
-                    className="lk-button rounded-full! bg-red-600 hover:bg-red-700 text-white border-0"
+                    className="lk-button rounded-full! border! border-solid! border-red-600! hover:bg-red-600! text-red-600! hover:text-white! transition-all duration-300 ease-in-out"
                     onClick={handleLeave}
                     title="Leave"
                 >

@@ -67,7 +67,6 @@ export default function Dashboard() {
                     Query.orderDesc('$createdAt'),
                     Query.limit(3),
                 ]);
-                console.log('RECORDINGS: ', response.documents);
                 setRecordings(response.documents);
             } catch (error) {
                 console.error('Failed to fetch recordings:', error);

@@ -67,6 +67,9 @@ export function PageClientImpl(props: {
     const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
         undefined,
     );
+    const [connectionDetails, setConnectionDetails] = React.useState<ConnectionDetails | undefined>(
+        undefined,
+    );
     const [mediaPermissionGranted, setMediaPermissionGranted] = useState(false);
     const { user } = useAuth();
     const prefs = user?.prefs as Record<string, any> | undefined;
@@ -139,11 +142,11 @@ export function PageClientImpl(props: {
             await retry();
         };
 
-        askPermission();
+        if (connectionDetails?.participantName !== 'Recorder') askPermission();
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [connectionDetails]);
 
     const preJoinDefaults = React.useMemo(() => {
         return {
@@ -160,9 +163,6 @@ export function PageClientImpl(props: {
                     : undefined,
         };
     }, [user?.name, user?.prefs]);
-    const [connectionDetails, setConnectionDetails] = React.useState<ConnectionDetails | undefined>(
-        undefined,
-    );
 
     const handlePreJoinSubmit = React.useCallback(
         async (values: LocalUserChoices) => {
