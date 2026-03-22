@@ -16,6 +16,7 @@ export default function RecordingDetailPage({ params }: PageProps) {
     const { user, isLoading: authLoading } = useAuth();
     const router = useRouter();
     const [recording, setRecording] = useState<any>(null);
+    const [participants, setParticipants] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [id, setId] = useState<string | null>(null);
 
@@ -32,19 +33,32 @@ export default function RecordingDetailPage({ params }: PageProps) {
     useEffect(() => {
         if (!id || authLoading || !user) return;
 
-        async function fetchRecording() {
+        async function fetchData() {
+            setLoading(true);
             try {
-                const res = await databases.getDocument('dvai-connect', 'recordings', id!);
-                setRecording(res);
+                const rec = await databases.getDocument('dvai-connect', 'recordings', id!);
+                setRecording(rec);
+
+                if (rec.participant_ids && rec.participant_ids.length > 0) {
+                    const pRes = await fetch('/api/users/info', {
+                        method: 'POST',
+                        body: JSON.stringify({ participant_ids: rec.participant_ids }),
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                    if (pRes.ok) {
+                        const pData = await pRes.json();
+                        setParticipants(pData.participants || []);
+                    }
+                }
             } catch (error) {
-                console.error('Failed to fetch recording:', error);
+                console.error('Failed to fetch data:', error);
                 setRecording(null);
             } finally {
                 setLoading(false);
             }
         }
 
-        fetchRecording();
+        fetchData();
     }, [id, user, authLoading]);
 
     if (authLoading || loading || !id) {
@@ -62,5 +76,5 @@ export default function RecordingDetailPage({ params }: PageProps) {
         return notFound();
     }
 
-    return <RecordingDetailClient recording={recording} />;
+    return <RecordingDetailClient recording={recording} participants={participants} />;
 }

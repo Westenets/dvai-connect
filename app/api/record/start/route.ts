@@ -135,7 +135,7 @@ export async function GET(req: NextRequest) {
                         if (!p.metadata) return null;
                         try {
                             const meta = JSON.parse(p.metadata);
-                            return meta.userId || null;
+                            return meta.userId || meta.userName || null;
                         } catch {
                             return null;
                         }

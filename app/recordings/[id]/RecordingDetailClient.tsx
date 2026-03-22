@@ -33,6 +33,7 @@ import { Footer } from '@/lib/components/Footer';
 
 interface RecordingDetailClientProps {
     recording: any;
+    participants: any[];
 }
 
 type Tab = 'summary' | 'transcript' | 'questions' | 'chat' | 'tasks' | 'info';
@@ -90,7 +91,7 @@ const MOCK_ACTION_ITEMS = [
     },
 ];
 
-export default function RecordingDetailClient({ recording }: RecordingDetailClientProps) {
+export default function RecordingDetailClient({ recording, participants }: RecordingDetailClientProps) {
     const router = useRouter();
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -287,24 +288,27 @@ export default function RecordingDetailClient({ recording }: RecordingDetailClie
                                 </h1>
                                 <div className="flex items-center gap-4 mt-3">
                                     <div className="flex -space-x-2">
-                                        {[1, 2, 3].map((i) => (
+                                        {(participants || []).slice(0, 3).map((p, i) => (
                                             <div
-                                                key={i}
+                                                key={p.id || i}
                                                 className="size-7 rounded-full border-2 border-white dark:border-[#101922] bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden"
+                                                title={p.name}
                                             >
                                                 <img
-                                                    src={`https://i.pravatar.cc/100?u=${i}`}
-                                                    alt="User"
+                                                    src={p.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=random&color=fff`}
+                                                    alt={p.name}
                                                     className="w-full h-full object-cover"
                                                 />
                                             </div>
                                         ))}
-                                        <div className="size-7 rounded-full border-2 border-white dark:border-[#101922] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                                            +3
-                                        </div>
+                                        {(participants || []).length > 3 && (
+                                            <div className="size-7 rounded-full border-2 border-white dark:border-[#101922] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                                                +{(participants || []).length - 3}
+                                            </div>
+                                        )}
                                     </div>
                                     <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                                        6 Participants
+                                        {(participants || []).length} Participants
                                     </span>
                                 </div>
                             </div>
@@ -729,7 +733,7 @@ export default function RecordingDetailClient({ recording }: RecordingDetailClie
                             </div>
                         </div>
                     </div>
-                </main>
+            </main>
 
                 {/* Mobile Bottom Navigation Bar */}
                 {isMobile && (

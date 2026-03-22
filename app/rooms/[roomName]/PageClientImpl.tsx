@@ -197,6 +197,7 @@ export function PageClientImpl(props: {
 
             const metaObj = prefs ? { ...prefs } : {};
             metaObj.isCreator = isCreator;
+            metaObj.userName = values.username;
             if (user?.$id) {
                 metaObj.userId = user.$id;
             }
