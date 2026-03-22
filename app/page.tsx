@@ -466,15 +466,21 @@ export default function Dashboard() {
             {/* Recordings Section */}
             <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 pb-12">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h2 className="text-base md:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <span className="material-symbols-outlined text-[#00a8a8]">history</span>
                         Recent Recordings
+                        {recordings.length > 0 && (
+                            <span className="text-sm text-white bg-red-100 dark:bg-red-800 px-3 py-1 rounded-full">
+                                {recordings.length > 99 ? '99+' : recordings.length}
+                            </span>
+                        )}
                     </h2>
-                    {recordings.length > 0 && (
-                        <span className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                            {recordings.length} {recordings.length === 1 ? 'meeting' : 'meetings'}
-                        </span>
-                    )}
+                    <a
+                        href="/recordings"
+                        className="text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full"
+                    >
+                        View All
+                    </a>
                 </div>
 
                 {isLoadingRecordings ? (
