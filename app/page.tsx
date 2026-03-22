@@ -471,8 +471,7 @@ export default function Dashboard() {
                         Recent Recordings
                         {recordings.length > 0 && (
                             <span className="text-sm text-white bg-[#00a8a8] px-1 py-0.5 md:px-2.5 md:py-1 rounded-full">
-                                {/* {recordings.length > 9 ? '9+' : recordings.length} */}
-                                99+
+                                {recordings.length > 9 ? '9+' : recordings.length}
                             </span>
                         )}
                     </h2>
