@@ -62,15 +62,12 @@ export default function Dashboard() {
         const fetchRecordings = async () => {
             if (!user?.$id) return;
             try {
-                const response = await databases.listDocuments(
-                    'dvai-connect',
-                    'recordings',
-                    [
-                        Query.contains('participant_ids', user.$id),
-                        Query.orderDesc('$createdAt'),
-                        Query.limit(10)
-                    ]
-                );
+                const response = await databases.listDocuments('dvai-connect', 'recordings', [
+                    Query.contains('participant_ids', user.$id),
+                    Query.orderDesc('$createdAt'),
+                    Query.limit(3),
+                ]);
+                console.log('RECORDINGS: ', response.documents);
                 setRecordings(response.documents);
             } catch (error) {
                 console.error('Failed to fetch recordings:', error);
@@ -144,7 +141,7 @@ export default function Dashboard() {
     return (
         <div className="bg-[#f5f7f8] dark:bg-[#101922] min-h-screen flex flex-col font-['Inter',sans-serif] text-slate-900 dark:text-slate-100 overflow-x-hidden">
             {/* Header */}
-            <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-[#15202b] px-6 py-3 sticky top-0 z-50">
+            <header className="flex items-center justify-between whitespace-nowrap border-0 bg-white dark:bg-[#15202b] px-6 py-3 sticky top-0 z-50">
                 <div className="flex items-center gap-3">
                     <img
                         src="/images/livekit-meet-home.svg"
@@ -166,22 +163,26 @@ export default function Dashboard() {
                             {currentDate}
                         </span>
                     </div>
-                    {!isMobile && <button
-                        className="group flex items-center justify-center rounded-full size-10 bg-transparent border-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 cursor-pointer"
-                        onClick={() => {
-                            window.open('https://deepvoiceai.co/pages/contact/', '_blank');
-                        }}
-                    >
-                        <span className="material-symbols-outlined text-[24px]">help</span>
-                    </button>}
-                    {!isMobile && <button
-                        className="group flex items-center justify-center rounded-full size-10 bg-transparent border-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 relative cursor-pointer"
-                        onClick={() => {
-                            router.push(isMobile ? '/settings/menu' : '/settings');
-                        }}
-                    >
-                        <span className="material-symbols-outlined text-[24px]">settings</span>
-                    </button>}
+                    {!isMobile && (
+                        <button
+                            className="group flex items-center justify-center rounded-full size-10 bg-transparent border-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 cursor-pointer"
+                            onClick={() => {
+                                window.open('https://deepvoiceai.co/pages/contact/', '_blank');
+                            }}
+                        >
+                            <span className="material-symbols-outlined text-[24px]">help</span>
+                        </button>
+                    )}
+                    {!isMobile && (
+                        <button
+                            className="group flex items-center justify-center rounded-full size-10 bg-transparent border-0 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400 relative cursor-pointer"
+                            onClick={() => {
+                                router.push(isMobile ? '/settings/menu' : '/settings');
+                            }}
+                        >
+                            <span className="material-symbols-outlined text-[24px]">settings</span>
+                        </button>
+                    )}
 
                     <div className="relative">
                         <div
@@ -479,46 +480,66 @@ export default function Dashboard() {
                 {isLoadingRecordings ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-40 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-2xl"></div>
+                            <div
+                                key={i}
+                                className="h-40 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-2xl"
+                            ></div>
                         ))}
                     </div>
                 ) : recordings.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {recordings.map((rec) => (
-                            <div 
-                                key={rec.$id} 
+                            <div
+                                key={rec.$id}
                                 className="group bg-white dark:bg-[#15202b] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-[#00a8a8] dark:hover:border-[#00a8a8] transition-all hover:shadow-md"
                             >
                                 <div className="relative w-full aspect-video mb-4 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
-                                    {rec.thumbnail_url ? (
-                                        <img 
-                                            src={rec.thumbnail_url} 
+                                    {rec.thumbnail ? (
+                                        <img
+                                            src={rec.thumbnail}
                                             alt={rec.room_name}
-                                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                            className="w-full h-full object-cover transition-transform scale-105 group-hover:scale-110"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                            <span className="material-symbols-outlined text-4xl">videocam</span>
+                                            <span className="material-symbols-outlined text-4xl">
+                                                videocam
+                                            </span>
                                         </div>
                                     )}
                                     <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 backdrop-blur-md rounded-lg text-[10px] text-white font-semibold">
-                                        {new Date(rec.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                        {new Date(rec.$createdAt).toLocaleDateString([], {
+                                            month: 'short',
+                                            day: 'numeric',
+                                        })}
+                                        -
+                                        {new Date(rec.$createdAt).toLocaleTimeString([], {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        })}
                                     </div>
                                 </div>
                                 <h3 className="font-semibold text-slate-900 dark:text-white mb-1 truncate leading-tight">
                                     {rec.room_name}
                                 </h3>
                                 <p className="text-[11px] text-slate-500 mb-4 flex items-center gap-1 opacity-80">
-                                    <span className="material-symbols-outlined text-[14px]">person</span>
-                                    Started by {rec.started_by === (user as any).name ? 'You' : rec.started_by}
+                                    <span className="material-symbols-outlined text-[14px]">
+                                        person
+                                    </span>
+                                    Started by{' '}
+                                    {rec.started_by.split('__')[0] === (user as any).name
+                                        ? 'You'
+                                        : rec.started_by.split('__')[0]}
                                 </p>
-                                <a 
-                                    href={rec.recording_url} 
-                                    target="_blank" 
+                                <a
+                                    href={rec.recording_url}
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center justify-center gap-2 w-full py-2 bg-slate-50 dark:bg-[#1e2936] hover:bg-[#00a8a8] hover:text-white text-slate-700 dark:text-slate-200 rounded-xl transition-all font-medium text-sm no-underline"
                                 >
-                                    <span className="material-symbols-outlined text-[18px]">play_circle</span>
+                                    <span className="material-symbols-outlined text-[18px]">
+                                        play_circle
+                                    </span>
                                     Watch Recording
                                 </a>
                             </div>
@@ -529,9 +550,12 @@ export default function Dashboard() {
                         <div className="size-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
                             <span className="material-symbols-outlined text-[32px]">movie_off</span>
                         </div>
-                        <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">No recordings yet</h3>
+                        <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">
+                            No recordings yet
+                        </h3>
                         <p className="text-slate-500 dark:text-slate-500 max-w-xs mx-auto mt-2">
-                            When you record a meeting, it will appear here for you to watch or share.
+                            When you record a meeting, it will appear here for you to watch or
+                            share.
                         </p>
                     </div>
                 )}
