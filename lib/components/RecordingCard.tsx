@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { handleDeleteRecording } from '@/lib/deleteRecording';
 
 interface RecordingCardProps {
@@ -20,7 +21,10 @@ export const RecordingCard: React.FC<RecordingCardProps> = ({ rec, user, onDelet
     };
 
     return (
-        <div className="group bg-white dark:bg-[#15202b] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-[#00a8a8] dark:hover:border-[#00a8a8] transition-all hover:shadow-md h-full flex flex-col">
+        <Link 
+            href={`/recordings/${rec.$id}`}
+            className="group bg-white dark:bg-[#15202b] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-[#00a8a8] dark:hover:border-[#00a8a8] transition-all hover:shadow-md h-full flex flex-col no-underline text-inherit"
+        >
             <div className="relative w-full aspect-video mb-4 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
                 {rec.thumbnail ? (
                     <img
@@ -49,7 +53,7 @@ export const RecordingCard: React.FC<RecordingCardProps> = ({ rec, user, onDelet
             </div>
             
             <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-1 truncate leading-tight flex items-center justify-between gap-2">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1 truncate leading-tight flex items-center justify-between gap-2 mt-0">
                     <span className="truncate" title={rec.room_name}>{rec.room_name}</span>
                     {isOwner && (
                         <button
@@ -63,7 +67,7 @@ export const RecordingCard: React.FC<RecordingCardProps> = ({ rec, user, onDelet
                         </button>
                     )}
                 </h3>
-                <p className="text-[11px] text-slate-500 mb-4 flex items-center gap-1 opacity-80">
+                <p className="text-[11px] text-slate-500 flex items-center gap-1 opacity-80 my-0">
                     <span className="material-symbols-outlined text-[14px]">
                         person
                     </span>
@@ -73,18 +77,6 @@ export const RecordingCard: React.FC<RecordingCardProps> = ({ rec, user, onDelet
                         : rec.started_by?.split('__')[0] || 'Unknown'}
                 </p>
             </div>
-
-            <a
-                href={rec.recording_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-2 bg-slate-50 dark:bg-[#1e2936] hover:bg-[#00a8a8] dark:hover:bg-[#00a8a8] hover:text-white text-slate-700 dark:text-slate-200 rounded-xl border-0 transition-all font-medium text-sm no-underline"
-            >
-                <span className="material-symbols-outlined text-[18px]">
-                    play_circle
-                </span>
-                Watch Recording
-            </a>
-        </div>
+        </Link>
     );
 };

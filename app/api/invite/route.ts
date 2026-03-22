@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
             subject: `${inviterName} invited you to a DVAI Connect meeting`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded: 8px;">
-                    <h2 style="color: #0f172a;">You're invited to a meeting</h2>
+                    <h2 style="color: #101922;">You're invited to a meeting</h2>
                     <p style="color: #475569; font-size: 16px;">
                         <strong>${inviterName}</strong> has invited you to join a video meeting on <strong>DVAI Connect</strong>.
                     </p>

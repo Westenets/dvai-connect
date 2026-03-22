@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ isMobile }) => {
     const avatarThumbUrl = prefs?.avatarThumbUrl;
 
     return (
-        <header className="flex items-center justify-between whitespace-nowrap border-0 bg-white dark:bg-[#15202b] px-6 py-3 sticky top-0 z-50">
+        <header className="flex items-center justify-between whitespace-nowrap border-0 bg-white dark:bg-[#15202b] px-6 py-3 sticky top-0 z-50 shadow-lg">
             <div className="flex items-center gap-3">
                 <img
                     src="/images/livekit-meet-home.svg"

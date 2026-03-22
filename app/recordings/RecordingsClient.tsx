@@ -240,7 +240,8 @@ export default function RecordingsClient({ user }: RecordingsClientProps) {
                                             {recordings.map((rec) => (
                                                 <tr
                                                     key={rec.$id}
-                                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                                                    onClick={() => router.push(`/recordings/${rec.$id}`)}
+                                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
                                                 >
                                                     <td className="px-6 py-4">
                                                         <div className="w-20 aspect-video rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
@@ -286,28 +287,30 @@ export default function RecordingsClient({ user }: RecordingsClientProps) {
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-2">
-                                                            <a
-                                                                href={rec.recording_url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-[#00a8a8] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors no-underline"
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    router.push(`/recordings/${rec.$id}`);
+                                                                }}
+                                                                className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-[#00a8a8] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-0 bg-transparent cursor-pointer"
                                                                 title="Watch"
                                                             >
-                                                                <span className="material-symbols-outlined">
+                                                                <span className="material-symbols-outlined font-bold">
                                                                     play_circle
                                                                 </span>
-                                                            </a>
+                                                            </button>
                                                             {(rec.owner?.includes(user?.$id) ||
                                                                 rec.started_by?.split('__')[1] ===
                                                                     user?.$id) && (
                                                                 <button
-                                                                    onClick={() =>
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
                                                                         handleDeleteRecording(
                                                                             rec,
                                                                             user,
                                                                             () => onDelete(rec.$id),
-                                                                        )
-                                                                    }
+                                                                        );
+                                                                    }}
                                                                     className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 border-0 cursor-pointer transition-colors"
                                                                     title="Delete"
                                                                 >
