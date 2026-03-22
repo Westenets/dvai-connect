@@ -63,6 +63,12 @@ export function PageClientImpl(props: {
     codec: VideoCodec;
     isRecordingView?: boolean;
 }) {
+    const isAutoJoin = useMemo(() => {
+        if (typeof window === 'undefined') return false;
+        const query = new URLSearchParams(window.location.search);
+        return !!(query.get('token') && query.get('serverUrl'));
+    }, []);
+
     const [isRecordingView, setIsRecordingView] = useState(props.isRecordingView ?? false);
     const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
         undefined,
@@ -70,12 +76,14 @@ export function PageClientImpl(props: {
     const [connectionDetails, setConnectionDetails] = React.useState<ConnectionDetails | undefined>(
         undefined,
     );
-    const [mediaPermissionGranted, setMediaPermissionGranted] = useState(false);
+    const [mediaPermissionGranted, setMediaPermissionGranted] = useState(isAutoJoin);
     const { user } = useAuth();
     const prefs = user?.prefs as Record<string, any> | undefined;
 
     // ── Check for token in URL for auto-join ──
     useEffect(() => {
+        if (!isAutoJoin) return;
+
         const query = new URLSearchParams(window.location.search);
         const token = query.get('token');
         const serverUrl = query.get('serverUrl');
@@ -85,8 +93,8 @@ export function PageClientImpl(props: {
             setConnectionDetails({
                 serverUrl,
                 roomName: props.roomName,
-                participantToken: token,
                 participantName: 'Recorder',
+                participantToken: token,
             });
             setPreJoinChoices({
                 username: 'Recorder',
@@ -99,10 +107,11 @@ export function PageClientImpl(props: {
                 setIsRecordingView(true);
             }
         }
-    }, [props.roomName]);
+    }, [isAutoJoin, props.roomName]);
 
     // ── Request camera/mic permissions before showing PreJoin ──
     useEffect(() => {
+        if (isAutoJoin || mediaPermissionGranted) return;
         let cancelled = false;
 
         const askPermission = async () => {
@@ -142,11 +151,11 @@ export function PageClientImpl(props: {
             await retry();
         };
 
-        if (connectionDetails?.participantName !== 'Recorder') askPermission();
+        askPermission();
         return () => {
             cancelled = true;
         };
-    }, [connectionDetails]);
+    }, [isAutoJoin, mediaPermissionGranted]);
 
     const preJoinDefaults = React.useMemo(() => {
         return {
