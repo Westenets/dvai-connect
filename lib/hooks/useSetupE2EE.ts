@@ -1,6 +1,6 @@
 import React from 'react';
 import { ExternalE2EEKeyProvider } from 'livekit-client';
-import { decodePassphrase } from './client-utils';
+import { decodePassphrase } from '@/lib/client-utils';
 
 export function useSetupE2EE() {
     const e2eePassphrase = React.useMemo(() => {

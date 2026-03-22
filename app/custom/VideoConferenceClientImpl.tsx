@@ -12,10 +12,10 @@ import {
 } from 'livekit-client';
 import { DebugMode } from '@/lib/Debug';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardShortcuts } from '@/lib/KeyboardShortcuts';
-import { SettingsMenu } from '@/lib/SettingsMenu';
+import { KeyboardShortcuts } from '@/lib/components/KeyboardShortcuts';
+import { SettingsMenu } from '@/lib/meetingComponents/SettingsMenu';
 import { useSetupE2EE } from '@/lib/useSetupE2EE';
-import { useLowCPUOptimizer } from '@/lib/usePerfomanceOptimiser';
+import { useLowCPUOptimizer } from '@/lib/hooks/usePerfomanceOptimiser';
 
 export function VideoConferenceClientImpl(props: {
     liveKitUrl: string;

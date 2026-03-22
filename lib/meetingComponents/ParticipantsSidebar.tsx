@@ -7,9 +7,9 @@ import {
 import { X, MoreVertical, UserPlus, Pin, PinOff, MicOff, Mic, UserX } from 'lucide-react';
 import { Participant, RoomEvent } from 'livekit-client';
 import toast from 'react-hot-toast';
-import { InviteModal } from './InviteModal';
+import { InviteModal } from '@/lib/components/InviteModal';
 import { useAuth } from '@/components/AuthProvider';
-import { playSound, SOUNDS } from './sound';
+import { playSound, SOUNDS } from '@/lib/sound';
 
 export interface ParticipantsSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     onClose: () => void;

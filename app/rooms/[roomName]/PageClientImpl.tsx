@@ -8,9 +8,9 @@ import { useAuth } from '@/components/AuthProvider';
 import { databases } from '@/lib/appwrite';
 import { Query } from 'appwrite';
 import { DebugMode } from '@/lib/Debug';
-import { KeyboardShortcuts } from '@/lib/KeyboardShortcuts';
-import { RecordingIndicator } from '@/lib/RecordingIndicator';
-import { SettingsMenu } from '@/lib/SettingsMenu';
+import { KeyboardShortcuts } from '@/lib/components/KeyboardShortcuts';
+import { RecordingIndicator } from '@/lib/components/RecordingIndicator';
+import { SettingsMenu } from '@/lib/meetingComponents/SettingsMenu';
 import { ConnectionDetails } from '@/lib/types';
 import {
     formatChatMessageLinks,
@@ -33,9 +33,9 @@ import {
     ConnectionState,
 } from 'livekit-client';
 import { useRouter } from 'next/navigation';
-import { useSetupE2EE } from '@/lib/useSetupE2EE';
-import { useLowCPUOptimizer } from '@/lib/usePerfomanceOptimiser';
-import { VideoConference } from '@/lib/VideoConference';
+import { useSetupE2EE } from '@/lib/hooks/useSetupE2EE';
+import { useLowCPUOptimizer } from '@/lib/hooks/usePerfomanceOptimiser';
+import { VideoConference } from '@/lib/meetingComponents/VideoConference';
 
 const CONN_DETAILS_ENDPOINT =
     process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
@@ -129,6 +129,7 @@ export function PageClientImpl(props: {
                     title: 'Camera & Microphone Access',
                     text: 'We need access to your camera and microphone to join the meeting. Please allow the permission when prompted.',
                     icon: 'warning',
+                    theme: 'auto',
                     confirmButtonText: 'Grant Permission',
                     showCancelButton: false,
                     allowOutsideClick: false,
@@ -325,6 +326,7 @@ function VideoConferenceComponent(props: {
                                 title: 'Error!',
                                 text: 'You are trying to join an encrypted meeting, but your browser does not support it. Please update it to the latest version and try again.',
                                 icon: 'error',
+                                theme: 'auto'
                             });
                             console.error(e);
                         } else {

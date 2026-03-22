@@ -147,6 +147,18 @@ watcher.on('add', async (filePath) => {
                         console.log(
                             `⚠️ [DATABASE] No matching document found in 'recordings' for file_name: ${fileName}. Creating new fallback...`,
                         );
+                        // Get room admin for the owner field
+                        let ownerIds = [];
+                        try {
+                            const roomName = fileName.split('-').pop().replace('.mp4', '');
+                            const roomAdminDocs = await databases.listDocuments('dvai-connect', 'room_admins', [
+                                Query.equal('roomId', roomName)
+                            ]);
+                            ownerIds = roomAdminDocs.documents.map(doc => doc.adminId);
+                        } catch (adminError) {
+                            console.error(`⚠️ [DATABASE] Failed to fetch room admin for owner field:`, adminError);
+                        }
+
                         await databases.createDocument('dvai-connect', 'recordings', ID.unique(), {
                             room_name: fileName.split('-').pop().replace('.mp4', ''), // Fallback room name from filename
                             file_name: fileName,
@@ -155,6 +167,7 @@ watcher.on('add', async (filePath) => {
                             status: 'completed',
                             started_by: 'unknown',
                             egress_id: fileId,
+                            owner: ownerIds,
                         });
                     }
                 } catch (err) {

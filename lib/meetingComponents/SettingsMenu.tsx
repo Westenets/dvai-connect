@@ -3,8 +3,8 @@ import * as React from 'react';
 import { useMaybeLayoutContext, MediaDeviceMenu } from '@livekit/components-react';
 import { Camera, Mic, Speaker, X, Settings2, Subtitles } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
-import { CameraSettings } from './CameraSettings';
-import { MicrophoneSettings } from './MicrophoneSettings';
+import { CameraSettings } from '@/lib/components/CameraSettings';
+import { MicrophoneSettings } from '@/lib/components/MicrophoneSettings';
 import { SpeakerSettings } from './SpeakerSettings';
 
 /**

@@ -105,12 +105,21 @@ export async function GET(req: NextRequest) {
                     Client: AppwriteClient,
                     Databases: AppwriteDatabases,
                     ID: AppwriteID,
+                    Query: AppwriteQuery,
                 } = await import('node-appwrite');
                 const appwriteClient = new AppwriteClient()
                     .setEndpoint(endpoint)
                     .setProject(project)
                     .setKey(APPWRITE_API_KEY);
                 const appwriteDatabases = new AppwriteDatabases(appwriteClient);
+
+                // Get Room Admins
+                const roomAdmins = await appwriteDatabases.listDocuments(
+                    'dvai-connect',
+                    'room_admins',
+                    [AppwriteQuery.equal('roomId', roomName)]
+                );
+                const adminIds = roomAdmins.documents.map(doc => doc.adminId);
 
                 // Get participant userIds and startedBy for initial tracking
                 const { RoomServiceClient } = await import('livekit-server-sdk');
@@ -134,6 +143,17 @@ export async function GET(req: NextRequest) {
                     .filter((id): id is string => !!id);
 
                 const startedBy = req.nextUrl.searchParams.get('startedBy') || 'unknown';
+                const initiator = participants.find(p => p.identity === startedBy);
+                let initiatorId = null;
+                if (initiator?.metadata) {
+                    try {
+                        const meta = JSON.parse(initiator.metadata);
+                        initiatorId = meta.userId;
+                    } catch (e) {}
+                }
+
+                // Combine admins and initiator for the owner array
+                const owners = Array.from(new Set([...adminIds, initiatorId].filter(id => !!id)));
 
                 await appwriteDatabases.createDocument(
                     'dvai-connect',
@@ -146,6 +166,7 @@ export async function GET(req: NextRequest) {
                         status: 'recording',
                         started_by: startedBy,
                         participant_ids: participantUserIds,
+                        owner: owners,
                     },
                 );
                 console.log('Active recording tracked in Appwrite DB');

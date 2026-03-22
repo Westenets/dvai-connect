@@ -12,7 +12,7 @@ import {
 } from 'react-share';
 import { SocialIcon } from 'react-social-icons';
 import { toast } from 'react-hot-toast';
-import { databases } from './appwrite';
+import { databases } from '@/lib/appwrite';
 import { ID, Query } from 'appwrite';
 import { useAuth } from '@/components/AuthProvider';
 

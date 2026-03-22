@@ -11,7 +11,7 @@ import languages from '@/lib/constants/languages.json';
 import speechLanguages from '@/lib/constants/speech-languages.json';
 import { useMediaDevices } from 'react-use';
 import Cropper from 'react-easy-crop';
-import { getCroppedImg } from '@/lib/cropImage';
+import { getCroppedImg } from '@/lib/components/cropImage';
 
 interface Device {
     deviceId: string;

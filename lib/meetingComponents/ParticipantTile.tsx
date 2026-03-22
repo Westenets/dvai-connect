@@ -165,14 +165,14 @@ export const ParticipantTile: (
                                     <img
                                         src={`https://fonts.gstatic.com/s/e/notoemoji/latest/${emoji}/512.gif`}
                                         alt="reaction"
-                                        width="40"
-                                        height="40"
+                                        width="50"
+                                        height="50"
                                     />
                                 </picture>
                             </div>
                         )}
                         {handRaised === 'true' && (
-                            <div className="absolute top-2 left-2 z-10 pointer-events-none">
+                            <div className="absolute top-2 left-2 z-10 pointer-events-none text-shadow-lg/50">
                                 <span
                                     className="material-symbols-outlined ml-0.5 text-4xl! animate-wave"
                                     style={{

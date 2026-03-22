@@ -617,6 +617,7 @@ export function ControlBar({
                 title: 'End Call for Everyone',
                 text: 'Are you sure you want to end the call for everyone?',
                 icon: 'warning',
+                theme: 'auto',
                 showCancelButton: true,
                 confirmButtonText: 'Yes',
                 cancelButtonText: 'No',

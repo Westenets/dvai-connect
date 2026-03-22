@@ -12,6 +12,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import { handleDeleteRecording } from '@/lib/deleteRecording';
 
 export default function Dashboard() {
     const router = useRouter();
@@ -524,8 +525,26 @@ export default function Dashboard() {
                                         })}
                                     </div>
                                 </div>
-                                <h3 className="font-semibold text-slate-900 dark:text-white mb-1 truncate leading-tight">
+                                <h3 className="font-semibold text-slate-900 dark:text-white mb-1 truncate leading-tight flex items-center justify-between">
                                     {rec.room_name}
+                                    {rec.owner?.includes(user?.$id) && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteRecording(rec, user, () => {
+                                                    setRecordings((prev) =>
+                                                        prev.filter((r) => r.$id !== rec.$id)
+                                                    );
+                                                });
+                                            }}
+                                            className="text-slate-500 hover:text-red-500 transition-colors bg-transparent border-0 p-1 rounded-full cursor-pointer"
+                                            title="Delete recording"
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">
+                                                delete
+                                            </span>
+                                        </button>
+                                    )}
                                 </h3>
                                 <p className="text-[11px] text-slate-500 mb-4 flex items-center gap-1 opacity-80">
                                     <span className="material-symbols-outlined text-[14px]">
@@ -540,7 +559,7 @@ export default function Dashboard() {
                                     href={rec.recording_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 w-full py-2 bg-slate-50 dark:bg-[#1e2936] hover:bg-[#00a8a8] hover:text-white text-slate-700 dark:text-slate-200 rounded-xl transition-all font-medium text-sm no-underline"
+                                    className="flex items-center justify-center gap-2 w-full py-2 bg-slate-50 dark:bg-[#1e2936] hover:bg-[#00a8a8] dark:hover:bg-[#00a8a8] hover:text-white text-slate-700 dark:text-slate-200 rounded-xl transition-all font-medium text-sm no-underline"
                                 >
                                     <span className="material-symbols-outlined text-[18px]">
                                         play_circle

@@ -8,7 +8,7 @@ import { isEqualTrackRef, isTrackReference, isWeb, log } from '@livekit/componen
 import { RoomEvent, Track } from 'livekit-client';
 import * as React from 'react';
 import toast from 'react-hot-toast';
-import { playSound, SOUNDS, playMessageSound } from './sound';
+import { playSound, SOUNDS, playMessageSound } from '@/lib/sound';
 import type { MessageFormatter } from '@livekit/components-react';
 import {
     CarouselLayout,
@@ -46,10 +46,10 @@ import { ControlBar } from './ControlBar';
 import { ParticipantTile } from './ParticipantTile';
 import { ParticipantsSidebar } from './ParticipantsSidebar';
 import { PipWindow } from './PipWindow';
-import { InviteModal } from './InviteModal';
-import { useSetupE2EE } from './useSetupE2EE';
-import { useLocalTranscriptionBroadcaster } from './hooks/useLocalTranscriptionBroadcaster';
-import { CaptionsOverlay } from './components/CaptionsOverlay';
+import { InviteModal } from '@/lib/components/InviteModal';
+import { useSetupE2EE } from '@/lib/hooks/useSetupE2EE';
+import { useLocalTranscriptionBroadcaster } from '@/lib/hooks/useLocalTranscriptionBroadcaster';
+import { CaptionsOverlay } from '@/lib/components/CaptionsOverlay';
 
 /**
  * @public
@@ -198,7 +198,9 @@ function MeetingUI({
                                 setIsPipOpen(false);
                                 setIsWaitingForShare?.(false);
                                 if (error.error.name === 'NotAllowedError') {
-                                    toast.error('Screen sharing was cancelled or denied', { duration: 5000 });
+                                    toast.error('Screen sharing was cancelled or denied', {
+                                        duration: 5000,
+                                    });
                                 }
                             }
                         }}
@@ -209,28 +211,28 @@ function MeetingUI({
                 )}
             </div>
 
-                {!pipMode && !isRecordingView && (
-                    <>
-                        <Chat
-                            style={{ display: widgetState.showChat ? 'grid' : 'none' }}
-                            messageFormatter={chatMessageFormatter}
-                            messageEncoder={chatMessageEncoder}
-                            messageDecoder={chatMessageDecoder}
-                        />
-                        <ParticipantsSidebar
-                            style={{ display: showParticipants ? 'flex' : 'none' }}
-                            onClose={() => setShowParticipants(false)}
-                        />
-                        {SettingsComponent && (
-                            <div
-                                className="lk-settings-menu-modal"
-                                style={{ display: widgetState.showSettings ? 'block' : 'none' }}
-                            >
-                                <SettingsComponent />
-                            </div>
-                        )}
-                    </>
-                )}
+            {!pipMode && !isRecordingView && (
+                <>
+                    <Chat
+                        style={{ display: widgetState.showChat ? 'grid' : 'none' }}
+                        messageFormatter={chatMessageFormatter}
+                        messageEncoder={chatMessageEncoder}
+                        messageDecoder={chatMessageDecoder}
+                    />
+                    <ParticipantsSidebar
+                        style={{ display: showParticipants ? 'flex' : 'none' }}
+                        onClose={() => setShowParticipants(false)}
+                    />
+                    {SettingsComponent && (
+                        <div
+                            className="lk-settings-menu-modal"
+                            style={{ display: widgetState.showSettings ? 'block' : 'none' }}
+                        >
+                            <SettingsComponent />
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     );
 }
