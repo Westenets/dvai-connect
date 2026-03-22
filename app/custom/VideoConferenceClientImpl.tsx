@@ -14,7 +14,7 @@ import { DebugMode } from '@/lib/Debug';
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardShortcuts } from '@/lib/components/KeyboardShortcuts';
 import { SettingsMenu } from '@/lib/meetingComponents/SettingsMenu';
-import { useSetupE2EE } from '@/lib/useSetupE2EE';
+import { useSetupE2EE } from '@/lib/hooks/useSetupE2EE';
 import { useLowCPUOptimizer } from '@/lib/hooks/usePerfomanceOptimiser';
 
 export function VideoConferenceClientImpl(props: {
