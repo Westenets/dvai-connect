@@ -16,7 +16,9 @@
       "Bash(xargs grep:*)",
       "Bash(find /d/Docs/Personal/Projects/Node.JS/Projects/meet/node_modules/.pnpm/@llamaindex+core*/node_modules/@llamaindex/core -name \"*.js\" -exec grep -l \"Cannot find Embedding\" {} \\\\;)",
       "Bash(node -e \"const li = require\\('llamaindex'\\); console.log\\(Object.keys\\(li\\).filter\\(k => k.includes\\('Node'\\) || k.includes\\('Text'\\)\\).join\\('\\\\n'\\)\\)\")",
-      "Bash(find \"D:/Docs/Personal/Projects/Node.JS/Projects/meet\" -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" -exec grep -l \"egress_id\\\\|file_name\\\\|started_by\\\\|participant_ids\" {} \\\\;)"
+      "Bash(find \"D:/Docs/Personal/Projects/Node.JS/Projects/meet\" -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" -exec grep -l \"egress_id\\\\|file_name\\\\|started_by\\\\|participant_ids\" {} \\\\;)",
+      "WebSearch",
+      "WebFetch(domain:docs.livekit.io)"
     ]
   }
 }
