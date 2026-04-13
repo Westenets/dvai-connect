@@ -1,10 +1,9 @@
 import React from 'react';
-import { useReceiveCaptions } from '../hooks/useReceiveCaptions';
+import type { CaptionLineData } from '../hooks/useReceiveCaptions';
 import { CaptionLine } from './CaptionLine';
 import { useAuth } from '@/components/AuthProvider';
 
-export const CaptionsOverlay = () => {
-    const captions = useReceiveCaptions();
+export const CaptionsOverlay = ({ captions }: { captions: CaptionLineData[] }) => {
     const { user } = useAuth();
 
     // Keep only the latest 3 active transcriptions

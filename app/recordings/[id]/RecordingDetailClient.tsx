@@ -68,12 +68,12 @@ export default function RecordingDetailClient({
     const speedMenuRef = useRef<HTMLDivElement>(null);
 
     // AI & Benchmarking Hooks
-    const { isProcessing, flushRemaining } = useMeetingIntelligence(recording.room_name);
+    const { isProcessing, flushRemaining, pipelineStatus, pipelineMessage, runPipeline } = useMeetingIntelligence(recording.room_name);
     const {
-        mode: ragMode,
-        toggleMode: toggleRagMode,
         isLoading: isRagLoading,
+        loadingMessage: ragLoadingMessage,
         askQuestion,
+        answer: ragAnswer,
         retrievedContext,
     } = useMeetingRAG(recording.room_name);
     const [ragQuery, setRagQuery] = useState('');
@@ -86,6 +86,11 @@ export default function RecordingDetailClient({
 
     const rawInsights = useLiveQuery(
         () => recording.room_name ? db.insights.where('room_name').equals(recording.room_name).toArray() : [],
+        [recording.room_name]
+    ) || [];
+
+    const chatMessages = useLiveQuery(
+        () => recording.room_name ? db.chat_messages.where('room_name').equals(recording.room_name).sortBy('timestamp') : [],
         [recording.room_name]
     ) || [];
 
@@ -114,12 +119,30 @@ export default function RecordingDetailClient({
         };
     });
 
+    // Auto-run pipeline if no insights exist yet
+    const pipelineTriggered = useRef(false);
     useEffect(() => {
-        if (recording.room_name) {
-            flushRemaining();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (!recording.room_name) return;
+        // Flush any remaining batches from live meeting
+        flushRemaining();
     }, [recording.room_name]);
+
+    useEffect(() => {
+        if (pipelineTriggered.current) return;
+        if (rawTranscripts.length > 0 && rawInsights.length === 0 && pipelineStatus === 'idle') {
+            pipelineTriggered.current = true;
+            runPipeline();
+        }
+    }, [rawTranscripts.length, rawInsights.length, pipelineStatus, runPipeline]);
+
+    // Unload LLM when leaving the page
+    useEffect(() => {
+        return () => {
+            import('@/lib/llmService').then(({ llmService }) => {
+                llmService.unload();
+            }).catch(() => {});
+        };
+    }, []);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -609,66 +632,62 @@ export default function RecordingDetailClient({
                                         </div>
                                     </div>
 
-                                    {/* Local RAG Benchmarking UI */}
+                                    {/* Ask about this meeting */}
                                     <div className="col-span-2 bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-6 border border-slate-200 dark:border-slate-800/50">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="flex items-center gap-2">
-                                                <Sparkles className="size-5 text-[#00a8a8]" />
-                                                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                                                    Local RAG Benchmarking
-                                                </h3>
-                                            </div>
-                                            <button
-                                                onClick={toggleRagMode}
-                                                className="text-xs px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer border-0 hover:bg-slate-300 dark:hover:bg-slate-700 transition"
-                                            >
-                                                Backend:{' '}
-                                                <span className="text-[#00a8a8]">
-                                                    {ragMode === 'llamaindex'
-                                                        ? 'LlamaIndex.ts'
-                                                        : 'Web Worker'}
-                                                </span>
-                                            </button>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Sparkles className="size-5 text-[#00a8a8]" />
+                                            <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                                                Ask about this meeting
+                                            </h3>
                                         </div>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
                                                 value={ragQuery}
                                                 onChange={(e) => setRagQuery(e.target.value)}
-                                                onKeyDown={(e) =>
-                                                    e.key === 'Enter' && askQuestion(ragQuery)
-                                                }
-                                                placeholder="Ask a question about this meeting..."
+                                                onKeyDown={(e) => e.key === 'Enter' && !isRagLoading && askQuestion(ragQuery)}
+                                                placeholder="e.g. What was assigned to Alex?"
                                                 className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00a8a8]"
+                                                disabled={isRagLoading}
                                             />
                                             <button
                                                 onClick={() => askQuestion(ragQuery)}
                                                 disabled={isRagLoading || !ragQuery.trim()}
                                                 className="bg-[#00a8a8] hover:bg-[#00a8a8]/90 disabled:opacity-50 text-white border-0 px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition"
                                             >
-                                                {isRagLoading ? 'Searching...' : 'Search'}
+                                                {isRagLoading ? '...' : 'Ask'}
                                             </button>
                                         </div>
-                                        {retrievedContext.length > 0 && (
-                                            <div className="mt-4 space-y-2">
-                                                <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
-                                                    Retrieved Chunks (Top 3)
+                                        {isRagLoading && (
+                                            <div className="mt-4 flex items-center gap-3 p-4 bg-[#00a8a8]/5 rounded-xl border border-[#00a8a8]/20">
+                                                <div className="size-4 border-2 border-[#00a8a8] border-t-transparent rounded-full animate-spin shrink-0" />
+                                                <p className="text-sm text-[#00a8a8] font-medium">{ragLoadingMessage || 'Processing...'}</p>
+                                            </div>
+                                        )}
+                                        {ragAnswer && !isRagLoading && (
+                                            <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-[#00a8a8]/20 shadow-sm">
+                                                <div className="flex items-center gap-1.5 mb-2">
+                                                    <Sparkles className="size-3.5 text-[#00a8a8]" />
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#00a8a8]">AI Answer</span>
+                                                </div>
+                                                <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{ragAnswer}</p>
+                                            </div>
+                                        )}
+                                        {retrievedContext.length > 0 && !isRagLoading && (
+                                            <div className="mt-3">
+                                                <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">
+                                                    Sources ({retrievedContext.length} excerpts)
                                                 </p>
-                                                {retrievedContext.map((ctx, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className="p-3 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300"
-                                                    >
-                                                        <div className="flex justify-between items-center mb-1">
-                                                            <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">
-                                                                Score: {ctx.score.toFixed(4)}
+                                                <div className="space-y-1.5">
+                                                    {retrievedContext.map((ctx, i) => (
+                                                        <div key={i} className="p-2.5 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                                                            <span className="text-[9px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400">
+                                                                {ctx.score.toFixed(4)}
                                                             </span>
+                                                            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">{ctx.text}</p>
                                                         </div>
-                                                        <p className="leading-relaxed">
-                                                            {ctx.text}
-                                                        </p>
-                                                    </div>
-                                                ))}
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -701,6 +720,9 @@ export default function RecordingDetailClient({
                                     <div className="mt-2">
                                         {activeTab === 'summary' && (
                                             <div className="space-y-6">
+                                                {pipelineStatus === 'running' && (
+                                                    <PipelineLoader message={pipelineMessage} />
+                                                )}
                                                 <div className="bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
                                                     <div className="flex items-center gap-2 mb-4">
                                                         <Sparkles className="size-5 text-[#00a8a8]" />
@@ -708,14 +730,9 @@ export default function RecordingDetailClient({
                                                             AI Summary
                                                         </h3>
                                                     </div>
-                                                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                                                        The team discussed the Q4 launch timeline,
-                                                        specifically focusing on the new
-                                                        glassmorphism engine. Key technical hurdles
-                                                        in mobile rendering were identified, and
-                                                        Sarah proposed a new caching strategy to
-                                                        improve performance by 40%.
-                                                    </p>
+                                                    <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium whitespace-pre-wrap">
+                                                        {latestSummary}
+                                                    </div>
                                                 </div>
                                                 <div className="space-y-4 px-2 pb-24">
                                                     <div className="flex items-center justify-between mb-2">
@@ -785,80 +802,128 @@ export default function RecordingDetailClient({
                                             </div>
                                         )}
                                         {activeTab === 'questions' && (
-                                            <div className="p-10 text-center flex flex-col items-center gap-4 text-slate-500">
-                                                <MoreHorizontal className="size-10 opacity-20" />
-                                                <p className="text-sm font-medium">
-                                                    No specific questions were identified by the AI
-                                                    in this session.
-                                                </p>
+                                            <div className="p-5">
+                                                {pipelineStatus === 'running' ? (
+                                                    <PipelineLoader message={pipelineMessage} />
+                                                ) : latestQuestions && !latestQuestions.includes('No specific questions') ? (
+                                                    <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                                        {latestQuestions}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center flex flex-col items-center gap-4 text-slate-500 py-5">
+                                                        <MoreHorizontal className="size-10 opacity-20" />
+                                                        <p className="text-sm font-medium">
+                                                            No specific questions were identified by the AI in this session.
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                         {activeTab === 'chat' && (
-                                            <div className="bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-5 border border-slate-200 dark:border-slate-800/50">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Sparkles className="size-5 text-[#00a8a8]" />
-                                                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                                                            Local RAG Benchmark
-                                                        </h3>
+                                            <div className="space-y-4">
+                                                {/* Chat History */}
+                                                {chatMessages.length > 0 && (
+                                                    <div className="bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-5 border border-slate-200 dark:border-slate-800/50">
+                                                        <div className="flex items-center gap-2 mb-3">
+                                                            <MessageSquare className="size-4 text-[#00a8a8]" />
+                                                            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100">
+                                                                Meeting Chat ({chatMessages.length})
+                                                            </h3>
+                                                        </div>
+                                                        <div className="max-h-[250px] overflow-y-auto space-y-2 custom-scrollbar">
+                                                            {chatMessages.map((msg, i) => (
+                                                                <div key={msg.id || i} className="flex flex-col">
+                                                                    <div className="flex items-baseline gap-2">
+                                                                        <span className="text-[10px] font-bold text-[#00a8a8]">{msg.sender}</span>
+                                                                        <span className="text-[9px] text-slate-500">
+                                                                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                        </span>
+                                                                    </div>
+                                                                    {msg.text && <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{msg.text}</p>}
+                                                                    {msg.media_url && msg.media_type === 'image' && (
+                                                                        <img src={msg.media_url} alt={msg.media_name} className="mt-1 rounded-lg max-h-32 object-cover" />
+                                                                    )}
+                                                                    {msg.media_url && msg.media_type === 'file' && (
+                                                                        <a href={msg.media_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#00a8a8] underline mt-0.5">
+                                                                            {msg.media_name || 'Download file'}
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                    <button
-                                                        onClick={toggleRagMode}
-                                                        className="text-[10px] px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer border-0"
-                                                    >
-                                                        Backend:{' '}
-                                                        <span className="text-[#00a8a8]">
-                                                            {ragMode === 'llamaindex'
-                                                                ? 'LlamaIndex'
-                                                                : 'Worker'}
-                                                        </span>
-                                                    </button>
+                                                )}
+
+                                                {/* RAG Search */}
+                                            <div className="bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-5 border border-slate-200 dark:border-slate-800/50">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <Sparkles className="size-5 text-[#00a8a8]" />
+                                                    <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                                                        Ask about this meeting
+                                                    </h3>
                                                 </div>
                                                 <div className="flex gap-2">
                                                     <input
                                                         type="text"
                                                         value={ragQuery}
-                                                        onChange={(e) =>
-                                                            setRagQuery(e.target.value)
-                                                        }
-                                                        onKeyDown={(e) =>
-                                                            e.key === 'Enter' &&
-                                                            askQuestion(ragQuery)
-                                                        }
-                                                        placeholder="Ask a question..."
+                                                        onChange={(e) => setRagQuery(e.target.value)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && !isRagLoading && askQuestion(ragQuery)}
+                                                        placeholder="e.g. What was assigned to Alex?"
                                                         className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00a8a8]"
+                                                        disabled={isRagLoading}
                                                     />
                                                     <button
                                                         onClick={() => askQuestion(ragQuery)}
                                                         disabled={isRagLoading || !ragQuery.trim()}
                                                         className="bg-[#00a8a8] hover:bg-[#00a8a8]/90 disabled:opacity-50 text-white border-0 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer shrink-0 transition"
                                                     >
-                                                        {isRagLoading ? '...' : 'Search'}
+                                                        {isRagLoading ? '...' : 'Ask'}
                                                     </button>
                                                 </div>
-                                                {retrievedContext.length > 0 && (
-                                                    <div className="mt-4 space-y-2">
-                                                        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
-                                                            Top 3 Chunks
-                                                        </p>
-                                                        {retrievedContext.map((ctx, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="p-3 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300"
-                                                            >
-                                                                <div className="flex justify-between items-center mb-1">
-                                                                    <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">
-                                                                        Score:{' '}
-                                                                        {ctx.score.toFixed(4)}
-                                                                    </span>
-                                                                </div>
-                                                                <p className="leading-relaxed text-xs">
-                                                                    {ctx.text}
-                                                                </p>
-                                                            </div>
-                                                        ))}
+
+                                                {/* Loading state */}
+                                                {isRagLoading && (
+                                                    <div className="mt-4 flex items-center gap-3 p-4 bg-[#00a8a8]/5 rounded-xl border border-[#00a8a8]/20">
+                                                        <div className="size-4 border-2 border-[#00a8a8] border-t-transparent rounded-full animate-spin shrink-0" />
+                                                        <p className="text-sm text-[#00a8a8] font-medium">{ragLoadingMessage || 'Processing...'}</p>
                                                     </div>
                                                 )}
+
+                                                {/* LLM Answer */}
+                                                {ragAnswer && !isRagLoading && (
+                                                    <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-[#00a8a8]/20 shadow-sm">
+                                                        <div className="flex items-center gap-1.5 mb-2">
+                                                            <Sparkles className="size-3.5 text-[#00a8a8]" />
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#00a8a8]">AI Answer</span>
+                                                        </div>
+                                                        <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{ragAnswer}</p>
+                                                    </div>
+                                                )}
+
+                                                {/* Retrieved Sources */}
+                                                {retrievedContext.length > 0 && !isRagLoading && (
+                                                    <div className="mt-3">
+                                                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">
+                                                            Sources ({retrievedContext.length} excerpts)
+                                                        </p>
+                                                        <div className="space-y-1.5">
+                                                            {retrievedContext.map((ctx, i) => (
+                                                                <div
+                                                                    key={i}
+                                                                    className="p-2.5 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700"
+                                                                >
+                                                                    <span className="text-[9px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400">
+                                                                        {ctx.score.toFixed(4)}
+                                                                    </span>
+                                                                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">
+                                                                        {ctx.text}
+                                                                    </p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                             </div>
                                         )}
                                     </div>
@@ -982,6 +1047,20 @@ export default function RecordingDetailClient({
                 recordingUrl={recording.recording_url}
                 roomName={recording.room_name}
             />
+        </div>
+    );
+}
+
+function PipelineLoader({ message }: { message: string }) {
+    return (
+        <div className="flex items-center gap-4 p-5 bg-[#00a8a8]/5 rounded-2xl border border-[#00a8a8]/20">
+            <div className="size-6 border-3 border-[#00a8a8] border-t-transparent rounded-full animate-spin shrink-0" />
+            <div>
+                <p className="text-sm font-semibold text-[#00a8a8]">{message || 'Processing...'}</p>
+                <p className="text-[10px] text-slate-500 mt-1">
+                    AI is running locally on your device. Do not close this window.
+                </p>
+            </div>
         </div>
     );
 }

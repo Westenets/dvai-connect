@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"^[^/]*\\\\.\\(ts|tsx|js\\)$|src/|dist/index\")",
+      "Bash(pnpm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(pnpm i:*)",
+      "Bash(npx next:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(node -e \"const pkg = require\\('./node_modules/@huggingface/transformers/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(pnpm install:*)",
+      "Bash(npm list:*)",
+      "Bash(find /d/Docs/Personal/Projects/Node.JS/Projects/meet/node_modules/.pnpm/@llamaindex+core*/node_modules/@llamaindex/core/vector-store -name \"*.js\")",
+      "Bash(xargs grep:*)",
+      "Bash(find /d/Docs/Personal/Projects/Node.JS/Projects/meet/node_modules/.pnpm/@llamaindex+core*/node_modules/@llamaindex/core -name \"*.js\" -exec grep -l \"Cannot find Embedding\" {} \\\\;)",
+      "Bash(node -e \"const li = require\\('llamaindex'\\); console.log\\(Object.keys\\(li\\).filter\\(k => k.includes\\('Node'\\) || k.includes\\('Text'\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(find \"D:/Docs/Personal/Projects/Node.JS/Projects/meet\" -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" -exec grep -l \"egress_id\\\\|file_name\\\\|started_by\\\\|participant_ids\" {} \\\\;)"
+    ]
+  }
+}

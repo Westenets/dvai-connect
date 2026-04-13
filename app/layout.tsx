@@ -58,12 +58,14 @@ import { PageTransition } from '@/components/PageTransition';
 import { ClarityInit } from '@/components/ClarityInit';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+import { DbProvider } from '@/lib/components/DbProvider';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" className={`${inter.variable}`}>
             <head></head>
             <body>
+                <DbProvider />
                 <ClarityInit />
                 <Toaster />
                 <AuthProvider>

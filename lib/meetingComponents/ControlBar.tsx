@@ -40,6 +40,7 @@ import {
     Video,
     VideoOff,
     ClosedCaption,
+    FlaskConical,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import EmojiPicker, { Theme } from 'emoji-picker-react';
@@ -52,6 +53,10 @@ import {
 import { SocialIcon } from 'react-social-icons';
 import { useAuth } from '@/components/AuthProvider';
 import Swal from 'sweetalert2';
+import { ingestTranscript } from '@/lib/db';
+import { MOCK_UTTERANCES } from '@/lib/test/mockMeeting';
+
+const ENABLE_SIM = process.env.NEXT_PUBLIC_ENABLE_SIM_TRANSCRIPT === 'true';
 
 export function useMediaQuery(query: string): boolean {
     const getMatches = (query: string): boolean => {
@@ -129,6 +134,8 @@ export interface ControlBarProps extends React.HTMLAttributes<HTMLDivElement> {
     onPipToggle?: () => void;
     pipMode?: boolean;
     e2eePassphrase?: string;
+    showTestHarness?: boolean;
+    onTestHarnessToggle?: (show: boolean) => void;
 }
 
 /**
@@ -234,6 +241,8 @@ export function ControlBar({
     pipMode,
     onDeviceError,
     e2eePassphrase,
+    showTestHarness,
+    onTestHarnessToggle,
     ...props
 }: ControlBarProps) {
     const [isChatOpen, setIsChatOpen] = React.useState(false);
@@ -295,6 +304,23 @@ export function ControlBar({
     const isRecording = useIsRecording() || isE2EERecording;
     const [initialRecStatus, setInitialRecStatus] = React.useState(isRecording);
     const [processingRecRequest, setProcessingRecRequest] = React.useState(false);
+
+    // -- Dev: Sim Transcript --
+    const [isSimulating, setIsSimulating] = React.useState(false);
+    const handleSimTranscript = React.useCallback(async () => {
+        if (isSimulating || !room.name) return;
+        setIsSimulating(true);
+        console.log(`[SIM] Starting mock transcript injection for room: ${room.name}`);
+        for (let i = 0; i < MOCK_UTTERANCES.length; i++) {
+            const { speaker, text } = MOCK_UTTERANCES[i];
+            console.log(`[SIM] Injecting chunk ${i + 1}/${MOCK_UTTERANCES.length}: [${speaker}]`);
+            await ingestTranscript(speaker, text, room.name);
+            await new Promise(r => setTimeout(r, 150));
+        }
+        console.log('[SIM] Done — check DevTools → IndexedDB → EdgeMeetingIntelligenceDB');
+        toast.success('Sim transcript complete! Check DevTools.', { duration: 4000 });
+        setIsSimulating(false);
+    }, [isSimulating, room.name]);
 
     // Permission check for stopping recording
     const canStopRecording = React.useMemo(() => {
@@ -399,8 +425,16 @@ export function ControlBar({
                         toast.success('Recording stopped successfully', { duration: 5000 });
                     }
                     setProcessingRecRequest(false);
+                    // Track recording stop for chat cleanup
+                    import('@/lib/chatCleanup').then(({ onRecordingStopped }) => {
+                        onRecordingStopped(room.name);
+                    }).catch(() => {});
                 } else {
                     toast.success('Recording started successfully', { duration: 5000 });
+                    // Track recording start for chat cleanup
+                    import('@/lib/chatCleanup').then(({ onRecordingStarted }) => {
+                        onRecordingStarted(room.name);
+                    }).catch(() => {});
                 }
             } else {
                 console.error(
@@ -981,6 +1015,42 @@ export function ControlBar({
 
                 {!isMobile && (
                     <>
+                        {/* Dev: Sim Transcript Button */}
+                        {ENABLE_SIM && (
+                            <button
+                                className="lk-button rounded-full!"
+                                title="Sim Transcript (Dev)"
+                                onClick={handleSimTranscript}
+                                disabled={isSimulating}
+                                style={{ background: isSimulating ? '#7c3aed' : 'rgba(124,58,237,0.3)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.5)' }}
+                            >
+                                {isSimulating ? (
+                                    <LoaderCircle size={isMobile ? 16 : 18} className="animate-spin" />
+                                ) : (
+                                    <span style={{ fontSize: '14px' }}>🧪</span>
+                                )}
+                                {showText && (isSimulating ? 'Simulating...' : 'Sim Transcript')}
+                            </button>
+                        )}
+
+                        {/* Dev: AI Test Harness Toggle */}
+                        {ENABLE_SIM && onTestHarnessToggle && (
+                            <button
+                                className="lk-button rounded-full!"
+                                title="AI Test Harness"
+                                onClick={() => onTestHarnessToggle(!showTestHarness)}
+                                aria-pressed={showTestHarness}
+                                style={{
+                                    background: showTestHarness ? '#7c3aed' : 'rgba(124,58,237,0.15)',
+                                    color: '#a78bfa',
+                                    border: '1px solid rgba(124,58,237,0.5)',
+                                }}
+                            >
+                                <FlaskConical size={isMobile ? 16 : 18} />
+                                {showText && 'AI Harness'}
+                            </button>
+                        )}
+
                         {(visibleControls.agent ||
                             (visibleControls.recording && recordingEndpoint)) && (
                             <div className="lk-button-group">

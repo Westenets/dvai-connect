@@ -16,6 +16,7 @@ import { KeyboardShortcuts } from '@/lib/components/KeyboardShortcuts';
 import { SettingsMenu } from '@/lib/meetingComponents/SettingsMenu';
 import { useSetupE2EE } from '@/lib/hooks/useSetupE2EE';
 import { useLowCPUOptimizer } from '@/lib/hooks/usePerfomanceOptimiser';
+import { DbProvider } from '@/lib/components/DbProvider';
 
 export function VideoConferenceClientImpl(props: {
     liveKitUrl: string;
@@ -83,6 +84,7 @@ export function VideoConferenceClientImpl(props: {
 
     return (
         <div className="lk-room-container">
+            <DbProvider />
             <RoomContext.Provider value={room}>
                 <KeyboardShortcuts />
                 <VideoConference

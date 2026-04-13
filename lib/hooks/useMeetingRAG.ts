@@ -1,60 +1,67 @@
 import { useState, useCallback } from 'react';
-import { embedderService } from '../embedder';
-import { searchWithLlamaIndex } from '../rag/llamaindex';
-import { searchWithWorker } from '../rag/worker';
+import { HumanMessage } from '@langchain/core/messages';
 
-export type RAGMode = 'llamaindex' | 'worker';
-
-export function useMeetingRAG(roomName: string | undefined, defaultMode: RAGMode = 'worker') {
-    const [mode, setMode] = useState<RAGMode>(defaultMode);
+export function useMeetingRAG(roomName: string | undefined) {
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
+    const [answer, setAnswer] = useState('');
     const [retrievedContext, setRetrievedContext] = useState<any[]>([]);
-    
-    const askQuestion = useCallback(async (userQuery: string, topK = 3) => {
-        if (!roomName || !userQuery.trim()) return;
-        
-        setIsLoading(true);
-        try {
-            // 1. Generate query embedding
-            const t0Embed = performance.now();
-            const queryEmbedding = await embedderService.embed(userQuery);
-            const t1Embed = performance.now();
-            console.log(`[RAG Benchmarking] Embedding generation took ${(t1Embed - t0Embed).toFixed(2)}ms`);
 
-            // 2. Perform Retrieval based on mode
-            const t0Search = performance.now();
-            let results: any[] = [];
-            
-            if (mode === 'llamaindex') {
-                results = await searchWithLlamaIndex(queryEmbedding, roomName, topK);
-            } else {
-                results = await searchWithWorker(queryEmbedding, roomName, topK);
-            }
-            
-            const t1Search = performance.now();
-            console.log(`[RAG Benchmarking] ${mode.toUpperCase()} search & retrieval took ${(t1Search - t0Search).toFixed(2)}ms for ${results.length} results`);
-            
+    const askQuestion = useCallback(async (query: string, topK = 5) => {
+        if (!roomName || !query.trim()) return;
+
+        setIsLoading(true);
+        setAnswer('');
+        setRetrievedContext([]);
+
+        try {
+            // 1. Embed query
+            setLoadingMessage('Embedding query...');
+            const { embedderService } = await import('../embedder');
+            const queryEmbedding = await embedderService.embed(query);
+
+            // 2. Retrieve via LlamaIndex
+            setLoadingMessage('Searching transcripts...');
+            const { searchWithLlamaIndex } = await import('../rag/llamaindex');
+            const results = await searchWithLlamaIndex(queryEmbedding, roomName, topK);
             setRetrievedContext(results);
-            return results;
-            
-            // Note: For a full RAG system, the next step would be passing this context + query to the LLM.
-        } catch (e) {
-            console.error('[RAG Benchmarking] Error retrieving context', e);
+
+            if (results.length === 0) {
+                setAnswer('No relevant transcript context found for this question.');
+                return;
+            }
+
+            // 3. Generate answer via LLM
+            setLoadingMessage('Generating answer...');
+            const { llmService } = await import('../llmService');
+            await llmService.initialize();
+            const model = llmService.getModel();
+
+            const context = results.map(r => r.text).join('\n');
+            const prompt = `Based on the following meeting transcript excerpts, answer the user's question. If the answer is not in the context, say so.\n\nContext:\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
+            const res = await model.invoke([new HumanMessage(prompt)]);
+            setAnswer((res.content as string).trim());
+        } catch (e: any) {
+            console.error('[RAG] Error:', e);
+            setAnswer(`Error: ${e.message}`);
         } finally {
             setIsLoading(false);
+            setLoadingMessage('');
         }
-    }, [roomName, mode]);
+    }, [roomName]);
 
-    const toggleMode = () => {
-        setMode(prev => prev === 'llamaindex' ? 'worker' : 'llamaindex');
-    };
+    const reset = useCallback(() => {
+        setAnswer('');
+        setRetrievedContext([]);
+        setLoadingMessage('');
+    }, []);
 
     return {
-        mode,
-        setMode,
-        toggleMode,
         isLoading,
+        loadingMessage,
+        answer,
+        retrievedContext,
         askQuestion,
-        retrievedContext
+        reset,
     };
 }
