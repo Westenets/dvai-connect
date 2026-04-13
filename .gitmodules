@@ -1,3 +1,6 @@
 [submodule "dvai-edge"]
 	path = dvai-edge
 	url = https://github.com/westenets/dvai-edge.git
+[submodule "packages/dvai-edge"]
+	path = packages/dvai-edge
+	url = https://github.com/westenets/dvai-edge.git

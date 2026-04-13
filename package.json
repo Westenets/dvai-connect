@@ -15,9 +15,11 @@
   },
   "dependencies": {
     "@datadog/browser-logs": "^6.30.1",
-    "@dvai-edge/core": "file:dvai-edge\\packages\\dvai-edge-core",
-    "@dvai-edge/react": "file:dvai-edge\\packages\\dvai-edge-react",
-    "@huggingface/transformers": "^3.8.1",
+    "@dvai-edge/core": "file:packages\\dvai-edge\\packages\\dvai-edge-core",
+    "@dvai-edge/react": "file:packages\\dvai-edge\\packages\\dvai-edge-react",
+    "@huggingface/transformers": "4.0.1",
+    "@langchain/core": "^1.1.39",
+    "@langchain/openai": "^1.4.4",
     "@livekit/components-core": "^0.12.13",
     "@livekit/components-react": "2.9.20",
     "@livekit/components-styles": "1.2.0",
@@ -73,6 +75,7 @@
     "prettier": "3.8.1",
     "source-map-loader": "^5.0.0",
     "tailwindcss": "^4.2.1",
+    "tsup": "^8.5.1",
     "typescript": "5.9.3",
     "vitest": "^4.0.18"
   },

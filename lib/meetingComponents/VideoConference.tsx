@@ -45,11 +45,14 @@ import {
 import { ControlBar } from './ControlBar';
 import { ParticipantTile } from './ParticipantTile';
 import { ParticipantsSidebar } from './ParticipantsSidebar';
+import { ChatSidebar } from './ChatSidebar';
 import { PipWindow } from './PipWindow';
 import { InviteModal } from '@/lib/components/InviteModal';
 import { useSetupE2EE } from '@/lib/hooks/useSetupE2EE';
 import { useLocalTranscriptionBroadcaster } from '@/lib/hooks/useLocalTranscriptionBroadcaster';
+import { useReceiveCaptions, type CaptionLineData } from '@/lib/hooks/useReceiveCaptions';
 import { CaptionsOverlay } from '@/lib/components/CaptionsOverlay';
+import { TestHarnessSidebar } from '@/lib/test/TestHarnessPanel';
 
 /**
  * @public
@@ -82,6 +85,24 @@ export interface VideoConferenceProps extends React.HTMLAttributes<HTMLDivElemen
  * @public
  */
 
+/** Wrapper that gives ChatSidebar access to the LayoutContext for toggling */
+function ChatSidebarWrapper({ isOpen, ...props }: React.HTMLAttributes<HTMLDivElement> & { isOpen?: boolean }) {
+    const ctx = useMaybeLayoutContext();
+    const openChat = React.useCallback(() => {
+        if (!ctx?.widget.state?.showChat) {
+            ctx?.widget.dispatch?.({ msg: 'toggle_chat' });
+        }
+    }, [ctx]);
+    return (
+        <ChatSidebar
+            {...props}
+            isOpen={!!isOpen}
+            onClose={() => ctx?.widget.dispatch?.({ msg: 'toggle_chat' })}
+            onOpenChat={openChat}
+        />
+    );
+}
+
 /** @internal */
 function MeetingUI({
     tracks,
@@ -106,6 +127,8 @@ function MeetingUI({
     e2eeEnabled,
     e2eePassphrase,
     isRecordingView = false,
+    showTestHarness,
+    setShowTestHarness,
 }: {
     tracks: any[];
     focusTrack: any;
@@ -129,8 +152,14 @@ function MeetingUI({
     e2eeEnabled?: boolean;
     e2eePassphrase?: string;
     isRecordingView?: boolean;
+    showTestHarness: boolean;
+    setShowTestHarness: (show: boolean) => void;
 }) {
     useLocalTranscriptionBroadcaster();
+
+    // Always receive and ingest remote transcripts (even when caption overlay is hidden).
+    // This ensures the local DB captures all participants' speech during recording.
+    const receivedCaptions = useReceiveCaptions();
 
     return (
         <div
@@ -176,7 +205,7 @@ function MeetingUI({
                         )}
                     </div>
                 )}
-                {showTranscription && !pipMode && <CaptionsOverlay />}
+                {showTranscription && !pipMode && <CaptionsOverlay captions={receivedCaptions} />}
                 {!isRecordingView && (
                     <ControlBar
                         controls={{
@@ -207,21 +236,25 @@ function MeetingUI({
                         variation="minimal"
                         className="justify-between!"
                         pipMode={pipMode}
+                        showTestHarness={showTestHarness}
+                        onTestHarnessToggle={setShowTestHarness}
                     />
                 )}
             </div>
 
             {!pipMode && !isRecordingView && (
                 <>
-                    <Chat
-                        style={{ display: widgetState.showChat ? 'grid' : 'none' }}
-                        messageFormatter={chatMessageFormatter}
-                        messageEncoder={chatMessageEncoder}
-                        messageDecoder={chatMessageDecoder}
+                    <ChatSidebarWrapper
+                        style={{ display: widgetState.showChat ? 'flex' : 'none' }}
+                        isOpen={widgetState.showChat}
                     />
                     <ParticipantsSidebar
                         style={{ display: showParticipants ? 'flex' : 'none' }}
                         onClose={() => setShowParticipants(false)}
+                    />
+                    <TestHarnessSidebar
+                        style={{ display: showTestHarness ? 'flex' : 'none' }}
+                        onClose={() => setShowTestHarness(false)}
                     />
                     {SettingsComponent && (
                         <div
@@ -335,6 +368,7 @@ export function VideoConference({
     });
     const [showTranscription, setShowTranscription] = React.useState(false);
     const [showParticipants, setShowParticipants] = React.useState(false);
+    const [showTestHarness, setShowTestHarness] = React.useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = React.useState(false);
     const transcriptions = useTranscriptions();
     const lastAutoFocusedScreenShareTrack = React.useRef<TrackReferenceOrPlaceholder | null>(null);
@@ -593,8 +627,24 @@ export function VideoConference({
         };
 
         room.on(RoomEvent.DataReceived, handleDataReceived);
+
+        // Clean up on meeting end: chat cleanup + embedder unload
+        const handleDisconnect = async () => {
+            try {
+                // Clean up chat messages based on recording state
+                const { cleanupChatForRoom } = await import('@/lib/chatCleanup');
+                if (room?.name) await cleanupChatForRoom(room.name);
+            } catch { /* ignore */ }
+            try {
+                const { embedderService } = await import('@/lib/embedder');
+                await embedderService.unload();
+            } catch { /* ignore */ }
+        };
+        room.on(RoomEvent.Disconnected, handleDisconnect);
+
         return () => {
             room.off(RoomEvent.DataReceived, handleDataReceived);
+            room.off(RoomEvent.Disconnected, handleDisconnect);
         };
     }, [room]);
 
@@ -667,6 +717,8 @@ export function VideoConference({
                             e2eeEnabled={e2eeEnabled}
                             e2eePassphrase={e2eePassphrase}
                             isRecordingView={isRecordingView}
+                            showTestHarness={showTestHarness}
+                            setShowTestHarness={setShowTestHarness}
                         />
                     </div>
 
@@ -707,6 +759,8 @@ export function VideoConference({
                                     e2eeEnabled={e2eeEnabled}
                                     e2eePassphrase={e2eePassphrase}
                                     isRecordingView={isRecordingView}
+                                    showTestHarness={showTestHarness}
+                                    setShowTestHarness={setShowTestHarness}
                                 />
                             </PipWindow>
                         </>

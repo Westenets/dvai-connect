@@ -15,6 +15,7 @@ export const RecordingCard: React.FC<RecordingCardProps> = ({ rec, user, onDelet
 
     const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation();
+        e.preventDefault();
         handleDeleteRecording(rec, user, () => {
             if (onDelete) onDelete(rec.$id);
         });
