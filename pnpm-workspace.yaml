@@ -2,7 +2,9 @@ onlyBuiltDependencies:
   - '@newrelic/fn-inspect'
   - '@newrelic/native-metrics'
   - esbuild
+  - msw
   - onnxruntime-node
   - protobufjs
   - sharp
+  - tree-sitter
   - unrs-resolver
