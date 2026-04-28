@@ -44,3 +44,4 @@ yarn-error.log*
 
 newrelic_agent.log
 next-env.d.ts
+/.gitnexus
