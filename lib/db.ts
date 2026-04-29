@@ -1,5 +1,18 @@
 import Dexie, { type EntityTable } from 'dexie';
 
+/**
+ * Source tier of a transcript row. Live tiers are written by the
+ * useTranscriptionBroadcaster hook; '*-rerun' values are written by
+ * the paid re-transcription service. Existing rows from before the
+ * v3 schema migration are backfilled to 'web-speech'.
+ */
+export type TranscriptTier =
+    | 'web-speech'
+    | 'local-whisper'
+    | 'cloud'
+    | 'cloud-rerun'
+    | 'local-rerun';
+
 export interface TranscriptRecord {
     id?: number;
     speaker: string;
@@ -7,6 +20,10 @@ export interface TranscriptRecord {
     timestamp: number;
     room_name: string;
     embedding: Float32Array | number[]; // Dexie stores arrays
+    /** BCP-47 language tag (e.g. "en-US") detected by the source tier; null when unknown. */
+    language?: string | null;
+    /** Which tier produced this row. */
+    tier?: TranscriptTier;
 }
 
 export interface ProcessingTracker {
@@ -54,13 +71,40 @@ class EdgeMeetingIntelligenceDB extends Dexie {
             insights: '++id, room_name, type, timestamp',
             chat_messages: '++id, room_name, timestamp',
         });
+        // v3: add language + tier columns to transcripts.
+        // Backfill existing rows to ('en-US' best-guess for language, 'web-speech' for tier)
+        // since pre-migration the only producer was the en-US Web Speech path.
+        this.version(3)
+            .stores({
+                transcripts: '++id, room_name, timestamp, tier, language',
+                processing_tracker: '++id, room_name',
+                insights: '++id, room_name, type, timestamp',
+                chat_messages: '++id, room_name, timestamp',
+            })
+            .upgrade(async (tx) => {
+                const table = tx.table('transcripts');
+                await table.toCollection().modify((row: any) => {
+                    if (row.language === undefined) row.language = null;
+                    if (row.tier === undefined) row.tier = 'web-speech';
+                });
+            });
     }
 }
 
 export const db = new EdgeMeetingIntelligenceDB();
 
-// Helper to handle the embedding injection and database transaction
-export async function ingestTranscript(speaker: string, text: string, room_name: string) {
+/**
+ * Helper to handle the embedding injection and database transaction.
+ * `options.language` and `options.tier` are recorded for analytics and
+ * to drive the paid "improve transcript quality" feature (which only
+ * applies to rows where tier === 'web-speech').
+ */
+export async function ingestTranscript(
+    speaker: string,
+    text: string,
+    room_name: string,
+    options: { language?: string | null; tier?: TranscriptTier } = {},
+) {
     if (!text.trim()) return;
     try {
         const { embedderService } = await import('./embedder');
@@ -70,7 +114,9 @@ export async function ingestTranscript(speaker: string, text: string, room_name:
             text,
             timestamp: Date.now(),
             room_name,
-            embedding
+            embedding,
+            language: options.language ?? null,
+            tier: options.tier ?? 'web-speech',
         });
     } catch (e) {
         console.error('Failed to ingest transcript to DB:', e);
