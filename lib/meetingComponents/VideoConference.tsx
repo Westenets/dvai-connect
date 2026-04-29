@@ -49,7 +49,7 @@ import { ChatSidebar } from './ChatSidebar';
 import { PipWindow } from './PipWindow';
 import { InviteModal } from '@/lib/components/InviteModal';
 import { useSetupE2EE } from '@/lib/hooks/useSetupE2EE';
-import { useLocalTranscriptionBroadcaster } from '@/lib/hooks/useLocalTranscriptionBroadcaster';
+import { useTranscriptionBroadcaster } from '@/lib/hooks/useTranscriptionBroadcaster';
 import { useReceiveCaptions, type CaptionLineData } from '@/lib/hooks/useReceiveCaptions';
 import { CaptionsOverlay } from '@/lib/components/CaptionsOverlay';
 import { TestHarnessSidebar } from '@/lib/test/TestHarnessPanel';
@@ -155,7 +155,7 @@ function MeetingUI({
     showTestHarness: boolean;
     setShowTestHarness: (show: boolean) => void;
 }) {
-    useLocalTranscriptionBroadcaster();
+    useTranscriptionBroadcaster();
 
     // Always receive and ingest remote transcripts (even when caption overlay is hidden).
     // This ensures the local DB captures all participants' speech during recording.

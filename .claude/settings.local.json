@@ -18,7 +18,8 @@
       "Bash(node -e \"const li = require\\('llamaindex'\\); console.log\\(Object.keys\\(li\\).filter\\(k => k.includes\\('Node'\\) || k.includes\\('Text'\\)\\).join\\('\\\\n'\\)\\)\")",
       "Bash(find \"D:/Docs/Personal/Projects/Node.JS/Projects/meet\" -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" -exec grep -l \"egress_id\\\\|file_name\\\\|started_by\\\\|participant_ids\" {} \\\\;)",
       "WebSearch",
-      "WebFetch(domain:docs.livekit.io)"
+      "WebFetch(domain:docs.livekit.io)",
+      "Bash(npx gitnexus *)"
     ]
   }
 }
