@@ -1,27 +1,61 @@
-import { DvAI } from "@dvai-edge/core";
+import { DVAI } from "@westenets/dvai-bridge-core";
+import { StatusEmitter, type AIServiceStatus } from "./aiServiceStatus";
 
 const EMBEDDING_DIM = 384; // all-MiniLM-L6-v2 hidden size
 
 class EmbedderService {
-    private embedAI: DvAI | null = null;
+    private embedAI: DVAI | null = null;
     private initPromise: Promise<void> | null = null;
+    public readonly status = new StatusEmitter();
 
-    async getEmbedder() {
+    /** Lazy-init the underlying DVAI instance. Idempotent. */
+    private async getEmbedder(): Promise<DVAI> {
         if (!this.embedAI) {
             if (!this.initPromise) {
-                this.embedAI = new DvAI({
+                this.embedAI = new DVAI({
                     backend: "transformers",
                     transformersModelId: "Xenova/all-MiniLM-L6-v2",
                     pipelineTask: "feature-extraction",
-                    // Embedder only uses runPipeline() — MSW is not needed.
-                    serviceWorkerUrl: "",
+                    // No HTTP/MSW transport — we call runPipeline() directly.
+                    transport: "none",
+                    // Default transformersWorkerUrl ("/dvai-transformers.worker.js")
+                    // runs the model in a Web Worker so it doesn't block the
+                    // meeting UI on every transcription line.
                 });
-                // The initialize method returns a boolean, so we chain .then to match Promise<void>
-                this.initPromise = this.embedAI.initialize().then(() => {});
+
+                this.status.emit({
+                    state: 'loading',
+                    progress: { text: 'Loading embedder…', progress: 0 },
+                });
+
+                const ai = this.embedAI;
+                this.initPromise = ai
+                    .initialize((info) => {
+                        // dvai-bridge progress shape: { text, progress, timeElapsed }
+                        this.status.emit({
+                            state: 'loading',
+                            progress: {
+                                text: info?.text ?? 'Loading embedder…',
+                                progress: typeof info?.progress === 'number' ? info.progress : -1,
+                                timeElapsed: info?.timeElapsed,
+                            },
+                        });
+                    })
+                    .then(() => {
+                        this.status.emit({ state: 'ready' });
+                    })
+                    .catch((err: unknown) => {
+                        const error = err instanceof Error ? err : new Error(String(err));
+                        this.status.emit({ state: 'error', error });
+                        // Reset so a future call can retry.
+                        this.embedAI = null;
+                        this.initPromise = null;
+                        throw error;
+                    });
             }
             await this.initPromise;
         }
-        return this.embedAI as DvAI;
+        return this.embedAI as DVAI;
     }
 
     async embed(text: string): Promise<Float32Array> {
@@ -30,7 +64,6 @@ class EmbedderService {
         }
         const embedder = await this.getEmbedder();
         const result = await embedder.runPipeline(text);
-
         return this.extractEmbedding(result);
     }
 
@@ -42,7 +75,6 @@ class EmbedderService {
     private extractEmbedding(result: any): Float32Array {
         if (!result) return new Float32Array(EMBEDDING_DIM);
 
-        // Get the raw float data from whatever format the pipeline returns
         let data: number[] | Float32Array;
         if (result instanceof Float32Array) {
             data = result;
@@ -58,7 +90,6 @@ class EmbedderService {
             return new Float32Array(EMBEDDING_DIM);
         }
 
-        // If already the right size, return as-is (already pooled)
         if (data.length === EMBEDDING_DIM) {
             return data instanceof Float32Array ? data : new Float32Array(data);
         }
@@ -85,11 +116,17 @@ class EmbedderService {
         return padded;
     }
 
+    /** Snapshot accessor (handy for non-React consumers). */
+    getStatus(): AIServiceStatus {
+        return this.status.get();
+    }
+
     async unload(): Promise<void> {
         if (this.embedAI) {
             await this.embedAI.unload();
             this.embedAI = null;
             this.initPromise = null;
+            this.status.emit({ state: 'unloaded' });
             console.log('[Embedder] Unloaded.');
         }
     }

@@ -11,12 +11,14 @@
     "lint:fix": "next lint --fix",
     "test": "vitest run",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
-    "format:write": "prettier --write \"**/*.{ts,tsx,md,json}\""
+    "format:write": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "postinstall": "node scripts/sync-workers.mjs",
+    "sync-workers": "node scripts/sync-workers.mjs"
   },
   "dependencies": {
     "@datadog/browser-logs": "^6.30.1",
-    "@dvai-edge/core": "file:packages\\dvai-edge\\packages\\dvai-edge-core",
-    "@dvai-edge/react": "file:packages\\dvai-edge\\packages\\dvai-edge-react",
+    "@westenets/dvai-bridge-core": "^2.4.1",
+    "@westenets/dvai-bridge-react": "^2.4.1",
     "@huggingface/transformers": "4.0.1",
     "@langchain/core": "^1.1.39",
     "@langchain/openai": "^1.4.4",

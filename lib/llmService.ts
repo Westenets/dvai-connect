@@ -1,68 +1,33 @@
-import { DvAI, type CreatePipelineFn } from "@dvai-edge/core";
+import { DVAI } from "@westenets/dvai-bridge-core";
 import { ChatOpenAI } from "@langchain/openai";
+import { StatusEmitter, type AIServiceStatus } from "./aiServiceStatus";
 
 const MOCK_URL = "https://api.openai.local/v1/chat/completions";
 const BASE_URL = "https://api.openai.local/v1";
 
 /**
- * Custom pipeline factory for Gemma 4 E2B.
- * Loads the model + processor directly (bypassing pipeline() which doesn't
- * support image-text-to-text) and returns a pipeline-compatible callable.
- */
-/**
- * Custom pipeline factory for Gemma 4 E2B (text-only mode).
+ * LLMService — Gemma 4 E2B running in a Web Worker via @westenets/dvai-bridge-core.
  *
- * Uses Gemma4ForCausalLM instead of Gemma4ForConditionalGeneration.
- * Transformers.js detects the cross-architecture load (ForCausalLM → ForConditionalGeneration)
- * and sets textOnly=true, which skips loading vision_encoder (~99MB) and audio_encoder (~171MB).
- * This saves ~270MB of downloads and significant GPU memory.
+ * The previous implementation used a custom `createPipeline` factory to bypass
+ * transformers.js's pipeline() (which doesn't natively handle image-text-to-text
+ * for Gemma 4) and to skip downloading the vision/audio encoders we don't use.
+ * That factory was a function closure, which can't be sent to a Web Worker, so
+ * the pipeline ran on the main thread and froze the UI.
+ *
+ * dvai-bridge v2 adds a declarative equivalent (`transformersModelClass` +
+ * `transformersDisableEncoders`) — plain strings that cross the worker
+ * boundary. This loads `Gemma4ForCausalLM` instead of
+ * `Gemma4ForConditionalGeneration`; transformers.js detects the
+ * cross-architecture load and sets `textOnly=true`, skipping vision_encoder
+ * (~99MB) and audio_encoder (~171MB). `transformersDisableEncoders` is a
+ * belt-and-suspenders safety net that nulls those fields post-load if
+ * anything slipped through.
  */
-const createGemma4Pipeline: CreatePipelineFn = async (transformers, ctx) => {
-    const { AutoProcessor, Gemma4ForCausalLM } = transformers;
-
-    // AutoProcessor has the chat template; AutoTokenizer does not for Gemma 4.
-    const processor = await AutoProcessor.from_pretrained(ctx.modelId, {
-        progress_callback: ctx.onProgress,
-    });
-
-    // Gemma4ForCausalLM triggers text-only mode in transformers.js:
-    // it detects ForCausalLM loading a ForConditionalGeneration model and
-    // sets textOnly=true, skipping vision_encoder (~99MB) and audio_encoder (~171MB).
-    const model = await Gemma4ForCausalLM.from_pretrained(ctx.modelId, {
-        dtype: ctx.dtype,
-        device: ctx.device,
-        progress_callback: ctx.onProgress,
-    });
-
-    console.log('[LLMService] Gemma 4 model loaded (text-only mode, vision/audio encoders skipped).');
-
-    // Return a pipeline-compatible callable: (messages, options) => [{ generated_text }]
-    return async (messages: any, options: any) => {
-        const prompt = processor.apply_chat_template(messages, {
-            enable_thinking: false,
-            add_generation_prompt: true,
-        });
-        // Use processor for tokenization (text-only: pass null for image/audio)
-        const inputs = await processor(prompt, null, null, { add_special_tokens: false });
-        const outputs = await model.generate({
-            ...inputs,
-            max_new_tokens: options?.max_new_tokens ?? 512,
-            temperature: options?.temperature ?? 1.0,
-            top_p: options?.top_p ?? 0.95,
-            do_sample: options?.do_sample ?? true,
-        });
-        // Slice off input tokens to get only the generated portion
-        const promptLength = inputs.input_ids.dims.at(-1);
-        const generatedTokens = outputs.slice(null, [promptLength, null]);
-        const decoded = processor.batch_decode(generatedTokens, { skip_special_tokens: true });
-        return [{ generated_text: decoded[0] ?? "" }];
-    };
-};
-
 class LLMService {
-    private dvai: DvAI | null = null;
+    private dvai: DVAI | null = null;
     private model: ChatOpenAI | null = null;
     private initPromise: Promise<void> | null = null;
+    public readonly status = new StatusEmitter();
 
     async initialize(): Promise<void> {
         if (typeof window === 'undefined') {
@@ -74,32 +39,62 @@ class LLMService {
             return;
         }
 
-        this.dvai = new DvAI({
+        this.dvai = new DVAI({
             backend: "transformers",
             transformersModelId: "onnx-community/gemma-4-E2B-it-ONNX",
             pipelineTask: "image-text-to-text",
             dtype: "q4f16",
             device: "webgpu",
             generationTimeout: 300_000,
-            transformersWorkerUrl: "",  // Skip worker — custom pipeline runs on main thread
+            // Declarative multimodal loader — runs in the worker. The worker
+            // calls `Gemma4ForCausalLM.from_pretrained(modelId)` and applies
+            // the disable-encoders pass post-load.
+            transformersModelClass: "Gemma4ForCausalLM",
+            transformersProcessorClass: "AutoProcessor",
+            transformersDisableEncoders: ["vision_encoder", "audio_encoder"],
+            // Default worker URL ("/dvai-transformers.worker.js") — the meet
+            // app keeps this file in public/ via scripts/sync-workers.mjs.
             mockUrl: MOCK_URL,
-            createPipeline: createGemma4Pipeline,
+            // transport defaults to "auto" → MSW in browser, which is what
+            // LangChain's ChatOpenAI consumes via BASE_URL below.
         });
 
-        this.initPromise = this.dvai.initialize().then(() => {
-            console.log('[LLMService] DvAI initialized with MSW endpoint.');
+        this.status.emit({
+            state: 'loading',
+            progress: { text: 'Loading Gemma 4…', progress: 0 },
         });
+
+        this.initPromise = this.dvai
+            .initialize((info) => {
+                this.status.emit({
+                    state: 'loading',
+                    progress: {
+                        text: info?.text ?? 'Loading Gemma 4…',
+                        progress: typeof info?.progress === 'number' ? info.progress : -1,
+                        timeElapsed: info?.timeElapsed,
+                    },
+                });
+            })
+            .then(() => {
+                this.model = new ChatOpenAI({
+                    apiKey: "not-needed",
+                    configuration: { baseURL: BASE_URL },
+                    temperature: 0,
+                    maxTokens: 512,
+                });
+                this.status.emit({ state: 'ready' });
+                console.log('[LLMService] DVAI initialized with MSW endpoint.');
+            })
+            .catch((err: unknown) => {
+                const error = err instanceof Error ? err : new Error(String(err));
+                this.status.emit({ state: 'error', error });
+                this.dvai = null;
+                this.model = null;
+                this.initPromise = null;
+                throw error;
+            });
 
         await this.initPromise;
-
-        this.model = new ChatOpenAI({
-            apiKey: "not-needed",
-            configuration: {
-                baseURL: BASE_URL,
-            },
-            temperature: 0,
-            maxTokens: 512,
-        });
     }
 
     getModel(): ChatOpenAI {
@@ -113,12 +108,18 @@ class LLMService {
         return !!this.model;
     }
 
+    /** Snapshot accessor (handy for non-React consumers). */
+    getStatus(): AIServiceStatus {
+        return this.status.get();
+    }
+
     async unload(): Promise<void> {
         if (this.dvai) {
             await this.dvai.unload();
             this.dvai = null;
             this.model = null;
             this.initPromise = null;
+            this.status.emit({ state: 'unloaded' });
             console.log('[LLMService] Unloaded.');
         }
     }

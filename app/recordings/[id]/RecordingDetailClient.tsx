@@ -135,7 +135,10 @@ export default function RecordingDetailClient({
         }
     }, [rawTranscripts.length, rawInsights.length, pipelineStatus, runPipeline]);
 
-    // Unload LLM when leaving the page
+    // Unload LLM when leaving the page.
+    // We deliberately go through the singleton (not useGemma) here because
+    // this cleanup runs on the React unmount path — the provider may already
+    // be torn down by the time this effect's cleanup fires.
     useEffect(() => {
         return () => {
             import('@/lib/llmService').then(({ llmService }) => {

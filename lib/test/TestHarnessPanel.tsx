@@ -5,9 +5,8 @@ import { X, FlaskConical } from 'lucide-react';
 import { useMaybeRoomContext } from '@livekit/components-react';
 import { runTest, TestResult } from './runIntelligenceTest';
 import { MOCK_MEETING_ROOM } from './mockMeeting';
-import { embedderService } from '@/lib/embedder';
 import { searchWithLlamaIndex } from '@/lib/rag/llamaindex';
-import { llmService } from '@/lib/llmService';
+import { useEmbedder, useGemma } from '@/lib/providers/MeetAIProvider';
 import { HumanMessage } from '@langchain/core/messages';
 import { db } from '@/lib/db';
 
@@ -32,6 +31,8 @@ export interface TestHarnessSidebarProps extends React.HTMLAttributes<HTMLDivEle
 export function TestHarnessSidebar({ onClose, style, className, ...props }: TestHarnessSidebarProps) {
     const room = useMaybeRoomContext();
     const roomName = room?.name || '';
+    const { service: embedder } = useEmbedder();
+    const { service: gemma, status: gemmaStatus } = useGemma();
 
     const [testResult, setTestResult] = React.useState<TestResult | null>(null);
     const [isTesting, setIsTesting] = React.useState(false);
@@ -84,7 +85,7 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
         setRagResult(null);
         try {
             console.log(`[TestHarness] Embedding query: "${ragQuery}" (room: "${queryRoom}")`);
-            const queryEmbedding = await embedderService.embed(ragQuery);
+            const queryEmbedding = await embedder.embed(ragQuery);
 
             // 1. Retrieve relevant context
             const t0 = performance.now();
@@ -100,8 +101,8 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                 const prompt = `Based on the following meeting transcript excerpts, answer the user's question. If the answer is not in the context, say so.\n\nContext:\n${context}\n\nQuestion: ${ragQuery}\n\nAnswer:`;
 
                 const t1 = performance.now();
-                await llmService.initialize();
-                const model = llmService.getModel();
+                await gemma.initialize();
+                const model = gemma.getModel();
                 const res = await model.invoke([new HumanMessage(prompt)]);
                 answer = (res.content as string).trim();
                 generationMs = Math.round(performance.now() - t1);

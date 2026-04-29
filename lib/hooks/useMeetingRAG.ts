@@ -1,7 +1,11 @@
 import { useState, useCallback } from 'react';
 import { HumanMessage } from '@langchain/core/messages';
+import { useEmbedder, useGemma } from '@/lib/providers/MeetAIProvider';
 
 export function useMeetingRAG(roomName: string | undefined) {
+    const { service: embedder } = useEmbedder();
+    const { service: gemma, status: gemmaStatus } = useGemma();
+
     const [isLoading, setIsLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
     const [answer, setAnswer] = useState('');
@@ -15,10 +19,9 @@ export function useMeetingRAG(roomName: string | undefined) {
         setRetrievedContext([]);
 
         try {
-            // 1. Embed query
+            // 1. Embed query — embedder lazy-inits the worker on first call.
             setLoadingMessage('Embedding query...');
-            const { embedderService } = await import('../embedder');
-            const queryEmbedding = await embedderService.embed(query);
+            const queryEmbedding = await embedder.embed(query);
 
             // 2. Retrieve via LlamaIndex
             setLoadingMessage('Searching transcripts...');
@@ -31,11 +34,12 @@ export function useMeetingRAG(roomName: string | undefined) {
                 return;
             }
 
-            // 3. Generate answer via LLM
+            // 3. Generate answer via LLM. The gemmaStatus from the provider
+            // will show real-time download/load progress while initialize()
+            // runs — UI components can render a progress bar from it.
             setLoadingMessage('Generating answer...');
-            const { llmService } = await import('../llmService');
-            await llmService.initialize();
-            const model = llmService.getModel();
+            await gemma.initialize();
+            const model = gemma.getModel();
 
             const context = results.map(r => r.text).join('\n');
             const prompt = `Based on the following meeting transcript excerpts, answer the user's question. If the answer is not in the context, say so.\n\nContext:\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
@@ -48,7 +52,7 @@ export function useMeetingRAG(roomName: string | undefined) {
             setIsLoading(false);
             setLoadingMessage('');
         }
-    }, [roomName]);
+    }, [roomName, embedder, gemma]);
 
     const reset = useCallback(() => {
         setAnswer('');
@@ -61,6 +65,10 @@ export function useMeetingRAG(roomName: string | undefined) {
         loadingMessage,
         answer,
         retrievedContext,
+        // Expose Gemma load status so the UI can show a progress bar during
+        // the first model download (~1.5GB). Embedder is small enough that
+        // the spinner from `isLoading` covers it.
+        gemmaStatus,
         askQuestion,
         reset,
     };
