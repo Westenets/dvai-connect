@@ -36,6 +36,9 @@ import { useMeetingIntelligence } from '@/lib/hooks/useMeetingIntelligence';
 import { useMeetingRAG } from '@/lib/hooks/useMeetingRAG';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
+import { isPaidUser } from '@/lib/auth/subscription';
+import { runReTranscription, cloudRestTranscribeChunk } from '@/lib/transcription/reTranscription';
+import toast from 'react-hot-toast';
 
 interface RecordingDetailClientProps {
     recording: any;
@@ -78,6 +81,11 @@ export default function RecordingDetailClient({
     } = useMeetingRAG(recording.room_name);
     const [ragQuery, setRagQuery] = useState('');
 
+    // Re-transcription state — paid feature, only relevant when existing
+    // transcripts came from Tier 3 (Web Speech) and the user is paid.
+    const [reTransRunning, setReTransRunning] = useState(false);
+    const [reTransProgress, setReTransProgress] = useState<{ processedSec: number; totalSec: number } | null>(null);
+
     // Fetch from Local DB
     const rawTranscripts = useLiveQuery(
         () => recording.room_name ? db.transcripts.where('room_name').equals(recording.room_name).toArray() : [],
@@ -118,6 +126,32 @@ export default function RecordingDetailClient({
             text: t.text,
         };
     });
+
+    // Detect tier of existing transcripts: read first row's tier field.
+    // 'web-speech' rows are upgrade candidates; 'cloud' / 'local-whisper'
+    // rows are already best-quality so we don't re-transcribe them.
+    const existingTier = (rawTranscripts[0] as any)?.tier ?? null;
+    const showImproveTranscriptButton =
+        isPaidUser() && existingTier === 'web-speech' && !!recording.audioUrl;
+
+    const handleImproveTranscript = async () => {
+        setReTransRunning(true);
+        setReTransProgress(null);
+        try {
+            await runReTranscription({
+                recordingAudioUrl: recording.audioUrl,
+                roomName: recording.room_name,
+                transcribeChunk: cloudRestTranscribeChunk,
+                resultTier: 'cloud-rerun',
+                onProgress: setReTransProgress,
+            });
+            toast.success('Transcripts upgraded to cloud quality.');
+        } catch (err: any) {
+            toast.error(`Re-transcription failed: ${err?.message ?? 'unknown error'}`);
+        } finally {
+            setReTransRunning(false);
+        }
+    };
 
     // Auto-run pipeline if no insights exist yet
     const pipelineTriggered = useRef(false);
@@ -797,11 +831,32 @@ export default function RecordingDetailClient({
                                             </div>
                                         )}
                                         {activeTab === 'transcript' && (
-                                            <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                                                <TranscriptList
-                                                    transcript={transcriptData}
-                                                    onSeek={handleTranscriptSeek}
-                                                />
+                                            <div className="space-y-3">
+                                                {showImproveTranscriptButton && (
+                                                    <div className="flex items-center justify-between rounded-lg border border-[#00a8a8]/30 bg-[#00a8a8]/5 px-3 py-2">
+                                                        <span className="text-xs text-slate-700 dark:text-slate-300">
+                                                            {reTransRunning && reTransProgress
+                                                                ? `Upgrading transcripts… ${Math.round(reTransProgress.processedSec)}s / ${Math.round(reTransProgress.totalSec)}s`
+                                                                : reTransRunning
+                                                                    ? 'Upgrading transcripts…'
+                                                                    : 'These transcripts were captured with basic captions. Upgrade to cloud-quality with multilingual + punctuation support.'}
+                                                        </span>
+                                                        <button
+                                                            onClick={handleImproveTranscript}
+                                                            disabled={reTransRunning}
+                                                            className="ml-3 inline-flex items-center gap-1.5 rounded-md bg-[#00a8a8] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#008a8a] disabled:opacity-60 disabled:cursor-not-allowed"
+                                                        >
+                                                            <Sparkles className="size-3.5" />
+                                                            {reTransRunning ? 'Working…' : 'Improve quality'}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                    <TranscriptList
+                                                        transcript={transcriptData}
+                                                        onSeek={handleTranscriptSeek}
+                                                    />
+                                                </div>
                                             </div>
                                         )}
                                         {activeTab === 'questions' && (
