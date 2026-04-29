@@ -116,6 +116,31 @@ export default function Settings() {
     const [echoReduction, setEchoReduction] = useState(false);
     const [captionSize, setCaptionSize] = useState(1);
 
+    // Transcription quality is per-device (hardware-dependent), so it lives
+    // in localStorage rather than synced Appwrite prefs. Read via the
+    // useTranscriptionBroadcaster hook on the next meeting join.
+    const TRANSCRIPTION_PREF_KEY = 'dvai.transcription.userPref.v1';
+    type TranscriptionPref = 'auto' | 'local-ai' | 'basic' | 'cloud';
+    const [transcriptionPref, setTranscriptionPref] = useState<TranscriptionPref>('auto');
+    useEffect(() => {
+        if (typeof localStorage === 'undefined') return;
+        const v = localStorage.getItem(TRANSCRIPTION_PREF_KEY) as TranscriptionPref | null;
+        if (v === 'auto' || v === 'local-ai' || v === 'basic' || v === 'cloud') {
+            setTranscriptionPref(v);
+        }
+    }, []);
+    const handleTranscriptionPrefChange = (next: TranscriptionPref) => {
+        setTranscriptionPref(next);
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem(TRANSCRIPTION_PREF_KEY, next);
+        }
+        // Also clear the strategy cache so the next meeting picks fresh.
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('dvai.transcription.strategy.v1');
+        }
+        toast.success('Transcription quality updated. Effective on next meeting.');
+    };
+
     // Video Settings State
     const [videoInputDevice, setVideoInputDevice] = useState('default');
     const [videoQuality, setVideoQuality] = useState('720');
@@ -1059,6 +1084,46 @@ export default function Settings() {
                                                 ))}
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
+                                        Closed Captions
+                                    </h3>
+                                    <div className="space-y-4 max-w-md">
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Quality
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                                <span className="material-symbols-outlined text-[20px]">
+                                                    closed_caption
+                                                </span>
+                                            </span>
+                                            <select
+                                                value={transcriptionPref}
+                                                onChange={(e) =>
+                                                    handleTranscriptionPrefChange(
+                                                        e.target.value as 'auto' | 'local-ai' | 'basic' | 'cloud',
+                                                    )
+                                                }
+                                                className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                            >
+                                                <option value="auto">Auto (recommended)</option>
+                                                <option value="local-ai">
+                                                    Local AI (best privacy, needs capable hardware)
+                                                </option>
+                                                <option value="basic">Basic (lowest battery)</option>
+                                                <option value="cloud">Cloud (paid plan)</option>
+                                            </select>
+                                        </div>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                                            Auto picks the best option your device can run in real-time.
+                                            Local AI keeps audio on your device. Cloud requires a paid
+                                            plan and sends audio to a transcription provider for the
+                                            highest accuracy and code-switching support.
+                                        </p>
                                     </div>
                                 </div>
 
