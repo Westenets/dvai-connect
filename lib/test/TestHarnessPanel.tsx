@@ -9,6 +9,9 @@ import { searchWithLlamaIndex } from '@/lib/rag/llamaindex';
 import { useEmbedder, useGemma } from '@/lib/providers/MeetAIProvider';
 import { HumanMessage } from '@langchain/core/messages';
 import { db } from '@/lib/db';
+import { WebSpeechAdapter } from '@/lib/transcription/adapters/webSpeechAdapter';
+import { WhisperLocalAdapter } from '@/lib/transcription/adapters/whisperLocalAdapter';
+import type { TranscriberAdapter, Tier } from '@/lib/transcription/types';
 
 type RAGResult = { text: string; score: number; id?: any };
 
@@ -41,6 +44,12 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
     const [ragQuery, setRagQuery] = React.useState('');
     const [ragLoading, setRagLoading] = React.useState(false);
     const [ragResult, setRagResult] = React.useState<RAGSearchResult | null>(null);
+
+    // Tier test state
+    const [tierTestRunning, setTierTestRunning] = React.useState(false);
+    const [tierTestResults, setTierTestResults] = React.useState<
+        Record<string, { ok: boolean; latencyMs?: number; error?: string }>
+    >({});
 
     const handleRunTest = React.useCallback(async () => {
         setIsTesting(true);
@@ -116,6 +125,54 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
             setRagLoading(false);
         }
     }, [ragQuery, roomName]);
+
+    const runTierTest = React.useCallback(async () => {
+        setTierTestRunning(true);
+        setTierTestResults({});
+        let stream: MediaStream | null = null;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (err: any) {
+            setTierTestResults({
+                _setup: { ok: false, error: `Mic permission denied: ${err?.message ?? 'unknown'}` },
+            });
+            setTierTestRunning(false);
+            return;
+        }
+        // Skip cloud — requires paid plan. Webspeech + local-whisper are free.
+        const adapters: Array<{ name: Tier; build: () => TranscriberAdapter }> = [
+            { name: 'web-speech', build: () => new WebSpeechAdapter() },
+            { name: 'local-whisper', build: () => new WhisperLocalAdapter() },
+        ];
+        const out: typeof tierTestResults = {};
+        for (const { name, build } of adapters) {
+            const adapter = build();
+            const t0 = performance.now();
+            try {
+                const latency = await new Promise<number>((resolve, reject) => {
+                    const timeout = setTimeout(
+                        () => reject(new Error('no transcript in 20s')),
+                        20000,
+                    );
+                    adapter.onTranscript(() => {
+                        clearTimeout(timeout);
+                        resolve(performance.now() - t0);
+                    });
+                    adapter.start(stream!, 'test-user').catch(reject);
+                });
+                out[name] = { ok: true, latencyMs: Math.round(latency) };
+            } catch (err: any) {
+                out[name] = { ok: false, error: err?.message ?? 'unknown' };
+            } finally {
+                try {
+                    await adapter.stop();
+                } catch {}
+            }
+            setTierTestResults({ ...out });
+        }
+        stream.getTracks().forEach((t) => t.stop());
+        setTierTestRunning(false);
+    }, []);
 
     return (
         <aside
@@ -260,6 +317,48 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                                     ))}
                                 </div>
                             )}
+                        </div>
+                    )}
+                </section>
+
+                <Divider />
+
+                {/* === Section 4: Transcription Tier Test === */}
+                <section>
+                    <SectionLabel>Transcription Tier Test</SectionLabel>
+                    <p className="text-slate-500 text-[10px] mb-2 leading-relaxed">
+                        Tries each transcription tier against your live mic.
+                        Reports time-to-first-transcript for each. Cloud tier
+                        is skipped (paid). Speak naturally for 5–10s after
+                        clicking.
+                    </p>
+                    <button
+                        onClick={runTierTest}
+                        disabled={tierTestRunning}
+                        className="w-full py-2 px-3 rounded-lg border-0 font-bold uppercase tracking-widest text-[10px] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ background: tierTestRunning ? '#374151' : '#0891b2', color: '#fff' }}
+                    >
+                        {tierTestRunning ? 'Testing tiers…' : 'Run Tier Test'}
+                    </button>
+                    {Object.keys(tierTestResults).length > 0 && (
+                        <div className="mt-2 flex flex-col gap-1">
+                            {Object.entries(tierTestResults).map(([tier, r]) => (
+                                <div
+                                    key={tier}
+                                    className="flex justify-between items-center bg-slate-800/60 rounded-md px-3 py-2"
+                                >
+                                    <span className="text-slate-300">{tier}</span>
+                                    {r.ok ? (
+                                        <span className="text-emerald-400 font-bold">
+                                            {r.latencyMs}ms first
+                                        </span>
+                                    ) : (
+                                        <span className="text-red-400 text-[10px] truncate ml-2">
+                                            {r.error}
+                                        </span>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     )}
                 </section>
