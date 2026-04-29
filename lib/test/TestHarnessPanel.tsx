@@ -12,6 +12,8 @@ import { db } from '@/lib/db';
 import { WebSpeechAdapter } from '@/lib/transcription/adapters/webSpeechAdapter';
 import { WhisperLocalAdapter } from '@/lib/transcription/adapters/whisperLocalAdapter';
 import type { TranscriberAdapter, Tier } from '@/lib/transcription/types';
+import { runFullSmokeSuite } from '@/lib/test/smokeSuite';
+import type { SmokeReport, StageResult } from '@/lib/test/smokeSuiteTypes';
 
 type RAGResult = { text: string; score: number; id?: any };
 
@@ -50,6 +52,13 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
     const [tierTestResults, setTierTestResults] = React.useState<
         Record<string, { ok: boolean; latencyMs?: number; error?: string }>
     >({});
+
+    // Smoke suite state
+    const [smokeRunning, setSmokeRunning] = React.useState(false);
+    const [smokeStages, setSmokeStages] = React.useState<StageResult[]>([]);
+    const [smokeReport, setSmokeReport] = React.useState<SmokeReport | null>(null);
+    const [smokeIncludeMic, setSmokeIncludeMic] = React.useState(false);
+    const [smokeSkipPipeline, setSmokeSkipPipeline] = React.useState(false);
 
     const handleRunTest = React.useCallback(async () => {
         setIsTesting(true);
@@ -125,6 +134,38 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
             setRagLoading(false);
         }
     }, [ragQuery, roomName]);
+
+    const runSmokeSuite = React.useCallback(async () => {
+        setSmokeRunning(true);
+        setSmokeStages([]);
+        setSmokeReport(null);
+        try {
+            const report = await runFullSmokeSuite({
+                includeMicTier: smokeIncludeMic,
+                skipAiPipeline: smokeSkipPipeline,
+                onProgress: (stage) => {
+                    setSmokeStages((prev) => [...prev, stage]);
+                },
+            });
+            setSmokeReport(report);
+        } catch (err) {
+            console.error('[TestHarness] smoke suite error', err);
+        } finally {
+            setSmokeRunning(false);
+        }
+    }, [smokeIncludeMic, smokeSkipPipeline]);
+
+    const downloadSmokeReport = React.useCallback(() => {
+        if (!smokeReport) return;
+        const blob = new Blob([JSON.stringify(smokeReport, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const ts = new Date(smokeReport.timestamp).toISOString().replace(/[:.]/g, '-');
+        a.href = url;
+        a.download = `dvai-smoke-${ts}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [smokeReport]);
 
     const runTierTest = React.useCallback(async () => {
         setTierTestRunning(true);
@@ -359,6 +400,109 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                                     )}
                                 </div>
                             ))}
+                        </div>
+                    )}
+                </section>
+
+                <Divider />
+
+                {/* === Section 5: Full Smoke Suite === */}
+                <section>
+                    <SectionLabel>Full Smoke Suite</SectionLabel>
+                    <p className="text-slate-500 text-[10px] mb-2 leading-relaxed">
+                        Runs every AI subsystem in sequence (embedder, Gemma,
+                        ingest, RAG, optional pipeline). Captures latency +
+                        heap deltas, applies device-class thresholds.
+                    </p>
+                    <div className="flex flex-col gap-1.5 mb-2">
+                        <label className="flex items-center gap-2 text-slate-400 text-[10px]">
+                            <input
+                                type="checkbox"
+                                checked={smokeIncludeMic}
+                                onChange={(e) => setSmokeIncludeMic(e.target.checked)}
+                                disabled={smokeRunning}
+                            />
+                            Include live-mic transcription tier check
+                        </label>
+                        <label className="flex items-center gap-2 text-slate-400 text-[10px]">
+                            <input
+                                type="checkbox"
+                                checked={smokeSkipPipeline}
+                                onChange={(e) => setSmokeSkipPipeline(e.target.checked)}
+                                disabled={smokeRunning}
+                            />
+                            Skip full AI pipeline (faster)
+                        </label>
+                    </div>
+                    <button
+                        onClick={runSmokeSuite}
+                        disabled={smokeRunning}
+                        className="w-full py-2 px-3 rounded-lg border-0 font-bold uppercase tracking-widest text-[10px] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{ background: smokeRunning ? '#374151' : '#be185d', color: '#fff' }}
+                    >
+                        {smokeRunning ? 'Running smoke suite…' : 'Run Full Smoke Suite'}
+                    </button>
+
+                    {smokeStages.length > 0 && (
+                        <div className="mt-2 flex flex-col gap-1">
+                            {smokeStages.map((s, idx) => {
+                                const color =
+                                    s.status === 'pass'
+                                        ? 'text-emerald-400'
+                                        : s.status === 'warn'
+                                            ? 'text-yellow-400'
+                                            : s.status === 'fail'
+                                                ? 'text-red-400'
+                                                : 'text-slate-500';
+                                const heap = s.deltaHeapBytes
+                                    ? ` ΔΉ ${(s.deltaHeapBytes / (1024 * 1024)).toFixed(1)}MB`
+                                    : '';
+                                return (
+                                    <div
+                                        key={`${s.name}-${idx}`}
+                                        className="flex justify-between items-start bg-slate-800/60 rounded-md px-3 py-2"
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="text-slate-300 text-[11px]">{s.name}</span>
+                                            {s.message && (
+                                                <span className="text-slate-500 text-[9px] mt-0.5 max-w-[180px] truncate">
+                                                    {s.message}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className={`${color} font-bold text-[10px] text-right`}>
+                                            {s.status.toUpperCase()}
+                                            <br />
+                                            <span className="text-slate-400 font-normal">
+                                                {s.durationMs > 0 ? `${Math.round(s.durationMs)}ms` : '—'}
+                                                {heap}
+                                            </span>
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {smokeReport && (
+                        <div className="mt-3 flex flex-col gap-2">
+                            <div
+                                className={`rounded-lg px-3 py-2 font-bold text-[10px] border ${
+                                    smokeReport.overall === 'pass'
+                                        ? 'bg-emerald-900/30 border-emerald-500/30 text-emerald-400'
+                                        : smokeReport.overall === 'pass-with-warnings'
+                                            ? 'bg-yellow-900/30 border-yellow-500/30 text-yellow-400'
+                                            : 'bg-red-900/30 border-red-500/30 text-red-400'
+                                }`}
+                            >
+                                {smokeReport.overall.toUpperCase()} — total {Math.round(smokeReport.durationMs)}ms
+                            </div>
+                            <button
+                                onClick={downloadSmokeReport}
+                                className="py-1.5 px-3 rounded-lg border border-slate-700 text-slate-300 text-[10px] hover:bg-slate-800 transition-colors"
+                            >
+                                Download JSON Report
+                            </button>
                         </div>
                     )}
                 </section>
