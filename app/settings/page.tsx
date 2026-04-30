@@ -1089,46 +1089,6 @@ export default function Settings() {
 
                                 <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
-                                        Closed Captions
-                                    </h3>
-                                    <div className="space-y-4 max-w-md">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                            Quality
-                                        </label>
-                                        <div className="relative">
-                                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                                                <span className="material-symbols-outlined text-[20px]">
-                                                    closed_caption
-                                                </span>
-                                            </span>
-                                            <select
-                                                value={transcriptionPref}
-                                                onChange={(e) =>
-                                                    handleTranscriptionPrefChange(
-                                                        e.target.value as 'auto' | 'local-ai' | 'basic' | 'cloud',
-                                                    )
-                                                }
-                                                className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
-                                            >
-                                                <option value="auto">Auto (recommended)</option>
-                                                <option value="local-ai">
-                                                    Local AI (best privacy, needs capable hardware)
-                                                </option>
-                                                <option value="basic">Basic (lowest battery)</option>
-                                                <option value="cloud">Cloud (paid plan)</option>
-                                            </select>
-                                        </div>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            Auto picks the best option your device can run in real-time.
-                                            Local AI keeps audio on your device. Cloud requires a paid
-                                            plan and sends audio to a transcription provider for the
-                                            highest accuracy and code-switching support.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
                                         Meeting Controls
                                     </h3>
                                     <div className="flex items-start justify-between">
@@ -1339,6 +1299,46 @@ export default function Settings() {
                                                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#00a8a8]/20 dark:peer-focus:ring-[#00a8a8]/30 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-px after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00a8a8] dark:peer-checked:bg-[#00a8a8]"></div>
                                             </label>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
+                                        Closed Captions
+                                    </h3>
+                                    <div className="space-y-4 max-w-md">
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Quality
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                                <span className="material-symbols-outlined text-[20px]">
+                                                    closed_caption
+                                                </span>
+                                            </span>
+                                            <select
+                                                value={transcriptionPref}
+                                                onChange={(e) =>
+                                                    handleTranscriptionPrefChange(
+                                                        e.target.value as 'auto' | 'local-ai' | 'basic' | 'cloud',
+                                                    )
+                                                }
+                                                className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                            >
+                                                <option value="auto">Auto (recommended)</option>
+                                                <option value="local-ai">
+                                                    Local AI (best privacy, needs capable hardware)
+                                                </option>
+                                                <option value="basic">Basic (lowest battery)</option>
+                                                <option value="cloud">Cloud (paid plan)</option>
+                                            </select>
+                                        </div>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                                            Auto picks the best option your device can run in real-time.
+                                            Local AI keeps audio on your device. Cloud requires a paid
+                                            plan and sends audio to a transcription provider for the
+                                            highest accuracy and code-switching support.
+                                        </p>
                                     </div>
                                 </div>
 
