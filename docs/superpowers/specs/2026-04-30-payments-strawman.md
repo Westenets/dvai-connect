@@ -1,15 +1,9 @@
-# Payments + Subscriptions — Strawman Spec (Problem #5)
+# Payments + Subscriptions — Spec (Problem #5)
 
-**Status:** Strawman draft, NOT for implementation. Discussion document
-for the morning. Every section below is a proposal to argue with, not a
-decision to execute.
-
-**Why a strawman, not a full design:** Pricing tier specifics, free-tier
-limits, trial periods, currency handling, refund policy, and roughly a
-dozen other product decisions need your input before architecture
-locks in. Writing a full spec on guesses would be wasted work. This
-document captures the *technical scaffolding* and *proposed defaults*
-so we can converge fast.
+**Status:** Decisions locked. Ready for implementation planning.
+Pricing reasoning + cost-per-user analysis lives in the companion
+document `dvai-meet-cost-and-pricing-analysis.docx` (delivered to the
+team for review).
 
 **Dependencies:** Implements `isPaidUser()` (currently a stub returning
 false in `lib/auth/subscription.ts`). When this lands, the transcription
@@ -18,32 +12,75 @@ quality" button automatically come alive for paid users.
 
 ---
 
-## 1. Proposed pricing tiers (strawman — argue with these)
+## 1. Pricing tiers — LOCKED
 
-| Tier | Price | Local AI | Cloud STT (live CC) | Cloud re-transcription | Recording storage | Meeting length | Participants |
-|---|---|---|---|---|---|---|---|
-| **Free** | $0 | ✅ unlimited | ❌ (Tier 2/3 fallback) | ❌ | 5 GB total | 60 min | up to 8 |
-| **Pro** | $12/mo or $120/yr | ✅ unlimited | ✅ included | ✅ included | 50 GB | unlimited | up to 25 |
-| **Team** | $20/seat/mo (3 seat min) | ✅ unlimited | ✅ included | ✅ included | 200 GB shared | unlimited | up to 100 |
-| **Enterprise** | Contact sales | ✅ + on-prem option | ✅ | ✅ | custom | unlimited | unlimited |
+| Tier | Monthly | Annual (16% off) | Min seats | Sales motion |
+|---|---|---|---|---|
+| **Free** | $0 | — | 1 | Self-serve |
+| **Pro** | $12/user/mo | $120/user/yr ($10/mo equiv) | 1 | Self-serve |
+| **Team** | $20/seat/mo | $200/seat/yr ($16.67/mo equiv) | 3 | Self-serve |
+| **Business** | $40/seat/mo | $400/seat/yr | 10 | Sales-assisted |
+| **Enterprise** | Custom (start at $50K/year) | annual only | typically 25+ | Sales-led |
 
-Open product questions for you:
+### Per-tier feature gates and limits
 
-1. **Free tier meeting length**: 60 min is mid-pack (Zoom Free is 40,
-   Google Meet Free is 60). Bump to 90? Drop to 40? Eliminate?
-2. **Free tier cloud STT**: I default to "none" — keep it as a paid
-   differentiator. Alternative: 30 min/month free quota to let users
-   "try" cloud quality and convert.
-3. **Pro pricing**: $12/mo is in the consumer SaaS sweet spot (Notion
-   Plus, Loom Pro, etc.). Could go $9 to undercut, $15 to anchor as
-   premium.
-4. **Annual discount**: 16% off (i.e. ~$10/mo equivalent) — standard.
-5. **Team pricing**: per-seat with 3-seat minimum is conservative.
-   Slack-style. Could do flat $50/mo for "small team" up to 10 seats.
-6. **Trial**: 14-day Pro trial on signup, no card required, soft-cap
-   to free tier on expiry? Or paid-only (more conversion, less viral).
-7. **Currency**: USD as primary. EUR + INR + GBP as automatic per-IP
-   localization? Or USD-only at launch, expand later.
+**Free** (loss leader; conversion engine):
+- 60-min meeting length cap, 5-min warning before cap
+- Up to 8 participants per meeting
+- 5 GB recording storage
+- 30 min/month cloud STT trial (then falls back to local AI/Web Speech)
+- E2EE included (key differentiator vs Zoom/Meet/Teams free tiers)
+- All local AI features (Gemma summary, RAG, embeddings)
+- Web Speech captions (browser-native, free)
+
+**Pro**:
+- Unlimited meeting length
+- Up to 25 participants per meeting
+- 100 GB recording storage
+- 100 hrs/month cloud STT included; overage at $0.30/min
+- All AI features (local + cloud)
+- Re-transcription on past recordings
+- E2EE included
+- Single user (no team workspace)
+
+**Team** (3-seat minimum = $60/mo floor):
+- Pro features per seat
+- Org workspace + basic admin
+- 200 GB shared storage pool
+- 500 hrs/month STT pool (shared org-wide)
+- Up to 100 participants per meeting
+
+**Business** (10-seat minimum = $400/mo floor):
+- Team features per seat
+- SSO/SAML, audit logs, advanced admin
+- 1 TB shared storage
+- Unlimited STT (200 hrs/seat/month soft-cap before sales review)
+- Up to 300 participants per meeting
+- White-label add-on: +$10/seat/month
+- Priority support
+- Sales-assisted onboarding (one human call)
+
+**Enterprise** (annual contracts only, $50K floor):
+- Dedicated infrastructure (own LiveKit node, partitioned data security)
+- HIPAA BAA, SOC2 Type II reports
+- White-label included
+- 24/7 dedicated CSM with SLA + service credits
+- Custom integrations, custom SSO providers
+- Up to 1,000 participants per meeting
+- API access for white-label resellers
+
+---
+
+## 1.1 Decisions captured (was open questions)
+
+- **Free meeting length**: 60 min, with soft-cap behavior — at 55 min show "5 min remaining → upgrade for unlimited" upsell prompt; if user dismisses or doesn't upgrade, hard-stop at 60 min.
+- **Free cloud STT**: 30 min/month quota (per-user), to let users sample cloud quality and convert.
+- **Annual discount**: 16% off across all tiers (i.e., 2 months free on annual).
+- **Trial**: Implementation ready but feature-flagged via `STRIPE_TRIAL_ENABLED` env var, **default off**. When enabled: 14-day Pro trial on signup, no card required, soft-cap to Free on expiry.
+- **Currency**: USD primary at launch. EUR + INR + GBP automatic per-IP localization to follow once Stripe Tax is configured.
+- **Team seat reassignment**: Immediately freed for reassignment. If the seat was paid for the current term, it can be reassigned to a different user without additional charge until the term ends.
+- **Soft-cap on free tier meetings**: Allow with degraded UX (countdown + upsell modal). If the user dismisses the upsell, hard-block at the limit.
+- **Pricing**: see table above. Pro $12, Team $20, Business $40, Enterprise custom $50K+/year. Reasoning lives in the companion DOCX cost analysis.
 
 ---
 
@@ -200,33 +237,53 @@ to `subscriptions` collection.
 Slice A unblocks all the dvai-meet AI features that depend on paid
 status — start there.
 
-## 6. Things explicitly NOT in this strawman
+## 6. Things explicitly NOT in this spec
 
-- AP2 / Agentic payments — deferred per earlier brainstorm
+- AP2 / Agentic payments — deferred indefinitely per earlier brainstorm
 - In-app purchases (App Store / Play Store) — not relevant for web app
 - Crypto / wallet payments — out of scope for v1
-- Usage-based billing — fixed-tier first; consider for enterprise
-- Affiliate / referral program — separate feature
-- Refund policy — needs you to write the actual policy text
+- Usage-based billing per minute (other than STT overage) — fixed-tier
+  first; revisit for enterprise custom contracts
+- Affiliate / referral program — separate feature, deferred
+- Refund policy — needs separate legal-reviewed policy text
 
-## 7. Open questions for the morning
+## 7. STT cost handling (per the cost analysis)
 
-These are blocking before I can write a real spec:
+Cloud STT is the highest-variability operating cost. To prevent
+runaway:
 
-1. **Free tier limits** (meeting length, storage, participants) — pick
-   numbers
-2. **Pro pricing** — $9/$12/$15
-3. **Annual discount %** — 16% (standard) or other
-4. **Team plan minimum seats** — 3? 5? flat for small teams?
-5. **Trial: yes/no, no-card vs card-required**
-6. **Currency strategy** — USD-only at launch, or multi-currency from
-   day one
-7. **Soft-cap behavior on free tier** — block at limit, or allow with
-   degraded UX (e.g. "this meeting will end in 5 min, upgrade for
-   unlimited")
-8. **Team seat reassignment cooldown** — if you remove a seat, is it
-   immediately freed for reassignment, or is there a 30-day delay
-   (Stripe quirk for proration)?
+- **Free tier**: Hard cap 30 min/month per user. Counter resets on the
+  1st of each calendar month. When exceeded, cloud STT requests return
+  402 with an upsell payload; the client falls back to local AI/Web
+  Speech transparently.
+- **Pro**: 100 hrs/month included. Overage billed at $0.30/min via
+  Stripe metered billing. Email warning at 80% and 100%.
+- **Team**: 50 hrs/seat/month included, pooled at the org level (so a
+  3-seat Team has a 150-hr pool any seat can draw from). Overage
+  $0.30/min.
+- **Business**: Unlimited up to 200 hrs/seat/month soft cap. Beyond
+  the soft cap triggers a sales-team review for fair-use enforcement;
+  no automatic overage billing.
+- **Enterprise**: Truly unlimited. Custom contract specifies usage
+  expectations.
 
-Once these are answered, I'll write the real Slice A + B spec and
-implement them.
+These caps assume Deepgram Nova-3 at $0.26/streaming-hour as the
+upstream provider. If we switch providers (or self-host Whisper on
+our own GPU), revisit the limits to keep gross margins ≥50%.
+
+## 8. Acquisition narrative this pricing supports
+
+Designed so that at scale we hit the metrics acquirers care about:
+
+- **ARR per customer** is meaningful: $144 (Pro), $720+ (Team avg),
+  $4,800+ (Business avg), $50K+ (Enterprise)
+- **Net Revenue Retention** levers are built in: seat expansion in
+  Team/Business, white-label add-on, STT overage billing
+- **Defensibility** = E2EE + on-device AI MOAT, codified in the price
+  premium (Pro is 25% above Zoom Pro and customers pay it for the
+  privacy promise)
+- **Compliance-ready**: SOC2/HIPAA targeted at the Business and
+  Enterprise tiers where they're sales-blocking
+- **Path to $5–10M ARR** = ~3,000–6,000 paid customers (mixed) or
+  ~100–200 enterprise contracts. At 5–10× ARR multiples, that's the
+  $25–100M acquisition zone we want to be in.
