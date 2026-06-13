@@ -34,6 +34,13 @@ export const Header: React.FC<HeaderProps> = ({ isMobile }) => {
     const initialLetter = user.name ? user.name.charAt(0).toUpperCase() : '?';
     const avatarUrl = prefs?.avatarUrl;
     const avatarThumbUrl = prefs?.avatarThumbUrl;
+    // Surface the Admin entry when the Appwrite account has the
+    // platform-admin label (set in the Appwrite Console → Auth → user
+    // → Labels). Per-team admin/owner roles also grant access at the
+    // server layer but aren't checked here — the link will redirect
+    // them through the same Layer 2 gate either way.
+    const labels = (user as { labels?: string[] }).labels ?? [];
+    const isPlatformAdmin = labels.includes('admin');
 
     return (
         <header className="flex items-center justify-between whitespace-nowrap border-0 bg-white dark:bg-[#15202b] px-6 py-3 sticky top-0 z-50 shadow-lg">
@@ -120,6 +127,17 @@ export const Header: React.FC<HeaderProps> = ({ isMobile }) => {
                             >
                                 Settings
                             </button>
+                            {isPlatformAdmin && (
+                                <button
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        router.push('/admin');
+                                    }}
+                                    className="block w-full text-left px-4 py-2 text-sm bg-transparent border-0 text-emerald-700 dark:text-emerald-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                                >
+                                    Admin
+                                </button>
+                            )}
                             <button
                                 onClick={() => {
                                     setMenuOpen(false);

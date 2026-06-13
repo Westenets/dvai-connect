@@ -112,6 +112,12 @@ export default async function AdminOrganizationsPage() {
                         the signup code.
                     </p>
                 </div>
+                <Link
+                    href="/admin/organizations/new"
+                    className="rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-sm font-semibold px-4 py-2"
+                >
+                    + New organization
+                </Link>
             </header>
 
             <DataTable
@@ -121,7 +127,7 @@ export default async function AdminOrganizationsPage() {
                 emptyState={
                     orgs === null
                         ? 'KPI source unavailable (APPWRITE_API_KEY missing or organizations collection not migrated).'
-                        : 'No organizations yet. New-org creation flow is deferred — for v1, ops creates orgs by directly inserting into the organizations + teams collections.'
+                        : 'No organizations yet. Use the "+ New organization" button above to create one.'
                 }
             />
         </div>
