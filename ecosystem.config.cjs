@@ -26,15 +26,32 @@
 module.exports = {
     apps: [
         {
-            name: 'meet-web',
+            name: 'DVAI-connect',
+            cwd: '/home/dvadmin/dvai-connect/',
+            // Alternatively, if PM2 has trouble finding pnpm in the PATH,
+            // you can point directly to the node executable:
             script: 'node_modules/next/dist/bin/next',
-            args: 'start --port 3000',
-            cwd: __dirname,
-            instances: 1, // raise for horizontal scaling, but the cron
-            // worker should remain instances:1 (it has its own process)
-            exec_mode: 'fork',
+            args: 'start',
+            env_production: {
+                NODE_ENV: 'production',
+            },
+            time: true,
+            watch: false,
+            // Give the app some time to properly shut down (important for closing LiveKit connections)
+            kill_timeout: 5000,
+            // Automatically restart if it crashes
             autorestart: true,
-            max_memory_restart: '2G',
+            max_restarts: 10,
+        },
+        {
+            // 2. The new Egress S3 Watcher
+            name: 'egress-s3-uploader',
+            cwd: '/home/dvadmin/dvai-connect/',
+            script: './workers/egress-watcher.js',
+            instances: 1, // Only ever run ONE instance of this, or they will fight over the same file
+            autorestart: true,
+            watch: false, // PM2 should NOT watch for file changes, chokidar handles that
+            max_memory_restart: '200M', // Keep it lightweight
             env: {
                 NODE_ENV: 'production',
             },
@@ -51,16 +68,5 @@ module.exports = {
                 NODE_ENV: 'production',
             },
         },
-        // Uncomment when ready to put the egress watcher under PM2 too:
-        // {
-        //     name: 'meet-egress-watcher',
-        //     script: 'workers/egress-watcher.js',
-        //     cwd: __dirname,
-        //     instances: 1,
-        //     exec_mode: 'fork',
-        //     autorestart: true,
-        //     max_memory_restart: '512M',
-        //     env: { NODE_ENV: 'production' },
-        // },
     ],
 };
