@@ -17,6 +17,10 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': resolve(__dirname, '.'),
+            // Next.js `server-only` package crashes at import time in
+            // tests; alias to an empty stub since tests run in node and
+            // the runtime safety isn't needed.
+            'server-only': resolve(__dirname, 'lib/stubs/server-only.ts'),
         },
     },
 });
