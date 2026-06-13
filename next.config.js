@@ -26,6 +26,10 @@ const nextConfig = {
         resolveAlias: {
             '@dvai-bridge/capacitor': './lib/stubs/dvai-bridge-capacitor.ts',
             '@mlc-ai/web-llm': './lib/stubs/mlc-web-llm.ts',
+            // @dvai-bridge/core@4.0.2 imports `fs/promises` for license file
+            // loading on Node hosts. Browser bundle never reaches it; stub
+            // it so the bundler is satisfied.
+            'fs/promises': './lib/stubs/node-fs-promises.ts',
         },
     },
     webpack: (config) => {
@@ -39,6 +43,10 @@ const nextConfig = {
             '@mlc-ai/web-llm': path.resolve(
                 __dirname,
                 'lib/stubs/mlc-web-llm.ts',
+            ),
+            'fs/promises': path.resolve(
+                __dirname,
+                'lib/stubs/node-fs-promises.ts',
             ),
         };
         return config;
