@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/session';
 import { createCheckoutSession } from '@/lib/actions/stripe';
+import { getOrgByCode, reserveSignupSeat } from '@/lib/auth/org';
 import type { PaidTierId } from '@/lib/pricing/stripe-config';
 
 /**
@@ -46,15 +47,33 @@ export async function POST(request: Request) {
     const quantity = typeof body.quantity === 'number' ? body.quantity : undefined;
     const signupCode = typeof body.signupCode === 'string' ? body.signupCode : undefined;
 
-    // Africa cohort tier requires a signup code — the public /pricing page
-    // never exposes pro_africa as a self-serve option; it's reached only
-    // via the cohort-restricted /pricing/africa route. Block any direct
-    // hit on this endpoint that bypasses that flow.
-    if (tier === 'pro_africa' && !signupCode) {
-        return NextResponse.json(
-            { error: 'Pro (Africa Cohort) requires a valid cohort signup code' },
-            { status: 403 },
-        );
+    // Africa cohort tier requires a signup code — the public /pricing
+    // page never exposes pro_africa as a self-serve option; it's
+    // reached only via the cohort-restricted /signup?code=... route.
+    // We re-validate the code AND atomically reserve a seat here so
+    // the seat-cap is enforced even if the client skipped the
+    // pre-flight validation.
+    if (tier === 'pro_africa') {
+        if (!signupCode) {
+            return NextResponse.json(
+                { error: 'Pro (Africa Cohort) requires a valid cohort signup code' },
+                { status: 403 },
+            );
+        }
+        const org = await getOrgByCode(signupCode);
+        if (!org) {
+            return NextResponse.json(
+                { error: 'This invite link is no longer valid.' },
+                { status: 403 },
+            );
+        }
+        const reserved = await reserveSignupSeat(org);
+        if (!reserved) {
+            return NextResponse.json(
+                { error: 'This invite link is no longer valid.' },
+                { status: 403 },
+            );
+        }
     }
 
     try {
