@@ -2,46 +2,38 @@ import { cookies } from 'next/headers';
 import { Client as ServerClient, Account as ServerAccount } from 'node-appwrite';
 
 /**
- * Server-side session helpers. Reads the Appwrite session cookie that the
- * browser SDK sets after login and resolves it via node-appwrite to a User
- * record.
+ * Server-side session helpers.
+ *
+ * Reads the `dvai_session` HttpOnly cookie set by /api/auth/sync (the
+ * JWT bridge from the Appwrite browser SDK to our domain) and
+ * authenticates the request via Appwrite's setJWT path.
  *
  * Used by:
  *   - lib/auth/admin.ts > requireAdmin (server-component RBAC)
  *   - all paid-feature gates in /api/* route handlers
- *   - server actions that need to know the current user (Stripe checkout
- *     session creation, signup-with-code submission, etc.)
+ *   - server actions that need to know the current user (Stripe
+ *     checkout creation, signup-with-code submission, etc.)
+ *   - proxy.ts (Layer 1 admin gate — cookie presence only, not value)
  *
- * Returns null when there's no session or it can't be verified. Callers
- * decide between 401 (API routes) and redirect (server components).
+ * Returns null on no session or verification failure. Callers choose
+ * between 401 (API routes) and redirect (server components).
  */
+
+export const SESSION_COOKIE_NAME = 'dvai_session';
 
 const ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!;
 const PROJECT = process.env.NEXT_PUBLIC_APPWRITE_PROJECT!;
 
-function buildClient(sessionValue: string): ServerClient {
-    return new ServerClient()
-        .setEndpoint(ENDPOINT)
-        .setProject(PROJECT)
-        .setSession(sessionValue);
+function buildClient(jwt: string): ServerClient {
+    return new ServerClient().setEndpoint(ENDPOINT).setProject(PROJECT).setJWT(jwt);
 }
 
-/**
- * Read the Appwrite session cookie value. Appwrite's browser SDK stores
- * the session under the cookie name `a_session_<projectId>`. In Next.js 16
- * the cookies() helper is async (was sync in <15).
- */
-async function getSessionCookieValue(): Promise<string | null> {
+async function getSessionJwt(): Promise<string | null> {
     try {
         const cookieStore = await cookies();
-        const cookieName = `a_session_${PROJECT}`;
-        const v = cookieStore.get(cookieName)?.value;
-        if (v) return v;
-        // Legacy / fallback cookie name (Appwrite has used variations).
-        const legacy = cookieStore.get('a_session')?.value;
-        return legacy ?? null;
+        const v = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+        return v ?? null;
     } catch (err) {
-        // cookies() throws in some build contexts; treat as unauthenticated.
         console.warn('[auth/session] cookies() failed:', err);
         return null;
     }
@@ -57,10 +49,10 @@ export async function getCurrentUser(): Promise<{
      *  from per-team admin/owner roles. */
     labels: string[];
 } | null> {
-    const sessionValue = await getSessionCookieValue();
-    if (!sessionValue) return null;
+    const jwt = await getSessionJwt();
+    if (!jwt) return null;
     try {
-        const client = buildClient(sessionValue);
+        const client = buildClient(jwt);
         const account = new ServerAccount(client);
         const me = await account.get();
         return {
@@ -71,7 +63,8 @@ export async function getCurrentUser(): Promise<{
             labels: (me as { labels?: string[] }).labels ?? [],
         };
     } catch (err: any) {
-        // Invalid session or revoked token — treat as unauthenticated.
+        // Expired or invalid JWT — treat as unauthenticated. The
+        // client will refresh the JWT on its next ping and resync.
         console.warn('[auth/session] account.get failed:', err?.message ?? err);
         return null;
     }
@@ -85,4 +78,13 @@ export async function requireUserId(): Promise<string> {
     const user = await getCurrentUser();
     if (!user) throw new Error('Unauthorized');
     return user.$id;
+}
+
+/**
+ * Server-action helper for code paths that need the raw JWT to forward
+ * to Appwrite SDK calls (rare — most code should call getCurrentUser
+ * and use the resolved user fields).
+ */
+export async function getRawSessionJwt(): Promise<string | null> {
+    return getSessionJwt();
 }

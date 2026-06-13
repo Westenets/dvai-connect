@@ -12,14 +12,18 @@ import type { NextRequest } from 'next/server';
  *      app/admin/layout.tsx and the /api/admin/* route handlers.
  */
 
-const APPWRITE_SESSION_COOKIE = `a_session_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT ?? ''}`;
+// DVAI session cookie set by /api/auth/sync after browser login.
+// The Appwrite browser SDK keeps its own session on the Appwrite
+// endpoint's domain, not ours — see lib/auth/session.ts for the
+// JWT-bridge rationale.
+const SESSION_COOKIE = 'dvai_session';
 
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // --- Admin RBAC gate (Layer 1) ---
     if (pathname.startsWith('/admin')) {
-        const session = request.cookies.get(APPWRITE_SESSION_COOKIE)?.value;
+        const session = request.cookies.get(SESSION_COOKIE)?.value;
         if (!session) {
             const url = request.nextUrl.clone();
             url.pathname = '/login';
