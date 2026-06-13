@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { TIERS, VISIBLE_PUBLIC_TIER_IDS, type TierId } from '@/lib/pricing/tiers';
 import { PricingCtaButton } from '@/lib/components/PricingCtaButton';
 import { getCurrentUser } from '@/lib/auth/session';
+import { getAllOverrides, type TierOverride } from '@/lib/pricing/overrides';
 
 export const metadata: Metadata = {
     title: 'Pricing — DVAI Connect',
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
  * /pricing/africa with a valid cohort signup code.
  */
 export default async function PricingPage() {
-    const user = await getCurrentUser();
+    const [user, overrides] = await Promise.all([getCurrentUser(), getAllOverrides()]);
     const userIsAuthenticated = !!user;
 
     return (
@@ -69,6 +70,7 @@ export default async function PricingPage() {
                             key={id}
                             id={id}
                             userIsAuthenticated={userIsAuthenticated}
+                            override={overrides.get(id)}
                         />
                     ))}
                 </div>
@@ -175,12 +177,25 @@ const TIER_COPY: Record<TierId, TierCopy> = {
     },
 };
 
-function TierCard({ id, userIsAuthenticated }: { id: TierId; userIsAuthenticated: boolean }) {
+function TierCard({
+    id,
+    userIsAuthenticated,
+    override,
+}: {
+    id: TierId;
+    userIsAuthenticated: boolean;
+    override?: TierOverride;
+}) {
     const tier = TIERS[id];
     const copy = TIER_COPY[id];
     const isFree = id === 'free';
     const isEnterprise = id === 'enterprise';
     const isFeatured = id === 'pro';
+    const effectiveDisplayName = override?.displayName ?? tier.displayName;
+    const effectiveBadge = override?.badge ?? (isFeatured ? 'Most popular' : undefined);
+    const effectiveBullets = override?.bullets && override.bullets.length > 0
+        ? override.bullets
+        : copy.bullets;
 
     return (
         <div
@@ -192,14 +207,14 @@ function TierCard({ id, userIsAuthenticated }: { id: TierId; userIsAuthenticated
                     : 'border-white/5 hover:bg-[rgba(35,46,58,0.6)] hover:border-white/10',
             ].join(' ')}
         >
-            {isFeatured && (
+            {effectiveBadge && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-900 px-4 py-1 text-[10px] font-bold tracking-widest uppercase rounded-full">
-                    Most popular
+                    {effectiveBadge}
                 </div>
             )}
 
             <div className="mb-8">
-                <h3 className="font-bold text-xl mb-6">{tier.displayName}</h3>
+                <h3 className="font-bold text-xl mb-6">{effectiveDisplayName}</h3>
                 <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-extrabold">
                         ${tier.basePriceUsd === 0 ? '0' : tier.basePriceUsd.toFixed(2)}
@@ -211,12 +226,20 @@ function TierCard({ id, userIsAuthenticated }: { id: TierId; userIsAuthenticated
                 )}
             </div>
 
+            {override?.headlineCopy && (
+                <p className="text-sm text-[#c0c7d5] mb-4">{override.headlineCopy}</p>
+            )}
+
             <ul className="space-y-3.5 mb-10 flex-grow text-sm">
-                {copy.bullets.map((b) => (
+                {effectiveBullets.map((b) => (
                     <Bullet key={b}>{b}</Bullet>
                 ))}
-                <BulletEmphasized>{copy.securityBullet}</BulletEmphasized>
-                <Bullet>{tier.support === '24-7' ? '24/7 priority support' : 'Community support'}</Bullet>
+                {!override?.bullets && (
+                    <>
+                        <BulletEmphasized>{copy.securityBullet}</BulletEmphasized>
+                        <Bullet>{tier.support === '24-7' ? '24/7 priority support' : 'Community support'}</Bullet>
+                    </>
+                )}
             </ul>
 
             {isFree ? (

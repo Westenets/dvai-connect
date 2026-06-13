@@ -5,7 +5,9 @@ import {
     STRIPE_METER_ENV,
 } from '@/lib/pricing/stripe-config';
 import { stripe, STRIPE_API_VERSION } from '@/lib/stripe';
+import { getAllOverrides } from '@/lib/pricing/overrides';
 import { CopyValue } from '../organizations/[id]/CopyValue';
+import { TierOverridesEditor } from './TierOverridesEditor';
 
 /**
  * Pricing admin (v1 — read-only config dashboard).
@@ -103,6 +105,7 @@ export default async function AdminPricingPage() {
         enterpriseBigRoom,
         meterBusiness,
         meterBigRoom,
+        overrides,
     ] = await Promise.all([
         probePrice(STRIPE_PRICE_ENV_BY_TIER.pro_africa),
         probePrice(STRIPE_PRICE_ENV_BY_TIER.pro),
@@ -112,7 +115,21 @@ export default async function AdminPricingPage() {
         probePrice(STRIPE_METERED_PRICE_ENV.enterprise_big_room),
         probeMeter(STRIPE_METER_ENV.business_extra_hours),
         probeMeter(STRIPE_METER_ENV.concurrent_big_room),
+        getAllOverrides(),
     ]);
+    const overrideRows = (Object.values(TIERS) as Array<(typeof TIERS)[TierId]>).map((t) => {
+        const o = overrides.get(t.id);
+        return {
+            tier: t.id,
+            defaultDisplayName: t.displayName,
+            defaultBadge: t.badge ?? '',
+            displayName: o?.displayName,
+            badge: o?.badge,
+            description: o?.description,
+            headlineCopy: o?.headlineCopy,
+            bullets: o?.bullets,
+        };
+    });
 
     return (
         <div>
@@ -166,6 +183,20 @@ export default async function AdminPricingPage() {
                         </tbody>
                     </table>
                 </div>
+            </Section>
+
+            <Section title="Display copy overrides">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                    Edit what users see on <code>/pricing</code> without
+                    changing tier behavior. Pricing, caps, and feature flags
+                    stay in <code>lib/pricing/tiers.ts</code> (the source of
+                    truth for billing and gates). Empty fields revert to the
+                    static default. Requires the <code>pricing_tiers</code>{' '}
+                    collection — run{' '}
+                    <code>scripts/appwrite-migrate-pricing-tiers-2026-06-14.mjs</code>{' '}
+                    if you haven't yet.
+                </p>
+                <TierOverridesEditor initialRows={overrideRows} />
             </Section>
 
             <Section title="Stripe configuration">
