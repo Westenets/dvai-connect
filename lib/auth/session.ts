@@ -52,6 +52,10 @@ export async function getCurrentUser(): Promise<{
     name: string;
     email: string;
     prefs: Record<string, any>;
+    /** Appwrite account labels. The 'admin' label is the platform-
+     *  level admin marker (set by ops on DVAI staff accounts), separate
+     *  from per-team admin/owner roles. */
+    labels: string[];
 } | null> {
     const sessionValue = await getSessionCookieValue();
     if (!sessionValue) return null;
@@ -64,6 +68,7 @@ export async function getCurrentUser(): Promise<{
             name: me.name,
             email: me.email,
             prefs: me.prefs ?? {},
+            labels: (me as { labels?: string[] }).labels ?? [],
         };
     } catch (err: any) {
         // Invalid session or revoked token — treat as unauthenticated.

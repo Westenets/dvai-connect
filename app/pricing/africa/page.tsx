@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export default function AfricaPricingPage() {
     const tier = TIERS.pro_africa;
     return (
-        <div className="bg-[#f5f7f8] dark:bg-[#101922] min-h-screen text-slate-900 dark:text-slate-100 font-['Inter',sans-serif] antialiased">
+        <div className="bg-[#f5f7f8] dark:bg-[#101922] h-full overflow-y-auto text-slate-900 dark:text-slate-100 font-['Inter',sans-serif] antialiased">
             <header className="px-6 py-6 max-w-6xl mx-auto">
                 <a href="/" className="inline-flex items-center gap-2">
                     <img
