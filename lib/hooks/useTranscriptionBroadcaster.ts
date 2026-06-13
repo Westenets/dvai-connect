@@ -10,25 +10,32 @@ import { selectStrategy, type UserPreference } from '../transcription/strategy';
 import { AdaptiveMonitor } from '../transcription/adaptiveMonitor';
 import { WebSpeechAdapter } from '../transcription/adapters/webSpeechAdapter';
 import { WhisperLocalAdapter } from '../transcription/adapters/whisperLocalAdapter';
-import { CloudSttAdapter } from '../transcription/adapters/cloudSttAdapter';
 import type { TranscriberAdapter, Tier, WhisperModel } from '../transcription/types';
 
 const DEFAULT_PREF: UserPreference = 'auto';
 const PREF_STORAGE_KEY = 'dvai.transcription.userPref.v1';
+const FALLBACK_NOTIFIED_KEY = 'dvai.transcription.fallbackNotified.v1';
 
 function readUserPref(): UserPreference {
     if (typeof localStorage === 'undefined') return DEFAULT_PREF;
     const v = localStorage.getItem(PREF_STORAGE_KEY);
-    if (v === 'auto' || v === 'local-ai' || v === 'basic' || v === 'cloud') return v;
+    if (v === 'auto' || v === 'local-ai' || v === 'basic') return v;
     return DEFAULT_PREF;
 }
 
 function makeAdapter(tier: Tier, model?: WhisperModel): TranscriberAdapter {
     if (tier === 'web-speech') return new WebSpeechAdapter();
-    if (tier === 'local-whisper') {
-        return new WhisperLocalAdapter({ model: model ?? 'whisper-tiny' });
-    }
-    return new CloudSttAdapter();
+    return new WhisperLocalAdapter({ model: model ?? 'whisper-tiny' });
+}
+
+function notifyWebSpeechFallback() {
+    if (typeof localStorage === 'undefined') return;
+    if (localStorage.getItem(FALLBACK_NOTIFIED_KEY)) return;
+    localStorage.setItem(FALLBACK_NOTIFIED_KEY, '1');
+    toast(
+        "Your device can't run our on-device speech recognition. We've switched to the browser's built-in speech API for this call. Transcription quality and meeting intelligence may be reduced. We don't fall back to the cloud — that would break our privacy promise.",
+        { icon: 'ℹ️', duration: 12000 },
+    );
 }
 
 /**
@@ -99,6 +106,13 @@ export function useTranscriptionBroadcaster() {
             adapterRef.current = adapter;
             setActiveTier(chosenTier);
 
+            // First time we fall back to Web Speech (any reason), tell the user
+            // so they understand why transcription quality dipped — and reassure
+            // them we never send audio to the cloud.
+            if (chosenTier === 'web-speech') {
+                notifyWebSpeechFallback();
+            }
+
             adapter.onTranscript((event) => {
                 if (cancelledRef.current) return;
                 // Broadcast over LiveKit data
@@ -130,10 +144,7 @@ export function useTranscriptionBroadcaster() {
             } catch (err) {
                 console.error('[useTranscriptionBroadcaster] adapter start failed', err);
                 toast.error(`Transcription unavailable on this tier (${chosenTier}). Falling back.`);
-                if (chosenTier === 'cloud') {
-                    pref = 'auto';
-                    await startWithTier();
-                } else if (chosenTier === 'local-whisper') {
+                if (chosenTier === 'local-whisper') {
                     await startWithTier('web-speech');
                 }
                 return;

@@ -22,7 +22,7 @@ describe('selectStrategy', () => {
         if (typeof localStorage !== 'undefined') localStorage.clear();
     });
 
-    it('returns Tier 2 with whisper-base when probe says definitely-tier-2 (no benchmark)', async () => {
+    it('returns local-whisper with whisper-base when probe says definitely-tier-2 (no benchmark)', async () => {
         (probeHardware as any).mockReturnValue({
             category: 'definitely-tier-2',
             recommendedModel: 'whisper-base',
@@ -37,7 +37,7 @@ describe('selectStrategy', () => {
         expect(runCapabilityBenchmark).not.toHaveBeenCalled();
     });
 
-    it('returns Tier 3 directly when probe says definitely-tier-3 (no benchmark download)', async () => {
+    it('returns web-speech directly when probe says definitely-tier-3 (no benchmark download)', async () => {
         (probeHardware as any).mockReturnValue({
             category: 'definitely-tier-3',
             reasoning: 'low spec',
@@ -70,7 +70,7 @@ describe('selectStrategy', () => {
         expect(result.source).toBe('benchmark');
     });
 
-    it('falls back to Tier 3 when benchmark fails the realtime test', async () => {
+    it('falls back to web-speech when benchmark fails the realtime test', async () => {
         (probeHardware as any).mockReturnValue({
             category: 'borderline',
             recommendedModel: 'whisper-tiny',
@@ -88,33 +88,7 @@ describe('selectStrategy', () => {
         expect(result.tier).toBe('web-speech');
     });
 
-    it('refuses Tier 1 (cloud) when isPaidUser is false', async () => {
-        (probeHardware as any).mockReturnValue({
-            category: 'definitely-tier-2',
-            recommendedModel: 'whisper-base',
-            reasoning: '',
-            fingerprint: 'e',
-        });
-        (isPaidUser as any).mockReturnValue(false);
-        const result = await selectStrategy({ pref: 'cloud' });
-        expect(result.tier).toBe('local-whisper');
-        expect(result.reasoning).toMatch(/paid/i);
-    });
-
-    it('honors Tier 1 (cloud) when isPaidUser is true', async () => {
-        (isPaidUser as any).mockReturnValue(true);
-        (probeHardware as any).mockReturnValue({
-            category: 'definitely-tier-2',
-            recommendedModel: 'whisper-base',
-            reasoning: '',
-            fingerprint: 'f',
-        });
-        const result = await selectStrategy({ pref: 'cloud' });
-        expect(result.tier).toBe('cloud');
-        expect(result.source).toBe('paid-cloud-pref');
-    });
-
-    it('honors user override "basic" → Tier 3 regardless of hardware', async () => {
+    it('honors user override "basic" → web-speech regardless of hardware', async () => {
         (probeHardware as any).mockReturnValue({
             category: 'definitely-tier-2',
             recommendedModel: 'whisper-base',
@@ -125,6 +99,31 @@ describe('selectStrategy', () => {
         const result = await selectStrategy({ pref: 'basic' });
         expect(result.tier).toBe('web-speech');
         expect(result.source).toBe('user-override');
+    });
+
+    it('honors user override "local-ai" → local-whisper when probe is capable', async () => {
+        (probeHardware as any).mockReturnValue({
+            category: 'definitely-tier-2',
+            recommendedModel: 'whisper-tiny',
+            reasoning: '',
+            fingerprint: 'g2',
+        });
+        (isPaidUser as any).mockReturnValue(false);
+        const result = await selectStrategy({ pref: 'local-ai' });
+        expect(result.tier).toBe('local-whisper');
+        expect(result.source).toBe('user-override');
+    });
+
+    it('honors user override "local-ai" → web-speech fallback when hardware can\'t run Whisper', async () => {
+        (probeHardware as any).mockReturnValue({
+            category: 'definitely-tier-3',
+            reasoning: 'low spec',
+            fingerprint: 'g3',
+        });
+        (isPaidUser as any).mockReturnValue(false);
+        const result = await selectStrategy({ pref: 'local-ai' });
+        expect(result.tier).toBe('web-speech');
+        expect(result.reasoning).toMatch(/hardware cannot run Whisper/i);
     });
 
     it('caches result in localStorage and reuses on next call', async () => {

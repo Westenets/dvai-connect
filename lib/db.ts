@@ -1,17 +1,16 @@
 import Dexie, { type EntityTable } from 'dexie';
 
 /**
- * Source tier of a transcript row. Live tiers are written by the
- * useTranscriptionBroadcaster hook; '*-rerun' values are written by
- * the paid re-transcription service. Existing rows from before the
- * v3 schema migration are backfilled to 'web-speech'.
+ * Source tier of a transcript row. Written by the
+ * useTranscriptionBroadcaster hook at meeting time. Existing rows from
+ * before the v3 schema migration are backfilled to 'web-speech'.
+ *
+ * 'cloud' and 'cloud-rerun' were removed on 2026-06-13 when Deepgram was
+ * dropped. The Dexie schema column still accepts those legacy strings
+ * for backward compatibility on rows captured before that date; new
+ * rows only use 'web-speech' | 'local-whisper'.
  */
-export type TranscriptTier =
-    | 'web-speech'
-    | 'local-whisper'
-    | 'cloud'
-    | 'cloud-rerun'
-    | 'local-rerun';
+export type TranscriptTier = 'web-speech' | 'local-whisper';
 
 export interface TranscriptRecord {
     id?: number;

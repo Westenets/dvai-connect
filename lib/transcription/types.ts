@@ -1,11 +1,17 @@
 /**
  * Shared types for the transcription subsystem. The TranscriberAdapter
- * interface is the contract every tier (Cloud / Local Whisper / Web
- * Speech) implements, so the strategy selector can swap them without
- * the caller knowing which tier is active.
+ * interface is the contract every tier (Local Whisper / Web Speech)
+ * implements, so the strategy selector can swap them without the caller
+ * knowing which tier is active.
+ *
+ * Cloud STT (Tier 1, Deepgram) was removed on 2026-06-13. The privacy MOAT
+ * is "audio never leaves the device" — falling back to a cloud STT provider
+ * would break that promise. When local AI can't run, we use Web Speech API
+ * (browser-native, no audio sent to our servers). When neither viable,
+ * transcription is OFF.
  */
 
-export type Tier = 'cloud' | 'local-whisper' | 'web-speech';
+export type Tier = 'local-whisper' | 'web-speech';
 
 export type WhisperModel = 'whisper-tiny' | 'whisper-base';
 
@@ -53,6 +59,6 @@ export interface TranscriberAdapter {
 export interface StrategyResult {
     tier: Tier;
     model?: WhisperModel;
-    source: 'cache' | 'static-probe' | 'benchmark' | 'user-override' | 'paid-cloud-pref';
+    source: 'cache' | 'static-probe' | 'benchmark' | 'user-override';
     reasoning: string;
 }

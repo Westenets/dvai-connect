@@ -9,12 +9,14 @@ const nextConfig = {
         formats: ['image/webp'],
     },
 
-    // @westenets/dvai-bridge-core's bundled dist contains static-resolvable
-    // imports of two optional peers we don't use in the meet web app:
-    //   - @westenets/dvai-bridge-capacitor (native-mobile transport)
+    // @dvai-bridge/core's bundled dist contains static-resolvable imports of
+    // two optional peers we don't use in the meet web app:
+    //   - @dvai-bridge/capacitor (native-mobile transport)
     //   - @mlc-ai/web-llm (WebLLM backend; we use transformers backend)
-    // Both code paths are dead at runtime here, but Turbopack/webpack still
-    // try to resolve them at build time. Aliasing to local stubs satisfies
+    // v4.0.2 correctly declares these as optional peers via
+    // peerDependenciesMeta, but they remain STATIC imports in the compiled
+    // dist — Turbopack/webpack still try to resolve them at build time even
+    // though the runtime paths are dead. Aliasing to local stubs satisfies
     // the bundler without pulling in the multi-MB unused packages.
     //
     // Both Turbopack (Next.js 16 default) and webpack (legacy) configs are
@@ -22,7 +24,7 @@ const nextConfig = {
     // resolve the stubs correctly.
     turbopack: {
         resolveAlias: {
-            '@westenets/dvai-bridge-capacitor': './lib/stubs/dvai-bridge-capacitor.ts',
+            '@dvai-bridge/capacitor': './lib/stubs/dvai-bridge-capacitor.ts',
             '@mlc-ai/web-llm': './lib/stubs/mlc-web-llm.ts',
         },
     },
@@ -30,7 +32,7 @@ const nextConfig = {
         config.resolve = config.resolve || {};
         config.resolve.alias = {
             ...(config.resolve.alias || {}),
-            '@westenets/dvai-bridge-capacitor': path.resolve(
+            '@dvai-bridge/capacitor': path.resolve(
                 __dirname,
                 'lib/stubs/dvai-bridge-capacitor.ts',
             ),
@@ -44,17 +46,25 @@ const nextConfig = {
 
     headers: async () => {
         return [
+            // The pricing page embeds Stripe Checkout iframe from js.stripe.com.
+            // Stripe's iframe is blocked by the global COOP `same-origin` +
+            // COEP `credentialless` headers we set everywhere else for
+            // SharedArrayBuffer / WebGPU support. Relax both on /pricing so
+            // the embedded checkout loads correctly. The rest of the app
+            // keeps the stricter headers required by Whisper/Gemma WebGPU
+            // workloads.
+            {
+                source: '/pricing/:path*',
+                headers: [
+                    { key: 'Cross-Origin-Opener-Policy', value: 'unsafe-none' },
+                    { key: 'Cross-Origin-Embedder-Policy', value: 'unsafe-none' },
+                ],
+            },
             {
                 source: '/(.*)',
                 headers: [
-                    {
-                        key: 'Cross-Origin-Opener-Policy',
-                        value: 'same-origin',
-                    },
-                    {
-                        key: 'Cross-Origin-Embedder-Policy',
-                        value: 'credentialless',
-                    },
+                    { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+                    { key: 'Cross-Origin-Embedder-Policy', value: 'credentialless' },
                 ],
             },
         ];

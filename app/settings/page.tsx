@@ -118,14 +118,15 @@ export default function Settings() {
 
     // Transcription quality is per-device (hardware-dependent), so it lives
     // in localStorage rather than synced Appwrite prefs. Read via the
-    // useTranscriptionBroadcaster hook on the next meeting join.
+    // useTranscriptionBroadcaster hook on the next meeting join. Cloud STT
+    // was removed on 2026-06-13 — audio never leaves the device by design.
     const TRANSCRIPTION_PREF_KEY = 'dvai.transcription.userPref.v1';
-    type TranscriptionPref = 'auto' | 'local-ai' | 'basic' | 'cloud';
+    type TranscriptionPref = 'auto' | 'local-ai' | 'basic';
     const [transcriptionPref, setTranscriptionPref] = useState<TranscriptionPref>('auto');
     useEffect(() => {
         if (typeof localStorage === 'undefined') return;
         const v = localStorage.getItem(TRANSCRIPTION_PREF_KEY) as TranscriptionPref | null;
-        if (v === 'auto' || v === 'local-ai' || v === 'basic' || v === 'cloud') {
+        if (v === 'auto' || v === 'local-ai' || v === 'basic') {
             setTranscriptionPref(v);
         }
     }, []);
@@ -1320,24 +1321,24 @@ export default function Settings() {
                                                 value={transcriptionPref}
                                                 onChange={(e) =>
                                                     handleTranscriptionPrefChange(
-                                                        e.target.value as 'auto' | 'local-ai' | 'basic' | 'cloud',
+                                                        e.target.value as 'auto' | 'local-ai' | 'basic',
                                                     )
                                                 }
                                                 className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
                                             >
                                                 <option value="auto">Auto (recommended)</option>
                                                 <option value="local-ai">
-                                                    Local AI (best privacy, needs capable hardware)
+                                                    Local AI (best quality; needs capable hardware)
                                                 </option>
-                                                <option value="basic">Basic (lowest battery)</option>
-                                                <option value="cloud">Cloud (paid plan)</option>
+                                                <option value="basic">Basic (browser-native; lowest battery)</option>
                                             </select>
                                         </div>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            Auto picks the best option your device can run in real-time.
-                                            Local AI keeps audio on your device. Cloud requires a paid
-                                            plan and sends audio to a transcription provider for the
-                                            highest accuracy and code-switching support.
+                                            All transcription runs on your device — audio never leaves it.
+                                            Auto picks the best option your hardware can run in real-time;
+                                            falls back to the browser-native API on devices that can&apos;t.
+                                            We don&apos;t offer a cloud option. That would break our privacy
+                                            promise.
                                         </p>
                                     </div>
                                 </div>

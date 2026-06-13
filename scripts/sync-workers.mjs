@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * sync-workers.mjs — keep public/dvai-*.worker.js in sync with the
- * @westenets/dvai-bridge-core dist that's currently installed.
+ * @dvai-bridge/core dist that's currently installed.
  *
  * The bridge runs Gemma 4 (and the embedder) inside a Web Worker. Next.js
  * serves /dvai-transformers.worker.js and /dvai-webllm.worker.js from /public,
@@ -22,8 +22,8 @@ const WORKERS = ["dvai-transformers.worker.js", "dvai-webllm.worker.js"];
 const SRC_DIR = join(
     root,
     "node_modules",
-    "@westenets",
-    "dvai-bridge-core",
+    "@dvai-bridge",
+    "core",
     "dist",
 );
 const DST_DIR = join(root, "public");
@@ -40,7 +40,7 @@ async function exists(path) {
 async function main() {
     if (!(await exists(SRC_DIR))) {
         console.log(
-            "[sync-workers] @westenets/dvai-bridge-core dist not found; skipping " +
+            "[sync-workers] @dvai-bridge/core dist not found; skipping " +
                 "(run `pnpm install` first).",
         );
         return;

@@ -1,4 +1,4 @@
-import { DVAI } from "@westenets/dvai-bridge-core";
+import { DVAI } from "@dvai-bridge/core";
 import { StatusEmitter, type AIServiceStatus } from "./aiServiceStatus";
 
 const EMBEDDING_DIM = 384; // all-MiniLM-L6-v2 hidden size

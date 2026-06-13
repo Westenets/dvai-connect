@@ -3,11 +3,16 @@ import { runCapabilityBenchmark } from './benchmark';
 import { isPaidUser } from '@/lib/auth/subscription';
 import type { StrategyResult, Tier, WhisperModel } from './types';
 
+/**
+ * User-facing transcription preference. The `cloud` option was removed on
+ * 2026-06-13 when Deepgram was dropped from the product — falling back to a
+ * cloud STT provider conflicts with the "audio never leaves the device"
+ * privacy MOAT.
+ */
 export type UserPreference =
     | 'auto' // hardware probe decides
-    | 'local-ai' // force Tier 2; fall back to Tier 3 if hardware can't
-    | 'basic' // force Tier 3
-    | 'cloud'; // request Tier 1 (paid only; falls back if not paid)
+    | 'local-ai' // force local Whisper; fall back to Web Speech if hardware can't
+    | 'basic'; // force Web Speech
 
 export interface SelectStrategyArgs {
     pref: UserPreference;
@@ -18,6 +23,9 @@ let inMemoryCache: { fingerprint: string; result: StrategyResult } | null = null
 
 export async function selectStrategy(args: SelectStrategyArgs): Promise<StrategyResult> {
     const probe = probeHardware();
+    // isPaidUser is kept in the fingerprint for future-proofing (if we add
+    // a paid-only "premium model" later); currently it has no effect on
+    // tier selection because cloud is gone.
     const fingerprintKey = `${probe.fingerprint}|pref:${args.pref}|paid:${isPaidUser() ? 1 : 0}`;
 
     const cached = readCache(fingerprintKey);
@@ -32,20 +40,9 @@ async function compute(
     args: SelectStrategyArgs,
     probe: ReturnType<typeof probeHardware>,
 ): Promise<StrategyResult> {
-    // 1. User override beats everything except invalid combos
+    // 1. User override beats probe
     if (args.pref === 'basic') {
         return mk('web-speech', undefined, 'user-override', 'User picked Basic (Web Speech)');
-    }
-    if (args.pref === 'cloud') {
-        if (isPaidUser()) {
-            return mk('cloud', undefined, 'paid-cloud-pref', 'User picked Cloud and is on a paid plan');
-        }
-        return mk(
-            probe.category === 'definitely-tier-3' ? 'web-speech' : 'local-whisper',
-            probe.recommendedModel,
-            'static-probe',
-            'User picked Cloud but is not paid; falling back to best free tier',
-        );
     }
     if (args.pref === 'local-ai') {
         if (probe.category === 'definitely-tier-3') {
@@ -82,14 +79,14 @@ async function compute(
             'web-speech',
             undefined,
             'benchmark',
-            `Benchmark failed (${bench.realtimeFactor.toFixed(2)}× real-time); using Tier 3`,
+            `Benchmark failed (${bench.realtimeFactor.toFixed(2)}× real-time); using Web Speech`,
         );
     } catch (err) {
         return mk(
             'web-speech',
             undefined,
             'static-probe',
-            `Benchmark failed to run; defaulting to Tier 3 (${(err as Error).message})`,
+            `Benchmark failed to run; defaulting to Web Speech (${(err as Error).message})`,
         );
     }
 }

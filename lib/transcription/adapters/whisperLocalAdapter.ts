@@ -1,4 +1,4 @@
-import { DVAI } from '@westenets/dvai-bridge-core';
+import { DVAI } from '@dvai-bridge/core';
 import type {
     TranscriberAdapter,
     TranscriptionEvent,

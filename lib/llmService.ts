@@ -1,4 +1,4 @@
-import { DVAI } from "@westenets/dvai-bridge-core";
+import { DVAI } from "@dvai-bridge/core";
 import { ChatOpenAI } from "@langchain/openai";
 import { StatusEmitter, type AIServiceStatus } from "./aiServiceStatus";
 
@@ -6,22 +6,27 @@ const MOCK_URL = "https://api.openai.local/v1/chat/completions";
 const BASE_URL = "https://api.openai.local/v1";
 
 /**
- * LLMService — Gemma 4 E2B running in a Web Worker via @westenets/dvai-bridge-core.
+ * LLMService — Gemma 4 E2B running in a Web Worker via @dvai-bridge/core v4.
  *
- * The previous implementation used a custom `createPipeline` factory to bypass
- * transformers.js's pipeline() (which doesn't natively handle image-text-to-text
- * for Gemma 4) and to skip downloading the vision/audio encoders we don't use.
- * That factory was a function closure, which can't be sent to a Web Worker, so
- * the pipeline ran on the main thread and froze the UI.
+ * Browser model: `onnx-community/gemma-4-E2B-it-qat-mobile-ONNX` (QAT-mobile
+ * variant). QAT = Quantization-Aware Training: the model was trained knowing
+ * it would be quantized, so it preserves more accuracy at low bit depth than
+ * the equivalent naive-quantized FP32 model. The mobile variant is laid out
+ * for low-end / mobile hardware but works on desktop browsers too.
  *
- * dvai-bridge v2 adds a declarative equivalent (`transformersModelClass` +
- * `transformersDisableEncoders`) — plain strings that cross the worker
- * boundary. This loads `Gemma4ForCausalLM` instead of
- * `Gemma4ForConditionalGeneration`; transformers.js detects the
- * cross-architecture load and sets `textOnly=true`, skipping vision_encoder
- * (~99MB) and audio_encoder (~171MB). `transformersDisableEncoders` is a
- * belt-and-suspenders safety net that nulls those fields post-load if
- * anything slipped through.
+ * Drafter / speculative decoding is NOT available in transformers.js as of
+ * v4.x, so the MTP drafter that ships with the unsloth GGUF variant of this
+ * model is unused on the browser path. The mobile-native paths (Capacitor
+ * llama.cpp + LiteRT-LM in Phase 2 RN) will consume the GGUF + MTP drafter
+ * directly.
+ *
+ * The declarative loader (`transformersModelClass` + `transformersDisableEncoders`)
+ * is plain strings that cross the worker boundary. We load
+ * `Gemma4ForCausalLM` instead of `Gemma4ForConditionalGeneration`;
+ * transformers.js detects the cross-architecture load and sets `textOnly=true`,
+ * skipping vision_encoder (~99MB) and audio_encoder (~171MB).
+ * `transformersDisableEncoders` is a belt-and-suspenders safety net that
+ * nulls those fields post-load if anything slipped through.
  */
 class LLMService {
     private dvai: DVAI | null = null;
@@ -41,9 +46,13 @@ class LLMService {
 
         this.dvai = new DVAI({
             backend: "transformers",
-            transformersModelId: "onnx-community/gemma-4-E2B-it-ONNX",
+            transformersModelId: "onnx-community/gemma-4-E2B-it-qat-mobile-ONNX",
             pipelineTask: "image-text-to-text",
-            dtype: "q4f16",
+            // q4 (not q4f16) for the QAT variant — qat-mobile is published
+            // with int4 weights and the int4 dtype enables the runtime to
+            // skip the f16-cast path on WebGPU. If the QAT model fails to
+            // load with dtype: "q4", fall back to "q4f16" or "auto".
+            dtype: "q4",
             device: "webgpu",
             generationTimeout: 300_000,
             // Declarative multimodal loader — runs in the worker. The worker
