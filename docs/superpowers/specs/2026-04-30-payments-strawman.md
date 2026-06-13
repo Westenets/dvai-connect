@@ -1,4 +1,29 @@
-# Payments + Subscriptions — Spec (Problem #5)
+# ⚠ SUPERSEDED — Payments + Subscriptions Strawman (2026-04-30)
+
+> **This spec is SUPERSEDED by:**
+> - `docs/superpowers/specs/2026-06-13-pricing-admin-design.md` (new pricing + admin panel)
+> - `docs/superpowers/plans/2026-06-13-pricing-admin.md` (6-PR implementation plan)
+>
+> **What changed (2026-06-13):**
+> - Pricing replaced with Tab 2 of the user's MD: `$0 / $14.99 Africa per-member / $18.99 Pro per-org / $48.99 Business per-org / $449.99 Enterprise per-org`. Old prices ($12 / $20 Team-per-seat / $40 Business-per-seat / $50K Enterprise) are obsolete.
+> - Team tier removed entirely.
+> - Pro split into Pro Africa (cohort-restricted, 24-month commit) and Pro Mainstream.
+> - Deepgram + cloud STT removed from the product entirely. Strategy S1+S5 obsolete.
+> - "Dedicated Node" for Enterprise upgraded from label-only-with-quota to actual per-customer LiveKit deployment.
+> - Hero copy: "We cannot see what's said in your meetings." (replaces stronger "your meetings" claim — VAD signals via RTP header extensions remain visible).
+> - Recording disclosure copy locked: "Cloud recording uses server-side encryption (not end-to-end). Recordings are encrypted at rest with platform-managed keys."
+> - Apple Intelligence backend on iOS 26+ for the Capacitor mobile path (Phase 1 of the mobile ADR).
+>
+> **What stays from this spec:**
+> - High-level Stripe + Appwrite architecture (collections, webhook patterns, idempotency log).
+> - 4-layer Pro Africa commitment lock (now with admin-modifiable Customer Portal config + daily drift-detection cron).
+> - Acquisition narrative.
+>
+> Keep this file as historical reference; don't implement against it. Read the 2026-06-13 spec/plan instead.
+
+---
+
+# Payments + Subscriptions — Spec (Problem #5) — OBSOLETE
 
 **Status:** Decisions locked. Ready for implementation planning.
 Pricing reasoning + cost-per-user analysis lives in the companion
