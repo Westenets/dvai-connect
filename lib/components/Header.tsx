@@ -127,6 +127,15 @@ export const Header: React.FC<HeaderProps> = ({ isMobile }) => {
                             >
                                 Settings
                             </button>
+                            <button
+                                onClick={() => {
+                                    setMenuOpen(false);
+                                    router.push('/billing');
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm bg-transparent border-0 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                            >
+                                Billing
+                            </button>
                             {isPlatformAdmin && (
                                 <button
                                     onClick={() => {

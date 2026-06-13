@@ -1,6 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ID } from 'appwrite';
+import { storage } from '@/lib/appwrite';
+
+const BRANDING_BUCKET_ID =
+    process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID || 'mvc-files';
 
 interface BrandingFields {
     logoUrl?: string;
@@ -56,22 +61,16 @@ export function BrandingForm({
 
     return (
         <form onSubmit={submit} className="space-y-6 max-w-3xl">
-            <Field label="Logo URL (light bg)" hint="Recommended: 200×60 PNG with transparent background.">
-                <input
-                    type="url"
+            <Field label="Logo (light bg)" hint="Recommended: 200×60 PNG with transparent background. Upload to your Appwrite bucket or paste any public URL.">
+                <LogoInput
                     value={fields.logoUrl ?? ''}
-                    onChange={(e) => update('logoUrl', e.target.value)}
-                    className="input"
-                    placeholder="https://your-cdn.com/logo-light.png"
+                    onChange={(v) => update('logoUrl', v)}
                 />
             </Field>
-            <Field label="Logo URL (dark bg)" hint="Optional — defaults to the light logo if blank.">
-                <input
-                    type="url"
+            <Field label="Logo (dark bg)" hint="Optional — defaults to the light logo if blank.">
+                <LogoInput
                     value={fields.darkLogoUrl ?? ''}
-                    onChange={(e) => update('darkLogoUrl', e.target.value)}
-                    className="input"
-                    placeholder="https://your-cdn.com/logo-dark.png"
+                    onChange={(v) => update('darkLogoUrl', v)}
                 />
             </Field>
 
@@ -168,6 +167,82 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
             {hint && <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">{hint}</div>}
             {children}
         </label>
+    );
+}
+
+function LogoInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const fileRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const upload = async (file: File) => {
+        setUploading(true);
+        setError(null);
+        try {
+            const created = await storage.createFile(BRANDING_BUCKET_ID, ID.unique(), file);
+            const url = storage.getFileView(BRANDING_BUCKET_ID, created.$id).toString();
+            onChange(url);
+        } catch (err: any) {
+            setError(err?.message ?? 'Upload failed');
+        } finally {
+            setUploading(false);
+            if (fileRef.current) fileRef.current.value = '';
+        }
+    };
+
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-3">
+                {value && (
+                    <img
+                        src={value}
+                        alt="logo preview"
+                        className="h-10 max-w-[160px] object-contain rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-2"
+                    />
+                )}
+                <input
+                    type="url"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="input"
+                    placeholder="https://your-cdn.com/logo.png"
+                />
+                <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-xs whitespace-nowrap hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50"
+                >
+                    {uploading ? 'Uploading…' : 'Upload'}
+                </button>
+                <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) upload(f);
+                    }}
+                />
+            </div>
+            {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+            <style jsx>{`
+                .input {
+                    flex: 1;
+                    border-radius: 0.5rem;
+                    border: 1px solid rgb(203 213 225);
+                    background: white;
+                    padding: 0.5rem 0.75rem;
+                    font-size: 0.875rem;
+                }
+                :global(.dark) .input {
+                    border-color: rgb(51 65 85);
+                    background: rgb(15 23 42);
+                    color: rgb(248 250 252);
+                }
+            `}</style>
+        </div>
     );
 }
 

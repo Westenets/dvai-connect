@@ -8,6 +8,7 @@ import {
 import { generateSignupCode, type Org } from '@/lib/auth/org';
 import { OrgInviteCopyBox } from './OrgInviteCopyBox';
 import { RegenerateCodeButton } from './RegenerateCodeButton';
+import { InviteForm } from './InviteForm';
 
 /**
  * Per-org admin page.
@@ -146,6 +147,17 @@ export default async function AdminOrgDetailPage({
             </section>
 
             <h2 className="text-lg font-semibold mb-3">Members ({members.length})</h2>
+
+            <div className="rounded-xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 p-5 mb-5">
+                <h3 className="text-sm font-semibold mb-3">Invite a member</h3>
+                <InviteForm orgId={org.$id} />
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+                    Appwrite emails the invitee a confirmation link. They appear here
+                    once they accept; the badge below shows pending vs joined.
+                </p>
+            </div>
+
+
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                 <table className="min-w-full text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-300">

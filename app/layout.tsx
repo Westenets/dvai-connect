@@ -57,6 +57,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { PageTransition } from '@/components/PageTransition';
 import { ClarityInit } from '@/components/ClarityInit';
 import { MeetAIProvider } from '@/lib/providers/MeetAIProvider';
+import { VerifyEmailBanner } from '@/components/VerifyEmailBanner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 import { DbProvider } from '@/lib/components/DbProvider';
@@ -70,6 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ClarityInit />
                 <Toaster />
                 <AuthProvider>
+                    <VerifyEmailBanner />
                     <ThemeProvider>
                         <MeetAIProvider>
                             <PageTransition>{children}</PageTransition>

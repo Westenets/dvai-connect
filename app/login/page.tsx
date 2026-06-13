@@ -212,7 +212,7 @@ function LoginInner() {
                                     {!isRegistering && (
                                         <a
                                             className="text-xs font-medium text-[#00a8a8] hover:text-[#00a8a8]/80"
-                                            href="#"
+                                            href="/forgot-password"
                                         >
                                             Forgot password?
                                         </a>
