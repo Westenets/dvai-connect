@@ -1,7 +1,35 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+/**
+ * Edge proxy (was `middleware.ts` in Next < 16; renamed to `proxy.ts`
+ * in Next 16). Two responsibilities:
+ *
+ *   1. CORS preflight + headers for /api/* (browser + mobile clients).
+ *   2. Layer 1 admin RBAC: gate /admin/* on Appwrite session-cookie
+ *      presence so unauthenticated visitors never reach the server
+ *      component render. Layers 2 + 3 (actual role checks) live in
+ *      app/admin/layout.tsx and the /api/admin/* route handlers.
+ */
+
+const APPWRITE_SESSION_COOKIE = `a_session_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT ?? ''}`;
+
 export function proxy(request: NextRequest) {
+    const { pathname } = request.nextUrl;
+
+    // --- Admin RBAC gate (Layer 1) ---
+    if (pathname.startsWith('/admin')) {
+        const session = request.cookies.get(APPWRITE_SESSION_COOKIE)?.value;
+        if (!session) {
+            const url = request.nextUrl.clone();
+            url.pathname = '/login';
+            url.searchParams.set('next', pathname);
+            return NextResponse.redirect(url);
+        }
+        return NextResponse.next();
+    }
+
+    // --- CORS for /api/* ---
     // 1. CORS Preflight Handling
     if (request.method === 'OPTIONS') {
         return new NextResponse(null, {
@@ -18,7 +46,7 @@ export function proxy(request: NextRequest) {
     const response = NextResponse.next();
 
     // 2. Add CORS headers to all API responses
-    if (request.nextUrl.pathname.startsWith('/api')) {
+    if (pathname.startsWith('/api')) {
         response.headers.set('Access-Control-Allow-Origin', '*');
         response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         response.headers.set(
@@ -51,5 +79,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: '/api/:path*',
+    // Run on /api/* (CORS) and /admin/* (RBAC).
+    matcher: ['/api/:path*', '/admin/:path*'],
 };
