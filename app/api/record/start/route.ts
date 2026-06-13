@@ -1,7 +1,8 @@
 import { AccessToken, EgressClient, EncodedFileOutput, VideoGrant } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/session';
-import { TIERS, type TierId } from '@/lib/pricing/tiers';
+import { getUserPlan } from '@/lib/auth/subscription';
+import { TIERS } from '@/lib/pricing/tiers';
 
 /**
  * Feature flag: when 'true', /api/record/start requires an authenticated
@@ -34,12 +35,9 @@ export async function GET(req: NextRequest) {
             if (!user) {
                 return new NextResponse('Unauthorized', { status: 401 });
             }
-            // TODO (PR 3a-2): resolve user's actual tier via async getUserPlan.
-            // For now while subscriptions collection doesn't exist, treat
-            // every authenticated user as Free so the gate fully protects
-            // when enabled (forces caller to set tier-resolution before
-            // enabling the flag in production).
-            const tier: TierId = 'free';
+            // Tier comes from the Appwrite subscriptions collection
+            // populated by the Stripe webhook event processor.
+            const tier = await getUserPlan(user.$id);
             if (!TIERS[tier].cloudRecording) {
                 return new NextResponse('Recording requires Pro or higher.', { status: 402 });
             }

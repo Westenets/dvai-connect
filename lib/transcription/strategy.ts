@@ -1,7 +1,13 @@
 import { probeHardware } from './hardwareProbe';
 import { runCapabilityBenchmark } from './benchmark';
-import { isPaidUser } from '@/lib/auth/subscription';
 import type { StrategyResult, Tier, WhisperModel } from './types';
+// isPaidUser is intentionally NOT imported here — transcription
+// strategy runs in the browser based on hardware probing, with no
+// user context. Even when we previously included it in the cache
+// fingerprint, the strategy selection didn't depend on it (cloud is
+// gone, so there's no paid-tier-only path). If we later add a
+// paid-only "premium local model," wire userId into SelectStrategyArgs
+// and call lib/auth/subscription:isPaidUser from a server boundary.
 
 /**
  * User-facing transcription preference. The `cloud` option was removed on
@@ -23,10 +29,7 @@ let inMemoryCache: { fingerprint: string; result: StrategyResult } | null = null
 
 export async function selectStrategy(args: SelectStrategyArgs): Promise<StrategyResult> {
     const probe = probeHardware();
-    // isPaidUser is kept in the fingerprint for future-proofing (if we add
-    // a paid-only "premium model" later); currently it has no effect on
-    // tier selection because cloud is gone.
-    const fingerprintKey = `${probe.fingerprint}|pref:${args.pref}|paid:${isPaidUser() ? 1 : 0}`;
+    const fingerprintKey = `${probe.fingerprint}|pref:${args.pref}`;
 
     const cached = readCache(fingerprintKey);
     if (cached) return cached;

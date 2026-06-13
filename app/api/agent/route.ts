@@ -2,7 +2,8 @@ import { AgentDispatchClient, RoomServiceClient } from 'livekit-server-sdk';
 import { NextResponse, NextRequest } from 'next/server';
 import { getLiveKitURL } from '@/lib/getLiveKitURL';
 import { getCurrentUser } from '@/lib/auth/session';
-import { TIERS, type TierId } from '@/lib/pricing/tiers';
+import { getUserPlan } from '@/lib/auth/subscription';
+import { TIERS } from '@/lib/pricing/tiers';
 
 // ParticipantInfo.Kind enum from livekit.proto (stable since v1.0):
 //   STANDARD = 0, INGRESS = 1, EGRESS = 2, SIP = 3, AGENT = 4
@@ -54,11 +55,10 @@ export async function POST(request: NextRequest) {
             if (!user) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
-            // TODO (PR 3a-2): resolve user's actual tier via async getUserPlan.
-            // For now while subscriptions collection doesn't exist, treat
-            // every authenticated user as Free (quota 0) so the gate fully
-            // protects when enabled.
-            const tier: TierId = 'free';
+            // Resolve tier from the Appwrite subscriptions collection
+            // populated by the Stripe webhook event processor. Returns
+            // 'free' on misconfiguration or no active subscription.
+            const tier = await getUserPlan(user.$id);
             if (TIERS[tier].meetingAgentQuota === 0) {
                 return NextResponse.json(
                     { error: 'Meeting agent requires Pro or higher.' },
