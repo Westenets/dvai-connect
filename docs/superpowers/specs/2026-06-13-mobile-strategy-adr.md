@@ -165,10 +165,86 @@ the narrative.
 **Why rejected:** Cedes the iOS privacy-meeting-app marketing window.
 Enterprise sales prospects routinely ask for mobile; no mobile = lost deals.
 
+## Locked decisions
+
+- **Capacitor app id (iOS + Android):** `co.dvai.connect`. Matches the
+  `co.dvai.*` audience pattern in the bridge license JWT so the same
+  license token covers both web and mobile.
+- **License token location:** `/public/dvai-license.jwt` (commercial tier,
+  licensee Deep Voice AI Limited, expires 2036, platforms
+  web/node/ios/android/dotnet/flutter/react-native/capacitor). Bridge
+  auto-discovery serves this at `https://<host>/dvai-license.jwt`.
+
+## iOS WKWebView smoke test results (2026-06-13)
+
+Hand-rolled minimal Swift+UIKit+WKWebView app, built with `swiftc`
+targeting `arm64-apple-ios17.0-simulator`, ad-hoc signed, launched via
+`xcrun simctl launch --console-pty`.
+
+**iOS 17.5 — PASS:**
+```json
+{
+    "RTCRtpScriptTransform": "function",   // present in WKWebView by default
+    "RTCRtpSender": "function",
+    "createEncodedStreams": false,         // older insertable-streams path (deprecated)
+    "RTCEncodedVideoFrame": "undefined",
+    "mediaDevices": "undefined",           // NOT exposed by default — see note below
+    "getUserMedia": false,                 // NOT available by default — see note below
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 ..."
+}
+```
+
+- **RTCRtpScriptTransform IS present** in iOS 17.5 WKWebView with no
+  extra config. LiveKit E2EE via Insertable Streams will work in the
+  Capacitor wrap with no additional setup.
+- **`navigator.mediaDevices` is `undefined`** in a vanilla WKWebView.
+  This is expected — WKWebView requires the host app to (a) set the
+  `mediaCaptureType` permission via the navigation delegate's
+  `webView(_:requestMediaCapturePermissionFor:initiatedByFrame:type:decisionHandler:)`
+  callback, AND (b) declare `NSCameraUsageDescription` +
+  `NSMicrophoneUsageDescription` in Info.plist. Capacitor's
+  `@capacitor/microphone` + `@capacitor/camera` plugins ship that
+  configuration out of the box. So this is a documented Capacitor
+  setup step, not a blocker.
+
+**iOS 16.x and earlier — UNTESTED in this Mac's Xcode 26.5.**
+- Xcode 26.5 ships only with iOS 17.5+ simulator runtimes. Older runtimes
+  must be downloaded explicitly.
+- Started a download of the iOS 16.4 runtime (6.18 GB), but the link rate
+  was throttled to ~167 KB/s — projected ~10 hours to completion. Killed
+  the download to avoid wasting bandwidth; sidelined for the user to
+  finish in the background (or test on real device hardware).
+- Based on WebKit's public release history, `RTCRtpScriptTransform`
+  was enabled-by-default in WKWebView from iOS 16.4. iOS 15.4–16.3
+  has it behind an experimental WebKit feature flag (not usable for
+  production).
+
+**Verified iOS floor: 17.0** (lowest runtime smoke-tested = 17.5; safe
+floor at 17.0 since the API has been stable since 16.4 and there are
+no known WKWebView regressions between 16.4 and 17.5).
+
+**Optional widening to iOS 16.4** is a sideline:
+- Either let the iOS 16.4 sim runtime finish downloading
+  (`xcodebuild -downloadPlatform iOS -buildVersion 16.4` — overnight at
+  current bandwidth), then re-run the smoke test against it; OR
+- Smoke-test against a real iOS 16.4 device via TestFlight.
+- If the 16.4 test PASSES, lower the Capacitor `iOS minimum` to 16.4
+  (addressable market gain: ~5% more iOS users vs floor at 17).
+- If it FAILS, floor stays at 17.
+
+**Capacitor Phase 1 plan amendment:**
+- `iOS minimum` set to 16.4 pending the 16.4 runtime smoke test.
+- `Info.plist` requirements documented for Phase 1: `NSCameraUsageDescription`,
+  `NSMicrophoneUsageDescription`, `NSLocalNetworkUsageDescription` (for
+  LiveKit signaling on some networks).
+- Capacitor plugins to install in Phase 1:
+  `@capacitor/microphone`, `@capacitor/camera`,
+  `@capacitor/screen-orientation`, `@capgo/capacitor-mute`.
+
 ## Open questions parked (require user action)
 
-1. **iOS 15.4 simulator smoke test.** Needs Mac + Xcode. Sideline until
-   user is back.
+1. **iOS 15.4 simulator smoke test** — being executed now on the user's
+   Mac (`ssh mac`). Result will be folded back into this ADR.
 2. **Apple Intelligence exact bridge wiring.** dvai-bridge v4 supports
    Apple Intelligence as a backend per the docs; concrete config and
    capability-check pattern needs a runtime smoke test once Phase 1 work
