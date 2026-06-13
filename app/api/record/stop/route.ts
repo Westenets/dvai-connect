@@ -1,16 +1,28 @@
 import { EgressClient } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { getCurrentUser } from '@/lib/auth/session';
+
+/**
+ * Feature flag: when 'true', /api/record/stop requires an authenticated
+ * user. Stopping a recording you didn't start is gated by simple auth
+ * presence here; org-level "you must be a member of the room creator's
+ * org" is enforced at the admin panel level once the org primitive is
+ * wired up (PR 3a-2 + 3e).
+ *
+ * Default 'false' (off). See app/api/record/start/route.ts for the rationale.
+ */
+const PAID_GATES_ENABLED = process.env.PAID_FEATURE_GATES_ENABLED === 'true';
 
 export async function GET(req: NextRequest) {
     try {
         const roomName = req.nextUrl.searchParams.get('roomName');
 
-        /**
-         * CAUTION:
-         * for simplicity this implementation does not authenticate users and therefore allows anyone with knowledge of a roomName
-         * to start/stop recordings for that room.
-         * DO NOT USE THIS FOR PRODUCTION PURPOSES AS IS
-         */
+        if (PAID_GATES_ENABLED) {
+            const user = await getCurrentUser();
+            if (!user) {
+                return new NextResponse('Unauthorized', { status: 401 });
+            }
+        }
 
         if (roomName === null) {
             return new NextResponse('Missing roomName parameter', { status: 403 });
