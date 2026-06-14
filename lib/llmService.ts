@@ -1,6 +1,8 @@
 import { DVAI } from "@dvai-bridge/core";
 import { ChatOpenAI } from "@langchain/openai";
-import { StatusEmitter, type AIServiceStatus } from "./aiServiceStatus";
+// See lib/embedder.ts for the rationale behind splitting this import.
+import { StatusEmitter } from "./aiServiceStatus";
+import type { AIServiceStatus } from "./aiServiceStatus";
 
 const MOCK_URL = "https://api.openai.local/v1/chat/completions";
 const BASE_URL = "https://api.openai.local/v1";

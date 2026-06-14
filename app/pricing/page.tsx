@@ -245,7 +245,7 @@ function TierCard({
             {isFree ? (
                 <a
                     href="/login"
-                    className="block text-center w-full py-4 rounded-full border border-white/10 font-bold hover:bg-white hover:text-slate-900 transition active:scale-95"
+                    className="block text-center w-full py-4 rounded-full bg-white text-slate-900 font-bold hover:bg-slate-100 transition active:scale-95"
                 >
                     {copy.ctaLabel}
                 </a>
@@ -259,7 +259,7 @@ function TierCard({
                         'block w-full text-center py-4 rounded-full font-bold transition active:scale-95',
                         isFeatured
                             ? 'bg-emerald-500 text-slate-900 hover:bg-emerald-400 shadow-lg shadow-emerald-500/20'
-                            : 'border border-white/10 hover:bg-white hover:text-slate-900',
+                            : 'bg-white text-slate-900 hover:bg-slate-100',
                     ].join(' ')}
                 />
             )}

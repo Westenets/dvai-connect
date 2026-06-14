@@ -1,5 +1,10 @@
 import { DVAI } from "@dvai-bridge/core";
-import { StatusEmitter, type AIServiceStatus } from "./aiServiceStatus";
+// Split into two statements — Turbopack 16.1.6 occasionally fails to
+// resolve a value+type combined import after a hot-reload cycle, with
+// "Export StatusEmitter doesn't exist in target module" even though
+// the export is right there. Two-statement form sidesteps the bug.
+import { StatusEmitter } from "./aiServiceStatus";
+import type { AIServiceStatus } from "./aiServiceStatus";
 
 const EMBEDDING_DIM = 384; // all-MiniLM-L6-v2 hidden size
 
