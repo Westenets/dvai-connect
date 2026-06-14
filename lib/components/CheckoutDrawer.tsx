@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
 import type { PaidTierId } from '@/lib/pricing/stripe-config';
@@ -79,12 +80,19 @@ export function CheckoutDrawer({ open, tier, signupCode, quantity, onClose }: Pr
     }, [open, tier, signupCode, quantity]);
 
     if (!open) return null;
+    // Portal the modal into document.body so it isn't trapped inside
+    // PageTransition's framer-motion wrapper (which sets `transform`,
+    // making it the containing block for any nested `position: fixed`
+    // descendant — that's why the modal was rendering inside the tier
+    // card instead of fullscreen before this commit). The body portal
+    // sidesteps every transform / filter / will-change ancestor.
+    if (typeof window === 'undefined') return null;
 
     const stripe = getStripe();
 
-    return (
+    const modal = (
         <div
-            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4"
             onClick={onClose}
             role="dialog"
             aria-modal="true"
@@ -135,4 +143,6 @@ export function CheckoutDrawer({ open, tier, signupCode, quantity, onClose }: Pr
             </div>
         </div>
     );
+
+    return createPortal(modal, document.body);
 }

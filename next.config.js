@@ -53,28 +53,36 @@ const nextConfig = {
     },
 
     headers: async () => {
+        // Next.js applies ALL matching header rules in order, and if a
+        // header key is duplicated across rules the LAST one wins.
+        // So: catch-all first (strict for AI workloads), then the more
+        // specific marketing/auth-flow paths last (relaxed for the
+        // Stripe Embedded Checkout iframe from js.stripe.com).
+        //
+        // Strict headers — COOP=same-origin + COEP=credentialless — are
+        // what unlock SharedArrayBuffer, which @dvai-bridge / Whisper /
+        // Gemma need inside the meeting room. They also block any
+        // cross-origin iframe without CORP cross-origin, which is why
+        // Stripe was rendering as `chrome-error://chromewebdata/`
+        // (the broken-image icon).
+        //
+        // Any new page that opens CheckoutDrawer needs to be in the
+        // relaxed list. Currently: /pricing, /pricing/africa, /signup,
+        // /billing, /checkout/success.
+        const STRICT = [
+            { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+            { key: 'Cross-Origin-Embedder-Policy', value: 'credentialless' },
+        ];
+        const RELAXED = [
+            { key: 'Cross-Origin-Opener-Policy', value: 'unsafe-none' },
+            { key: 'Cross-Origin-Embedder-Policy', value: 'unsafe-none' },
+        ];
         return [
-            // The pricing page embeds Stripe Checkout iframe from js.stripe.com.
-            // Stripe's iframe is blocked by the global COOP `same-origin` +
-            // COEP `credentialless` headers we set everywhere else for
-            // SharedArrayBuffer / WebGPU support. Relax both on /pricing so
-            // the embedded checkout loads correctly. The rest of the app
-            // keeps the stricter headers required by Whisper/Gemma WebGPU
-            // workloads.
-            {
-                source: '/pricing/:path*',
-                headers: [
-                    { key: 'Cross-Origin-Opener-Policy', value: 'unsafe-none' },
-                    { key: 'Cross-Origin-Embedder-Policy', value: 'unsafe-none' },
-                ],
-            },
-            {
-                source: '/(.*)',
-                headers: [
-                    { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-                    { key: 'Cross-Origin-Embedder-Policy', value: 'credentialless' },
-                ],
-            },
+            { source: '/(.*)', headers: STRICT },
+            { source: '/pricing/:path*', headers: RELAXED },
+            { source: '/billing/:path*', headers: RELAXED },
+            { source: '/signup/:path*', headers: RELAXED },
+            { source: '/checkout/:path*', headers: RELAXED },
         ];
     },
 };
