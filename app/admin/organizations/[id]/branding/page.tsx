@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Client as ServerClient, Databases as ServerDatabases, Query } from 'node-appwrite';
 import { BrandingForm } from './BrandingForm';
+import { DomainVerifyPanel } from './DomainVerifyPanel';
 
 /**
  * Per-org branding editor.
@@ -36,6 +37,11 @@ interface BrandingRow {
     loginScreenCopy?: string;
     emailFromName?: string;
     emailFromAddress?: string;
+    customDomainVerificationToken?: string;
+    customDomainVerificationStatus?: 'pending' | 'verified' | 'failed';
+    customDomainVerifiedAt?: string | null;
+    customDomainCheckedAt?: string | null;
+    customDomainVerificationError?: string | null;
 }
 
 async function loadOrgAndBranding(id: string): Promise<{
@@ -99,6 +105,19 @@ export default async function AdminOrgBrandingPage({
             </header>
 
             <BrandingForm orgId={data.org.$id} initial={data.branding} />
+
+            <section className="mt-10">
+                <h2 className="text-lg font-semibold mb-3">Custom domain</h2>
+                <DomainVerifyPanel
+                    orgId={data.org.$id}
+                    customDomain={data.branding.customDomain}
+                    token={data.branding.customDomainVerificationToken}
+                    status={data.branding.customDomainVerificationStatus}
+                    verifiedAt={data.branding.customDomainVerifiedAt}
+                    checkedAt={data.branding.customDomainCheckedAt}
+                    lastError={data.branding.customDomainVerificationError}
+                />
+            </section>
         </div>
     );
 }

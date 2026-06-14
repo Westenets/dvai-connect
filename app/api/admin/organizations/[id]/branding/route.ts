@@ -6,13 +6,16 @@ import {
     ID,
 } from 'node-appwrite';
 import { requireAdmin } from '@/lib/auth/admin';
+import { generateVerificationToken } from '@/lib/branding/domain-verify';
 
 /**
  * POST /api/admin/organizations/[id]/branding
  *
- * Upsert the org_branding row for this organization. Body is a JSON
- * object with any subset of the branding fields; unset fields are
- * left as-is.
+ * Upsert the org_branding row. Side effect: if the saved customDomain
+ * changed (and the org didn't already have a verification token for
+ * the new value), we mint a fresh token and reset the verification
+ * status to 'pending'. If customDomain is cleared, all verification
+ * fields reset.
  */
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +36,12 @@ const ALLOWED_FIELDS = [
     'emailFromAddress',
 ] as const;
 
+interface BrandingRow {
+    $id: string;
+    customDomain?: string;
+    customDomainVerificationToken?: string;
+}
+
 export async function POST(
     request: Request,
     context: { params: Promise<{ id: string }> },
@@ -52,7 +61,7 @@ export async function POST(
     } catch {
         return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    const fields: Record<string, string> = {};
+    const fields: Record<string, string | null> = {};
     for (const key of ALLOWED_FIELDS) {
         if (typeof body[key] === 'string') {
             fields[key] = (body[key] as string).trim();
@@ -70,9 +79,36 @@ export async function POST(
             Query.equal('appwriteTeamId', teamId),
             Query.limit(1),
         ]);
-        if (existing.documents[0]) {
-            await databases.updateDocument(DB_ID, 'org_branding', existing.documents[0].$id, fields);
-            return NextResponse.json({ ok: true, updated: existing.documents[0].$id });
+        const existingRow = existing.documents[0] as unknown as BrandingRow | undefined;
+
+        // Verification token management.
+        const newDomain = (fields.customDomain ?? '').trim();
+        const oldDomain = (existingRow?.customDomain ?? '').trim();
+        if (newDomain && newDomain !== oldDomain) {
+            // Domain changed (or first set) — mint a new token and
+            // reset verification state.
+            fields.customDomainVerificationToken = generateVerificationToken();
+            fields.customDomainVerificationStatus = 'pending';
+            fields.customDomainVerifiedAt = null;
+            fields.customDomainCheckedAt = null;
+            fields.customDomainVerificationError = null;
+        } else if (!newDomain && oldDomain) {
+            // Domain cleared — wipe verification too.
+            fields.customDomainVerificationToken = null;
+            fields.customDomainVerificationStatus = null;
+            fields.customDomainVerifiedAt = null;
+            fields.customDomainCheckedAt = null;
+            fields.customDomainVerificationError = null;
+        } else if (newDomain === oldDomain && oldDomain && !existingRow?.customDomainVerificationToken) {
+            // Domain unchanged but no token yet (e.g. row predates the
+            // domain-verify migration) — backfill a token.
+            fields.customDomainVerificationToken = generateVerificationToken();
+            fields.customDomainVerificationStatus = 'pending';
+        }
+
+        if (existingRow) {
+            await databases.updateDocument(DB_ID, 'org_branding', existingRow.$id, fields);
+            return NextResponse.json({ ok: true, updated: existingRow.$id });
         }
         const created = await databases.createDocument(DB_ID, 'org_branding', ID.unique(), {
             appwriteTeamId: teamId,
