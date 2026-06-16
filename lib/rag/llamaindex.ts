@@ -1,5 +1,5 @@
-import { SimpleVectorStore, VectorStoreQueryMode, Settings, TextNode } from "llamaindex";
-import { db } from "../db";
+import { SimpleVectorStore, VectorStoreQueryMode, Settings, TextNode } from 'llamaindex';
+import { db } from '../db';
 
 /**
  * LlamaIndex requires Settings.embedModel to be set, even when we
@@ -16,13 +16,19 @@ try {
         getTextEmbeddings: async () => [],
         embedBatchSize: 512,
     } as any;
-} catch { /* SSR or module load failure — safe to ignore, RAG only runs client-side */ }
+} catch {
+    /* SSR or module load failure — safe to ignore, RAG only runs client-side */
+}
 
-export async function searchWithLlamaIndex(queryEmbedding: Float32Array, roomName: string, topK = 5) {
+export async function searchWithLlamaIndex(
+    queryEmbedding: Float32Array,
+    roomName: string,
+    topK = 5,
+) {
     // Fetch both transcripts and chat messages for the room
     const [transcripts, chatMessages] = await Promise.all([
-        db.transcripts.where("room_name").equals(roomName).toArray(),
-        db.chat_messages.where("room_name").equals(roomName).toArray(),
+        db.transcripts.where('room_name').equals(roomName).toArray(),
+        db.chat_messages.where('room_name').equals(roomName).toArray(),
     ]);
 
     // Initialize LlamaIndex in-memory simple vector store
@@ -33,8 +39,8 @@ export async function searchWithLlamaIndex(queryEmbedding: Float32Array, roomNam
 
     // Map transcripts to TextNode instances
     const transcriptNodes = transcripts
-        .filter(r => r.embedding && r.embedding.length > 0)
-        .map(r => {
+        .filter((r) => r.embedding && r.embedding.length > 0)
+        .map((r) => {
             const id = `t-${r.id?.toString() || Math.random().toString()}`;
             const node = new TextNode({
                 id_: id,
@@ -48,8 +54,8 @@ export async function searchWithLlamaIndex(queryEmbedding: Float32Array, roomNam
 
     // Map chat messages to TextNode instances
     const chatNodes = chatMessages
-        .filter(m => m.embedding && m.embedding.length > 0 && m.text)
-        .map(m => {
+        .filter((m) => m.embedding && m.embedding.length > 0 && m.text)
+        .map((m) => {
             const id = `c-${m.id?.toString() || Math.random().toString()}`;
             const node = new TextNode({
                 id_: id,
@@ -79,12 +85,14 @@ export async function searchWithLlamaIndex(queryEmbedding: Float32Array, roomNam
     const ids = result.ids || [];
     const similarities = result.similarities || [];
 
-    return ids.map((id, i) => {
-        const node = nodeMap.get(id);
-        return {
-            text: node?.text || '',
-            score: similarities[i] || 0,
-            id,
-        };
-    }).filter(r => r.text);
+    return ids
+        .map((id, i) => {
+            const node = nodeMap.get(id);
+            return {
+                text: node?.text || '',
+                score: similarities[i] || 0,
+                id,
+            };
+        })
+        .filter((r) => r.text);
 }

@@ -28,7 +28,14 @@ export interface ChatSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     onOpenChat?: () => void;
 }
 
-export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, className, ...props }: ChatSidebarProps) {
+export function ChatSidebar({
+    onClose,
+    isOpen = false,
+    onOpenChat,
+    style,
+    className,
+    ...props
+}: ChatSidebarProps) {
     const room = useMaybeRoomContext();
     const { localParticipant } = useLocalParticipant();
     const [inputText, setInputText] = React.useState('');
@@ -41,7 +48,9 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
     const [notifications, setNotifications] = React.useState<ChatNotification[]>([]);
 
     // Keep ref in sync
-    React.useEffect(() => { isOpenRef.current = isOpen; }, [isOpen]);
+    React.useEffect(() => {
+        isOpenRef.current = isOpen;
+    }, [isOpen]);
 
     // Clear notifications when chat opens
     React.useEffect(() => {
@@ -51,10 +60,14 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
     const roomName = room?.name || '';
 
     // Load chat history from DB
-    const dbMessages = useLiveQuery(
-        () => roomName ? db.chat_messages.where('room_name').equals(roomName).sortBy('timestamp') : [],
-        [roomName]
-    ) || [];
+    const dbMessages =
+        useLiveQuery(
+            () =>
+                roomName
+                    ? db.chat_messages.where('room_name').equals(roomName).sortBy('timestamp')
+                    : [],
+            [roomName],
+        ) || [];
 
     // Auto-scroll to bottom
     React.useEffect(() => {
@@ -70,42 +83,53 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
         playMessageSound();
         if (isOpenRef.current) return; // Chat is visible, no toast needed
 
-        setNotifications(prev => {
+        setNotifications((prev) => {
             if (prev.length >= MAX_NOTIFICATIONS) return prev; // Cap at 5
-            return [...prev, {
-                id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                sender,
-                text: text || '(media)',
-                msgDbId,
-                timestamp: Date.now(),
-            }];
+            return [
+                ...prev,
+                {
+                    id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                    sender,
+                    text: text || '(media)',
+                    msgDbId,
+                    timestamp: Date.now(),
+                },
+            ];
         });
     }, []);
 
     const dismissNotification = React.useCallback((id: string) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, []);
 
-    const handleNotificationClick = React.useCallback((notif: ChatNotification) => {
-        dismissNotification(notif.id);
-        onOpenChat?.();
-        // Scroll to the message after chat opens
-        if (notif.msgDbId) {
-            setTimeout(() => {
-                const el = messageRefsMap.current.get(notif.msgDbId!);
-                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Brief highlight
-                el?.classList.add('ring-2', 'ring-[#00a8a8]');
-                setTimeout(() => el?.classList.remove('ring-2', 'ring-[#00a8a8]'), 2000);
-            }, 150);
-        }
-    }, [dismissNotification, onOpenChat]);
+    const handleNotificationClick = React.useCallback(
+        (notif: ChatNotification) => {
+            dismissNotification(notif.id);
+            onOpenChat?.();
+            // Scroll to the message after chat opens
+            if (notif.msgDbId) {
+                setTimeout(() => {
+                    const el = messageRefsMap.current.get(notif.msgDbId!);
+                    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Brief highlight
+                    el?.classList.add('ring-2', 'ring-[#00a8a8]');
+                    setTimeout(() => el?.classList.remove('ring-2', 'ring-[#00a8a8]'), 2000);
+                }, 150);
+            }
+        },
+        [dismissNotification, onOpenChat],
+    );
 
     // Receive messages from other participants
     React.useEffect(() => {
         if (!room) return;
 
-        const handleData = async (payload: Uint8Array, participant: any, _kind: any, topic?: string) => {
+        const handleData = async (
+            payload: Uint8Array,
+            participant: any,
+            _kind: any,
+            topic?: string,
+        ) => {
             if (topic !== CHAT_TOPIC) return;
             try {
                 const data = JSON.parse(new TextDecoder().decode(payload));
@@ -125,71 +149,88 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
 
                 // Show notification for remote messages
                 if (data.sender !== senderName) {
-                    showNotification(data.sender, data.text, typeof msgDbId === 'number' ? msgDbId : undefined);
+                    showNotification(
+                        data.sender,
+                        data.text,
+                        typeof msgDbId === 'number' ? msgDbId : undefined,
+                    );
                 }
-            } catch { /* ignore malformed */ }
+            } catch {
+                /* ignore malformed */
+            }
         };
 
         room.on(RoomEvent.DataReceived, handleData);
-        return () => { room.off(RoomEvent.DataReceived, handleData); };
+        return () => {
+            room.off(RoomEvent.DataReceived, handleData);
+        };
     }, [room, roomName, senderName, showNotification]);
 
-    const sendMessage = React.useCallback(async (text: string, media?: { url: string; type: string; name: string }) => {
-        if (!room || !roomName || (!text.trim() && !media)) return;
+    const sendMessage = React.useCallback(
+        async (text: string, media?: { url: string; type: string; name: string }) => {
+            if (!room || !roomName || (!text.trim() && !media)) return;
 
-        const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const timestamp = Date.now();
+            const msgId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const timestamp = Date.now();
 
-        const payload = {
-            type: 'chat_message',
-            id: msgId,
-            text: text.trim(),
-            sender: senderName,
-            timestamp,
-            ...(media && { media_url: media.url, media_type: media.type, media_name: media.name }),
-        };
+            const payload = {
+                type: 'chat_message',
+                id: msgId,
+                text: text.trim(),
+                sender: senderName,
+                timestamp,
+                ...(media && {
+                    media_url: media.url,
+                    media_type: media.type,
+                    media_name: media.name,
+                }),
+            };
 
-        room.localParticipant.publishData(
-            new TextEncoder().encode(JSON.stringify(payload)),
-            { topic: CHAT_TOPIC },
-        );
+            room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(payload)), {
+                topic: CHAT_TOPIC,
+            });
 
-        ingestedIdsRef.current.add(msgId);
+            ingestedIdsRef.current.add(msgId);
 
-        await ingestChatMessage({
-            room_name: roomName,
-            sender: senderName,
-            text: text.trim(),
-            timestamp,
-            media_url: media?.url,
-            media_type: media?.type,
-            media_name: media?.name,
-        });
+            await ingestChatMessage({
+                room_name: roomName,
+                sender: senderName,
+                text: text.trim(),
+                timestamp,
+                media_url: media?.url,
+                media_type: media?.type,
+                media_name: media?.name,
+            });
 
-        setInputText('');
-    }, [room, roomName, senderName]);
+            setInputText('');
+        },
+        [room, roomName, senderName],
+    );
 
     const handleSend = () => {
         if (inputText.trim()) sendMessage(inputText);
     };
 
-    const handleFileUpload = React.useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !room) return;
+    const handleFileUpload = React.useCallback(
+        async (e: React.ChangeEvent<HTMLInputElement>) => {
+            const file = e.target.files?.[0];
+            if (!file || !room) return;
 
-        setIsUploading(true);
-        try {
-            const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), file);
-            const url = storage.getFileView(BUCKET_ID, uploaded.$id).toString();
-            const type = file.type.startsWith('image/') ? 'image' : 'file';
-            await sendMessage('', { url, type, name: file.name });
-        } catch (err) {
-            console.error('[Chat] File upload failed:', err);
-        } finally {
-            setIsUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-        }
-    }, [room, sendMessage]);
+            setIsUploading(true);
+            try {
+                const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), file);
+                const url = storage.getFileView(BUCKET_ID, uploaded.$id).toString();
+                const type = file.type.startsWith('image/') ? 'image' : 'file';
+                await sendMessage('', { url, type, name: file.name });
+            } catch (err) {
+                console.error('[Chat] File upload failed:', err);
+            } finally {
+                setIsUploading(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        },
+        [room, sendMessage],
+    );
 
     const isLocal = (msg: ChatMessage) => msg.sender === senderName;
 
@@ -197,8 +238,11 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
         <>
             {/* Notification toasts (rendered outside sidebar, always visible) */}
             {notifications.length > 0 && (
-                <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none" style={{ maxWidth: '340px' }}>
-                    {notifications.map(notif => (
+                <div
+                    className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"
+                    style={{ maxWidth: '340px' }}
+                >
+                    {notifications.map((notif) => (
                         <div
                             key={notif.id}
                             className="pointer-events-auto bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-3 shadow-2xl shadow-black/30 cursor-pointer hover:bg-slate-800/95 transition-all animate-in slide-in-from-right"
@@ -209,11 +253,18 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
                                     <MessageSquare size={14} className="text-[#00a8a8]" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-bold text-[#00a8a8]">{notif.sender}</p>
-                                    <p className="text-xs text-slate-300 truncate mt-0.5">{notif.text}</p>
+                                    <p className="text-xs font-bold text-[#00a8a8]">
+                                        {notif.sender}
+                                    </p>
+                                    <p className="text-xs text-slate-300 truncate mt-0.5">
+                                        {notif.text}
+                                    </p>
                                 </div>
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); dismissNotification(notif.id); }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        dismissNotification(notif.id);
+                                    }}
                                     className="text-slate-500 hover:text-white bg-transparent border-0 p-0.5 cursor-pointer shrink-0"
                                 >
                                     <X size={14} />
@@ -233,7 +284,10 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
                     <h2 className="text-white text-base font-bold">Chat</h2>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors bg-transparent border-0">
+                    <button
+                        onClick={onClose}
+                        className="text-slate-400 hover:text-white transition-colors bg-transparent border-0"
+                    >
                         <X size={20} />
                     </button>
                 </div>
@@ -241,22 +295,32 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {dbMessages.length === 0 && (
-                        <p className="text-center text-slate-500 text-xs mt-10">No messages yet. Say hello!</p>
+                        <p className="text-center text-slate-500 text-xs mt-10">
+                            No messages yet. Say hello!
+                        </p>
                     )}
                     {dbMessages.map((msg, i) => (
                         <div
                             key={msg.id || i}
-                            ref={el => { if (el && msg.id) messageRefsMap.current.set(msg.id, el); }}
+                            ref={(el) => {
+                                if (el && msg.id) messageRefsMap.current.set(msg.id, el);
+                            }}
                             className={`flex flex-col transition-all rounded-xl ${isLocal(msg) ? 'items-end' : 'items-start'}`}
                         >
                             <span className="text-[10px] text-slate-500 mb-0.5 px-1">
-                                {msg.sender} &middot; {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {msg.sender} &middot;{' '}
+                                {new Date(msg.timestamp).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                })}
                             </span>
-                            <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
-                                isLocal(msg)
-                                    ? 'bg-[#00a8a8] text-white rounded-br-sm'
-                                    : 'bg-slate-800 text-slate-200 rounded-bl-sm'
-                            }`}>
+                            <div
+                                className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
+                                    isLocal(msg)
+                                        ? 'bg-[#00a8a8] text-white rounded-br-sm'
+                                        : 'bg-slate-800 text-slate-200 rounded-bl-sm'
+                                }`}
+                            >
                                 {msg.text && <p>{msg.text}</p>}
                                 {msg.media_url && msg.media_type === 'image' && (
                                     <img
@@ -286,7 +350,12 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
                 {/* Input */}
                 <div className="p-3 border-t border-white/10 shrink-0">
                     <div className="flex items-center gap-2">
-                        <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={handleFileUpload}
+                        />
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
@@ -301,8 +370,8 @@ export function ChatSidebar({ onClose, isOpen = false, onOpenChat, style, classN
                         </button>
                         <input
                             value={inputText}
-                            onChange={e => setInputText(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                            onChange={(e) => setInputText(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                             placeholder="Type a message..."
                             className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 outline-none focus:border-[#00a8a8]"
                         />

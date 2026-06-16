@@ -83,31 +83,41 @@ export function CustomDateRangePicker({ value, onChange, className }: CustomDate
                         classNames={{
                             months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
                             month: 'space-y-4',
-                            month_caption: 'flex justify-between pt-1 relative items-center px-4 mb-2',
+                            month_caption:
+                                'flex justify-between pt-1 relative items-center px-4 mb-2',
                             caption_label: 'text-sm font-bold text-slate-900 dark:text-slate-100',
                             nav: 'm-0 flex items-center',
-                            button_previous: 'absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 transition-opacity border-0 cursor-pointer text-slate-900 dark:text-slate-100 flex items-center justify-center',
-                            button_next: 'absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 transition-opacity border-0 cursor-pointer text-slate-900 dark:text-slate-100 flex items-center justify-center',
+                            button_previous:
+                                'absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 transition-opacity border-0 cursor-pointer text-slate-900 dark:text-slate-100 flex items-center justify-center',
+                            button_next:
+                                'absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 transition-opacity border-0 cursor-pointer text-slate-900 dark:text-slate-100 flex items-center justify-center',
                             month_grid: 'w-full border-collapse space-y-1',
                             weekdays: 'flex px-2',
-                            weekday: 'text-slate-400 rounded-md w-9 font-normal text-[0.8rem] uppercase flex items-center justify-center',
+                            weekday:
+                                'text-slate-400 rounded-md w-9 font-normal text-[0.8rem] uppercase flex items-center justify-center',
                             week: 'flex w-full mt-2 px-2',
                             day: 'h-9 w-9 p-0 flex items-center justify-center relative',
-                            day_button: 'h-9 w-9 p-0 font-normal hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors border-0 cursor-pointer text-slate-900 dark:text-slate-100 bg-transparent flex items-center justify-center outline-none z-10',
-                            range_start: 'bg-[#00a8a8]/15 dark:bg-[#00a8a8]/25 rounded-l-full z-20 [&>button]:bg-[#00a8a8] [&>button]:!text-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:shadow-[#00a8a8]/40',
-                            range_end: 'bg-[#00a8a8]/15 dark:bg-[#00a8a8]/25 rounded-r-full z-20 [&>button]:bg-[#00a8a8] [&>button]:!text-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:shadow-[#00a8a8]/40',
-                            range_middle: 'bg-[#00a8a8]/10 dark:bg-[#00a8a8]/20 !rounded-none z-20 hover:bg-[#00a8a8]/30 transition-colors',
+                            day_button:
+                                'h-9 w-9 p-0 font-normal hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors border-0 cursor-pointer text-slate-900 dark:text-slate-100 bg-transparent flex items-center justify-center outline-none z-10',
+                            range_start:
+                                'bg-[#00a8a8]/15 dark:bg-[#00a8a8]/25 rounded-l-full z-20 [&>button]:bg-[#00a8a8] [&>button]:!text-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:shadow-[#00a8a8]/40',
+                            range_end:
+                                'bg-[#00a8a8]/15 dark:bg-[#00a8a8]/25 rounded-r-full z-20 [&>button]:bg-[#00a8a8] [&>button]:!text-white [&>button]:rounded-full [&>button]:shadow-lg [&>button]:shadow-[#00a8a8]/40',
+                            range_middle:
+                                'bg-[#00a8a8]/10 dark:bg-[#00a8a8]/20 !rounded-none z-20 hover:bg-[#00a8a8]/30 transition-colors',
                             selected: '',
                             today: 'text-[#00a8a8] font-bold underline decoration-2 underline-offset-4',
                             outside: 'text-slate-300 dark:text-slate-600 opacity-50',
-                            disabled: 'text-slate-300 dark:text-slate-600 opacity-50 cursor-not-allowed',
+                            disabled:
+                                'text-slate-300 dark:text-slate-600 opacity-50 cursor-not-allowed',
                             hidden: 'invisible',
                         }}
                         components={{
                             Chevron: (props) => {
-                                if (props.orientation === 'left') return <ChevronLeft className="h-4 w-4" />;
+                                if (props.orientation === 'left')
+                                    return <ChevronLeft className="h-4 w-4" />;
                                 return <ChevronRight className="h-4 w-4" />;
-                            }
+                            },
                         }}
                     />
                 </div>

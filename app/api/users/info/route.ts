@@ -14,7 +14,10 @@ export async function POST(req: NextRequest) {
         const { participant_ids } = await req.json();
 
         if (!participant_ids || !Array.isArray(participant_ids)) {
-            return NextResponse.json({ error: 'participant_ids is required and must be an array' }, { status: 400 });
+            return NextResponse.json(
+                { error: 'participant_ids is required and must be an array' },
+                { status: 400 },
+            );
         }
 
         const results = await Promise.all(
@@ -23,10 +26,8 @@ export async function POST(req: NextRequest) {
                 // - Typical Appwrite ID length is 20
                 // - Alphanumeric
                 // - No spaces
-                const isPossibleId = 
-                    id.length === 20 && 
-                    /^[a-zA-Z0-9]+$/.test(id) && 
-                    !id.includes(' ');
+                const isPossibleId =
+                    id.length === 20 && /^[a-zA-Z0-9]+$/.test(id) && !id.includes(' ');
 
                 if (!isPossibleId) {
                     return { id, name: id, avatarUrl: null, isRegistered: false };
@@ -43,10 +44,13 @@ export async function POST(req: NextRequest) {
                     };
                 } catch (error) {
                     // If user not found or error, treat as non-registered name
-                    console.warn(`User fetch failed for ID ${id}:`, error instanceof Error ? error.message : error);
+                    console.warn(
+                        `User fetch failed for ID ${id}:`,
+                        error instanceof Error ? error.message : error,
+                    );
                     return { id, name: id, avatarUrl: null, isRegistered: false };
                 }
-            })
+            }),
         );
 
         return NextResponse.json({ participants: results });

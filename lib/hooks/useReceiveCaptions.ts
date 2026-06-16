@@ -19,34 +19,43 @@ export function useReceiveCaptions() {
     useEffect(() => {
         if (!room) return;
 
-        const handleDataReceived = (payload: Uint8Array, participant?: RemoteParticipant | LocalParticipant, kind?: any, topic?: string) => {
+        const handleDataReceived = (
+            payload: Uint8Array,
+            participant?: RemoteParticipant | LocalParticipant,
+            kind?: any,
+            topic?: string,
+        ) => {
             if (topic !== 'transcription') return;
 
             try {
                 const decoder = new TextDecoder();
                 const data = JSON.parse(decoder.decode(payload));
-                
+
                 if (data.utteranceId && data.text !== undefined) {
                     const speakerName = participant?.name || participant?.identity || 'Unknown';
-                    
+
                     if (data.isFinal && !ingestedIds.current.has(data.utteranceId)) {
                         ingestedIds.current.add(data.utteranceId);
                         ingestTranscript(speakerName, data.text, room.name);
                     }
-                    
-                    console.log(`[RECEIVE] from ${speakerName}: id: ${data.utteranceId}, isFinal: ${data.isFinal}, text: "${data.text}"`);
-                    
-                    setCaptions(prev => {
+
+                    console.log(
+                        `[RECEIVE] from ${speakerName}: id: ${data.utteranceId}, isFinal: ${data.isFinal}, text: "${data.text}"`,
+                    );
+
+                    setCaptions((prev) => {
                         const newCaptions = [...prev];
-                        const existingIndex = newCaptions.findIndex(c => c.utteranceId === data.utteranceId);
-                        
+                        const existingIndex = newCaptions.findIndex(
+                            (c) => c.utteranceId === data.utteranceId,
+                        );
+
                         if (existingIndex >= 0) {
                             newCaptions[existingIndex] = {
                                 ...newCaptions[existingIndex],
                                 text: data.text,
                                 // Prevent downgrading to isFinal=false if already true (shouldn't happen, but just in case)
                                 isFinal: newCaptions[existingIndex].isFinal || data.isFinal,
-                                timestamp: Date.now()
+                                timestamp: Date.now(),
                             };
                         } else {
                             newCaptions.push({
@@ -54,10 +63,10 @@ export function useReceiveCaptions() {
                                 text: data.text,
                                 isFinal: data.isFinal,
                                 speakerName,
-                                timestamp: Date.now()
+                                timestamp: Date.now(),
                             });
                         }
-                        
+
                         return newCaptions.slice(-10); // maintain max 10 to avoid memory leak
                     });
                 }

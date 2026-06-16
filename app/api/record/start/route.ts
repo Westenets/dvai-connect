@@ -1,5 +1,20 @@
 import { AccessToken, EgressClient, EncodedFileOutput, VideoGrant } from 'livekit-server-sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { getCurrentUser } from '@/lib/auth/session';
+import { getUserPlan } from '@/lib/auth/subscription';
+import { TIERS } from '@/lib/pricing/tiers';
+
+/**
+ * Feature flag: when 'true', /api/record/start requires an authenticated
+ * user AND requires their tier to include cloud recording.
+ *
+ * Default 'false' (off) — preserves the existing flow until the full
+ * payment system lands (Tasks 1 PR 3b through 3e). Flip on once Stripe +
+ * Appwrite subscriptions + the real isPaidUser are wired up.
+ *
+ * Sidelined for user action.
+ */
+const PAID_GATES_ENABLED = process.env.PAID_FEATURE_GATES_ENABLED === 'true';
 
 export async function GET(req: NextRequest) {
     try {
@@ -7,21 +22,32 @@ export async function GET(req: NextRequest) {
         const e2eePassphrase = req.nextUrl.searchParams.get('e2eePassphrase');
 
         /**
-         * CAUTION:
-         * for simplicity this implementation does not authenticate users and therefore allows anyone with knowledge of a roomName
-         * to start/stop recordings for that room.
-         * DO NOT USE THIS FOR PRODUCTION PURPOSES AS IS
+         * Authentication note (2026-06-13): an authentication + tier-aware
+         * paywall is now in place behind PAID_FEATURE_GATES_ENABLED. When
+         * the flag is on, this route requires an authenticated user whose
+         * tier allows recording. Previously this route was intentionally
+         * unauthenticated for development convenience — see the original
+         * CAUTION comment in git history.
          */
+
+        if (PAID_GATES_ENABLED) {
+            const user = await getCurrentUser();
+            if (!user) {
+                return new NextResponse('Unauthorized', { status: 401 });
+            }
+            // Tier comes from the Appwrite subscriptions collection
+            // populated by the Stripe webhook event processor.
+            const tier = await getUserPlan(user.$id);
+            if (!TIERS[tier].cloudRecording) {
+                return new NextResponse('Recording requires Pro or higher.', { status: 402 });
+            }
+        }
 
         if (roomName === null) {
             return new NextResponse('Missing roomName parameter', { status: 403 });
         }
 
-        const {
-            LIVEKIT_API_KEY,
-            LIVEKIT_API_SECRET,
-            LIVEKIT_URL,
-        } = process.env;
+        const { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL } = process.env;
 
         const hostURL = new URL(LIVEKIT_URL!);
         hostURL.protocol = 'https:';
@@ -117,9 +143,9 @@ export async function GET(req: NextRequest) {
                 const roomAdmins = await appwriteDatabases.listDocuments(
                     'dvai-connect',
                     'room_admins',
-                    [AppwriteQuery.equal('roomId', roomName)]
+                    [AppwriteQuery.equal('roomId', roomName)],
                 );
-                const adminIds = roomAdmins.documents.map(doc => doc.adminId);
+                const adminIds = roomAdmins.documents.map((doc) => doc.adminId);
 
                 // Get participant userIds and startedBy for initial tracking
                 const { RoomServiceClient } = await import('livekit-server-sdk');
@@ -129,7 +155,7 @@ export async function GET(req: NextRequest) {
                     LIVEKIT_API_SECRET,
                 );
                 const participants = await roomServiceClient.listParticipants(roomName);
-                
+
                 const participantUserIds = participants
                     .map((p) => {
                         if (!p.metadata) return null;
@@ -143,7 +169,7 @@ export async function GET(req: NextRequest) {
                     .filter((id): id is string => !!id);
 
                 const startedBy = req.nextUrl.searchParams.get('startedBy') || 'unknown';
-                const initiator = participants.find(p => p.identity === startedBy);
+                const initiator = participants.find((p) => p.identity === startedBy);
                 let initiatorId = null;
                 if (initiator?.metadata) {
                     try {
@@ -153,7 +179,7 @@ export async function GET(req: NextRequest) {
                 }
 
                 // Combine admins and initiator for the owner array
-                const owners = Array.from(new Set([...adminIds, initiatorId].filter(id => !!id)));
+                const owners = Array.from(new Set([...adminIds, initiatorId].filter((id) => !!id)));
 
                 await appwriteDatabases.createDocument(
                     'dvai-connect',

@@ -44,8 +44,6 @@ interface RecordingDetailClientProps {
 
 type Tab = 'summary' | 'transcript' | 'questions' | 'chat' | 'tasks' | 'info';
 
-
-
 export default function RecordingDetailClient({
     recording,
     participants,
@@ -68,7 +66,8 @@ export default function RecordingDetailClient({
     const speedMenuRef = useRef<HTMLDivElement>(null);
 
     // AI & Benchmarking Hooks
-    const { isProcessing, flushRemaining, pipelineStatus, pipelineMessage, runPipeline } = useMeetingIntelligence(recording.room_name);
+    const { isProcessing, flushRemaining, pipelineStatus, pipelineMessage, runPipeline } =
+        useMeetingIntelligence(recording.room_name);
     const {
         isLoading: isRagLoading,
         loadingMessage: ragLoadingMessage,
@@ -79,42 +78,71 @@ export default function RecordingDetailClient({
     const [ragQuery, setRagQuery] = useState('');
 
     // Fetch from Local DB
-    const rawTranscripts = useLiveQuery(
-        () => recording.room_name ? db.transcripts.where('room_name').equals(recording.room_name).toArray() : [],
-        [recording.room_name]
-    ) || [];
+    const rawTranscripts =
+        useLiveQuery(
+            () =>
+                recording.room_name
+                    ? db.transcripts.where('room_name').equals(recording.room_name).toArray()
+                    : [],
+            [recording.room_name],
+        ) || [];
 
-    const rawInsights = useLiveQuery(
-        () => recording.room_name ? db.insights.where('room_name').equals(recording.room_name).toArray() : [],
-        [recording.room_name]
-    ) || [];
+    const rawInsights =
+        useLiveQuery(
+            () =>
+                recording.room_name
+                    ? db.insights.where('room_name').equals(recording.room_name).toArray()
+                    : [],
+            [recording.room_name],
+        ) || [];
 
-    const chatMessages = useLiveQuery(
-        () => recording.room_name ? db.chat_messages.where('room_name').equals(recording.room_name).sortBy('timestamp') : [],
-        [recording.room_name]
-    ) || [];
+    const chatMessages =
+        useLiveQuery(
+            () =>
+                recording.room_name
+                    ? db.chat_messages
+                          .where('room_name')
+                          .equals(recording.room_name)
+                          .sortBy('timestamp')
+                    : [],
+            [recording.room_name],
+        ) || [];
 
     // Process Insights
-    const latestSummary = rawInsights.filter(i => i.type === 'summary').pop()?.content || 'Waiting for AI processing...';
-    const latestActionItemsStr = rawInsights.filter(i => i.type === 'action_items').pop()?.content || '';
-    const latestQuestions = rawInsights.filter(i => i.type === 'questions').pop()?.content || 'No specific questions were identified by the AI in this session.';
+    const latestSummary =
+        rawInsights.filter((i) => i.type === 'summary').pop()?.content ||
+        'Waiting for AI processing...';
+    const latestActionItemsStr =
+        rawInsights.filter((i) => i.type === 'action_items').pop()?.content || '';
+    const latestQuestions =
+        rawInsights.filter((i) => i.type === 'questions').pop()?.content ||
+        'No specific questions were identified by the AI in this session.';
 
-    const dbActionItems = latestActionItemsStr.split('\n')
-        .map(s => s.trim().replace(/^-\s*/, '').replace(/^\d+\.\s*/, ''))
-        .filter(s => s.length > 0)
+    const dbActionItems = latestActionItemsStr
+        .split('\n')
+        .map((s) =>
+            s
+                .trim()
+                .replace(/^-\s*/, '')
+                .replace(/^\d+\.\s*/, ''),
+        )
+        .filter((s) => s.length > 0)
         .map((text, idx) => ({
             id: idx,
             text,
             assignee: 'Team',
             due: '',
-            completed: false
+            completed: false,
         }));
 
-    const transcriptData = rawTranscripts.map(t => {
+    const transcriptData = rawTranscripts.map((t) => {
         // Simple relative time format (MM:SS) mock
         return {
             speaker: t.speaker || 'Unknown',
-            time: new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            time: new Date(t.timestamp).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+            }),
             text: t.text,
         };
     });
@@ -135,12 +163,17 @@ export default function RecordingDetailClient({
         }
     }, [rawTranscripts.length, rawInsights.length, pipelineStatus, runPipeline]);
 
-    // Unload LLM when leaving the page
+    // Unload LLM when leaving the page.
+    // We deliberately go through the singleton (not useGemma) here because
+    // this cleanup runs on the React unmount path — the provider may already
+    // be torn down by the time this effect's cleanup fires.
     useEffect(() => {
         return () => {
-            import('@/lib/llmService').then(({ llmService }) => {
-                llmService.unload();
-            }).catch(() => {});
+            import('@/lib/llmService')
+                .then(({ llmService }) => {
+                    llmService.unload();
+                })
+                .catch(() => {});
         };
     }, []);
 
@@ -587,48 +620,52 @@ export default function RecordingDetailClient({
                                         </div>
                                         <div className="space-y-4">
                                             {dbActionItems.length === 0 ? (
-                                                <p className="text-xs text-slate-500 italic">No action items extracted yet.</p>
-                                            ) : dbActionItems.map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    className="flex items-start gap-3 group"
-                                                >
+                                                <p className="text-xs text-slate-500 italic">
+                                                    No action items extracted yet.
+                                                </p>
+                                            ) : (
+                                                dbActionItems.map((item) => (
                                                     <div
-                                                        className={cn(
-                                                            'size-5 rounded-full border flex items-center justify-center mt-0.5 transition-colors',
-                                                            item.completed
-                                                                ? 'bg-[#00a8a8] border-[#00a8a8] text-white'
-                                                                : 'border-slate-300 dark:border-slate-700 group-hover:border-[#00a8a8]/50 bg-white dark:bg-slate-800',
-                                                        )}
+                                                        key={item.id}
+                                                        className="flex items-start gap-3 group"
                                                     >
-                                                        {item.completed && (
-                                                            <CheckCircle2 className="size-3" />
-                                                        )}
-                                                    </div>
-                                                    <div className="grow">
-                                                        <p
+                                                        <div
                                                             className={cn(
-                                                                'text-sm font-medium',
+                                                                'size-5 rounded-full border flex items-center justify-center mt-0.5 transition-colors',
                                                                 item.completed
-                                                                    ? 'text-slate-400 line-through'
-                                                                    : 'text-slate-800 dark:text-slate-300',
+                                                                    ? 'bg-[#00a8a8] border-[#00a8a8] text-white'
+                                                                    : 'border-slate-300 dark:border-slate-700 group-hover:border-[#00a8a8]/50 bg-white dark:bg-slate-800',
                                                             )}
                                                         >
-                                                            {item.text}
-                                                        </p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <span className="text-[10px] text-slate-500">
-                                                                Assignee: {item.assignee}
-                                                            </span>
-                                                            {item.due && !item.completed && (
-                                                                <span className="text-[10px] text-[#00a8a8] font-bold">
-                                                                    Due {item.due}
-                                                                </span>
+                                                            {item.completed && (
+                                                                <CheckCircle2 className="size-3" />
                                                             )}
                                                         </div>
+                                                        <div className="grow">
+                                                            <p
+                                                                className={cn(
+                                                                    'text-sm font-medium',
+                                                                    item.completed
+                                                                        ? 'text-slate-400 line-through'
+                                                                        : 'text-slate-800 dark:text-slate-300',
+                                                                )}
+                                                            >
+                                                                {item.text}
+                                                            </p>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className="text-[10px] text-slate-500">
+                                                                    Assignee: {item.assignee}
+                                                                </span>
+                                                                {item.due && !item.completed && (
+                                                                    <span className="text-[10px] text-[#00a8a8] font-bold">
+                                                                        Due {item.due}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                ))
+                                            )}
                                         </div>
                                     </div>
 
@@ -645,7 +682,11 @@ export default function RecordingDetailClient({
                                                 type="text"
                                                 value={ragQuery}
                                                 onChange={(e) => setRagQuery(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && !isRagLoading && askQuestion(ragQuery)}
+                                                onKeyDown={(e) =>
+                                                    e.key === 'Enter' &&
+                                                    !isRagLoading &&
+                                                    askQuestion(ragQuery)
+                                                }
                                                 placeholder="e.g. What was assigned to Alex?"
                                                 className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00a8a8]"
                                                 disabled={isRagLoading}
@@ -661,16 +702,22 @@ export default function RecordingDetailClient({
                                         {isRagLoading && (
                                             <div className="mt-4 flex items-center gap-3 p-4 bg-[#00a8a8]/5 rounded-xl border border-[#00a8a8]/20">
                                                 <div className="size-4 border-2 border-[#00a8a8] border-t-transparent rounded-full animate-spin shrink-0" />
-                                                <p className="text-sm text-[#00a8a8] font-medium">{ragLoadingMessage || 'Processing...'}</p>
+                                                <p className="text-sm text-[#00a8a8] font-medium">
+                                                    {ragLoadingMessage || 'Processing...'}
+                                                </p>
                                             </div>
                                         )}
                                         {ragAnswer && !isRagLoading && (
                                             <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-[#00a8a8]/20 shadow-sm">
                                                 <div className="flex items-center gap-1.5 mb-2">
                                                     <Sparkles className="size-3.5 text-[#00a8a8]" />
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#00a8a8]">AI Answer</span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#00a8a8]">
+                                                        AI Answer
+                                                    </span>
                                                 </div>
-                                                <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{ragAnswer}</p>
+                                                <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
+                                                    {ragAnswer}
+                                                </p>
                                             </div>
                                         )}
                                         {retrievedContext.length > 0 && !isRagLoading && (
@@ -680,11 +727,16 @@ export default function RecordingDetailClient({
                                                 </p>
                                                 <div className="space-y-1.5">
                                                     {retrievedContext.map((ctx, i) => (
-                                                        <div key={i} className="p-2.5 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                                                        <div
+                                                            key={i}
+                                                            className="p-2.5 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700"
+                                                        >
                                                             <span className="text-[9px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400">
                                                                 {ctx.score.toFixed(4)}
                                                             </span>
-                                                            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">{ctx.text}</p>
+                                                            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">
+                                                                {ctx.text}
+                                                            </p>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -747,49 +799,54 @@ export default function RecordingDetailClient({
                                                         </span>
                                                     </div>
                                                     {dbActionItems.length === 0 ? (
-                                                        <p className="text-xs text-slate-500 italic">No action items extracted yet.</p>
-                                                    ) : dbActionItems.map((item) => (
-                                                        <div
-                                                            key={item.id}
-                                                            className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-3xl border border-slate-200 dark:border-slate-800/50 flex items-start gap-4 shadow-sm"
-                                                        >
+                                                        <p className="text-xs text-slate-500 italic">
+                                                            No action items extracted yet.
+                                                        </p>
+                                                    ) : (
+                                                        dbActionItems.map((item) => (
                                                             <div
-                                                                className={cn(
-                                                                    'size-6 rounded-full border-2 flex items-center justify-center mt-0.5',
-                                                                    item.completed
-                                                                        ? 'bg-[#00a8a8] border-[#00a8a8]'
-                                                                        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800',
-                                                                )}
+                                                                key={item.id}
+                                                                className="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-3xl border border-slate-200 dark:border-slate-800/50 flex items-start gap-4 shadow-sm"
                                                             >
-                                                                {item.completed && (
-                                                                    <CheckCircle2 className="size-3 text-white" />
-                                                                )}
-                                                            </div>
-                                                            <div className="grow">
-                                                                <p
+                                                                <div
                                                                     className={cn(
-                                                                        'text-sm font-semibold',
+                                                                        'size-6 rounded-full border-2 flex items-center justify-center mt-0.5',
                                                                         item.completed
-                                                                            ? 'text-slate-400 line-through'
-                                                                            : 'text-slate-800 dark:text-slate-200',
+                                                                            ? 'bg-[#00a8a8] border-[#00a8a8]'
+                                                                            : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800',
                                                                     )}
                                                                 >
-                                                                    {item.text}
-                                                                </p>
-                                                                <div className="flex items-center gap-3 mt-1.5">
-                                                                    <span className="text-[10px] text-slate-500">
-                                                                        Assigned to: {item.assignee}
-                                                                    </span>
-                                                                    {item.due &&
-                                                                        !item.completed && (
-                                                                            <span className="text-[10px] text-[#00a8a8] font-bold">
-                                                                                Due {item.due}
-                                                                            </span>
+                                                                    {item.completed && (
+                                                                        <CheckCircle2 className="size-3 text-white" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="grow">
+                                                                    <p
+                                                                        className={cn(
+                                                                            'text-sm font-semibold',
+                                                                            item.completed
+                                                                                ? 'text-slate-400 line-through'
+                                                                                : 'text-slate-800 dark:text-slate-200',
                                                                         )}
+                                                                    >
+                                                                        {item.text}
+                                                                    </p>
+                                                                    <div className="flex items-center gap-3 mt-1.5">
+                                                                        <span className="text-[10px] text-slate-500">
+                                                                            Assigned to:{' '}
+                                                                            {item.assignee}
+                                                                        </span>
+                                                                        {item.due &&
+                                                                            !item.completed && (
+                                                                                <span className="text-[10px] text-[#00a8a8] font-bold">
+                                                                                    Due {item.due}
+                                                                                </span>
+                                                                            )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
+                                                        ))
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -805,7 +862,10 @@ export default function RecordingDetailClient({
                                             <div className="p-5">
                                                 {pipelineStatus === 'running' ? (
                                                     <PipelineLoader message={pipelineMessage} />
-                                                ) : latestQuestions && !latestQuestions.includes('No specific questions') ? (
+                                                ) : latestQuestions &&
+                                                  !latestQuestions.includes(
+                                                      'No specific questions',
+                                                  ) ? (
                                                     <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                                                         {latestQuestions}
                                                     </div>
@@ -813,7 +873,8 @@ export default function RecordingDetailClient({
                                                     <div className="text-center flex flex-col items-center gap-4 text-slate-500 py-5">
                                                         <MoreHorizontal className="size-10 opacity-20" />
                                                         <p className="text-sm font-medium">
-                                                            No specific questions were identified by the AI in this session.
+                                                            No specific questions were identified by
+                                                            the AI in this session.
                                                         </p>
                                                     </div>
                                                 )}
@@ -832,22 +893,53 @@ export default function RecordingDetailClient({
                                                         </div>
                                                         <div className="max-h-[250px] overflow-y-auto space-y-2 custom-scrollbar">
                                                             {chatMessages.map((msg, i) => (
-                                                                <div key={msg.id || i} className="flex flex-col">
+                                                                <div
+                                                                    key={msg.id || i}
+                                                                    className="flex flex-col"
+                                                                >
                                                                     <div className="flex items-baseline gap-2">
-                                                                        <span className="text-[10px] font-bold text-[#00a8a8]">{msg.sender}</span>
+                                                                        <span className="text-[10px] font-bold text-[#00a8a8]">
+                                                                            {msg.sender}
+                                                                        </span>
                                                                         <span className="text-[9px] text-slate-500">
-                                                                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                            {new Date(
+                                                                                msg.timestamp,
+                                                                            ).toLocaleTimeString(
+                                                                                [],
+                                                                                {
+                                                                                    hour: '2-digit',
+                                                                                    minute: '2-digit',
+                                                                                },
+                                                                            )}
                                                                         </span>
                                                                     </div>
-                                                                    {msg.text && <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{msg.text}</p>}
-                                                                    {msg.media_url && msg.media_type === 'image' && (
-                                                                        <img src={msg.media_url} alt={msg.media_name} className="mt-1 rounded-lg max-h-32 object-cover" />
+                                                                    {msg.text && (
+                                                                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                                                                            {msg.text}
+                                                                        </p>
                                                                     )}
-                                                                    {msg.media_url && msg.media_type === 'file' && (
-                                                                        <a href={msg.media_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#00a8a8] underline mt-0.5">
-                                                                            {msg.media_name || 'Download file'}
-                                                                        </a>
-                                                                    )}
+                                                                    {msg.media_url &&
+                                                                        msg.media_type ===
+                                                                            'image' && (
+                                                                            <img
+                                                                                src={msg.media_url}
+                                                                                alt={msg.media_name}
+                                                                                className="mt-1 rounded-lg max-h-32 object-cover"
+                                                                            />
+                                                                        )}
+                                                                    {msg.media_url &&
+                                                                        msg.media_type ===
+                                                                            'file' && (
+                                                                            <a
+                                                                                href={msg.media_url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="text-[10px] text-[#00a8a8] underline mt-0.5"
+                                                                            >
+                                                                                {msg.media_name ||
+                                                                                    'Download file'}
+                                                                            </a>
+                                                                        )}
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -855,75 +947,97 @@ export default function RecordingDetailClient({
                                                 )}
 
                                                 {/* RAG Search */}
-                                            <div className="bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-5 border border-slate-200 dark:border-slate-800/50">
-                                                <div className="flex items-center gap-2 mb-4">
-                                                    <Sparkles className="size-5 text-[#00a8a8]" />
-                                                    <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                                                        Ask about this meeting
-                                                    </h3>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={ragQuery}
-                                                        onChange={(e) => setRagQuery(e.target.value)}
-                                                        onKeyDown={(e) => e.key === 'Enter' && !isRagLoading && askQuestion(ragQuery)}
-                                                        placeholder="e.g. What was assigned to Alex?"
-                                                        className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00a8a8]"
-                                                        disabled={isRagLoading}
-                                                    />
-                                                    <button
-                                                        onClick={() => askQuestion(ragQuery)}
-                                                        disabled={isRagLoading || !ragQuery.trim()}
-                                                        className="bg-[#00a8a8] hover:bg-[#00a8a8]/90 disabled:opacity-50 text-white border-0 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer shrink-0 transition"
-                                                    >
-                                                        {isRagLoading ? '...' : 'Ask'}
-                                                    </button>
-                                                </div>
-
-                                                {/* Loading state */}
-                                                {isRagLoading && (
-                                                    <div className="mt-4 flex items-center gap-3 p-4 bg-[#00a8a8]/5 rounded-xl border border-[#00a8a8]/20">
-                                                        <div className="size-4 border-2 border-[#00a8a8] border-t-transparent rounded-full animate-spin shrink-0" />
-                                                        <p className="text-sm text-[#00a8a8] font-medium">{ragLoadingMessage || 'Processing...'}</p>
+                                                <div className="bg-slate-50 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl p-5 border border-slate-200 dark:border-slate-800/50">
+                                                    <div className="flex items-center gap-2 mb-4">
+                                                        <Sparkles className="size-5 text-[#00a8a8]" />
+                                                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">
+                                                            Ask about this meeting
+                                                        </h3>
                                                     </div>
-                                                )}
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            value={ragQuery}
+                                                            onChange={(e) =>
+                                                                setRagQuery(e.target.value)
+                                                            }
+                                                            onKeyDown={(e) =>
+                                                                e.key === 'Enter' &&
+                                                                !isRagLoading &&
+                                                                askQuestion(ragQuery)
+                                                            }
+                                                            placeholder="e.g. What was assigned to Alex?"
+                                                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00a8a8]"
+                                                            disabled={isRagLoading}
+                                                        />
+                                                        <button
+                                                            onClick={() => askQuestion(ragQuery)}
+                                                            disabled={
+                                                                isRagLoading || !ragQuery.trim()
+                                                            }
+                                                            className="bg-[#00a8a8] hover:bg-[#00a8a8]/90 disabled:opacity-50 text-white border-0 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer shrink-0 transition"
+                                                        >
+                                                            {isRagLoading ? '...' : 'Ask'}
+                                                        </button>
+                                                    </div>
 
-                                                {/* LLM Answer */}
-                                                {ragAnswer && !isRagLoading && (
-                                                    <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-[#00a8a8]/20 shadow-sm">
-                                                        <div className="flex items-center gap-1.5 mb-2">
-                                                            <Sparkles className="size-3.5 text-[#00a8a8]" />
-                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#00a8a8]">AI Answer</span>
+                                                    {/* Loading state */}
+                                                    {isRagLoading && (
+                                                        <div className="mt-4 flex items-center gap-3 p-4 bg-[#00a8a8]/5 rounded-xl border border-[#00a8a8]/20">
+                                                            <div className="size-4 border-2 border-[#00a8a8] border-t-transparent rounded-full animate-spin shrink-0" />
+                                                            <p className="text-sm text-[#00a8a8] font-medium">
+                                                                {ragLoadingMessage ||
+                                                                    'Processing...'}
+                                                            </p>
                                                         </div>
-                                                        <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{ragAnswer}</p>
-                                                    </div>
-                                                )}
+                                                    )}
 
-                                                {/* Retrieved Sources */}
-                                                {retrievedContext.length > 0 && !isRagLoading && (
-                                                    <div className="mt-3">
-                                                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">
-                                                            Sources ({retrievedContext.length} excerpts)
-                                                        </p>
-                                                        <div className="space-y-1.5">
-                                                            {retrievedContext.map((ctx, i) => (
-                                                                <div
-                                                                    key={i}
-                                                                    className="p-2.5 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700"
-                                                                >
-                                                                    <span className="text-[9px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400">
-                                                                        {ctx.score.toFixed(4)}
-                                                                    </span>
-                                                                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">
-                                                                        {ctx.text}
-                                                                    </p>
+                                                    {/* LLM Answer */}
+                                                    {ragAnswer && !isRagLoading && (
+                                                        <div className="mt-4 p-4 bg-white dark:bg-slate-800 rounded-xl border border-[#00a8a8]/20 shadow-sm">
+                                                            <div className="flex items-center gap-1.5 mb-2">
+                                                                <Sparkles className="size-3.5 text-[#00a8a8]" />
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#00a8a8]">
+                                                                    AI Answer
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
+                                                                {ragAnswer}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Retrieved Sources */}
+                                                    {retrievedContext.length > 0 &&
+                                                        !isRagLoading && (
+                                                            <div className="mt-3">
+                                                                <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">
+                                                                    Sources (
+                                                                    {retrievedContext.length}{' '}
+                                                                    excerpts)
+                                                                </p>
+                                                                <div className="space-y-1.5">
+                                                                    {retrievedContext.map(
+                                                                        (ctx, i) => (
+                                                                            <div
+                                                                                key={i}
+                                                                                className="p-2.5 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700"
+                                                                            >
+                                                                                <span className="text-[9px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400">
+                                                                                    {ctx.score.toFixed(
+                                                                                        4,
+                                                                                    )}
+                                                                                </span>
+                                                                                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1">
+                                                                                    {ctx.text}
+                                                                                </p>
+                                                                            </div>
+                                                                        ),
+                                                                    )}
                                                                 </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
+                                                            </div>
+                                                        )}
+                                                </div>
                                             </div>
                                         )}
                                     </div>

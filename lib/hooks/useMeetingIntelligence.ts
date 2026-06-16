@@ -8,9 +8,17 @@ export type PipelineStatus = 'idle' | 'running' | 'complete' | 'error';
 export function useMeetingIntelligence(explicitRoomName?: string, batchSize = 100) {
     let room: any;
     try {
+        // The hook intentionally tolerates being used outside a
+        // <LiveKitRoom> provider (post-meeting pipeline runs against
+        // dexie-stored transcripts only). useRoomContext throws when
+        // there's no provider; we catch and continue. The hook-order
+        // contract is preserved because the throw is at the SAME
+        // position every render — useRoomContext is the first call,
+        // and either it always throws or it always returns.
+        // eslint-disable-next-line react-hooks/rules-of-hooks
         room = useRoomContext();
     } catch (e) {
-        // Not in LiveKitRoom context, that's fine for post-meeting fallback
+        // No LiveKitRoom context — post-meeting fallback. See above.
     }
     const roomName = explicitRoomName || room?.name;
     const [isProcessing, setIsProcessing] = useState(false);
@@ -19,13 +27,17 @@ export function useMeetingIntelligence(explicitRoomName?: string, batchSize = 10
     const processingRef = useRef(false);
 
     const processingTracker = useLiveQuery(
-        async () => roomName ? await db.processing_tracker.where('room_name').equals(roomName).first() : undefined,
-        [roomName]
+        async () =>
+            roomName
+                ? await db.processing_tracker.where('room_name').equals(roomName).first()
+                : undefined,
+        [roomName],
     );
 
     const latestTranscript = useLiveQuery(
-        async () => roomName ? await db.transcripts.where('room_name').equals(roomName).last() : undefined,
-        [roomName]
+        async () =>
+            roomName ? await db.transcripts.where('room_name').equals(roomName).last() : undefined,
+        [roomName],
     );
 
     // Auto-trigger batch processing during live meetings
@@ -98,7 +110,9 @@ export function useMeetingIntelligence(explicitRoomName?: string, batchSize = 10
         if (!roomName) return;
 
         setPipelineStatus('running');
-        setPipelineMessage('Processing meeting transcript locally... This may take a few minutes. Please don\'t close this window.');
+        setPipelineMessage(
+            "Processing meeting transcript locally... This may take a few minutes. Please don't close this window.",
+        );
 
         try {
             const { runFullPipelineForRoom } = await import('../intelligencePipeline');

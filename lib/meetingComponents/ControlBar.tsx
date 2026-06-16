@@ -315,7 +315,7 @@ export function ControlBar({
             const { speaker, text } = MOCK_UTTERANCES[i];
             console.log(`[SIM] Injecting chunk ${i + 1}/${MOCK_UTTERANCES.length}: [${speaker}]`);
             await ingestTranscript(speaker, text, room.name);
-            await new Promise(r => setTimeout(r, 150));
+            await new Promise((r) => setTimeout(r, 150));
         }
         console.log('[SIM] Done — check DevTools → IndexedDB → EdgeMeetingIntelligenceDB');
         toast.success('Sim transcript complete! Check DevTools.', { duration: 4000 });
@@ -426,15 +426,19 @@ export function ControlBar({
                     }
                     setProcessingRecRequest(false);
                     // Track recording stop for chat cleanup
-                    import('@/lib/chatCleanup').then(({ onRecordingStopped }) => {
-                        onRecordingStopped(room.name);
-                    }).catch(() => {});
+                    import('@/lib/chatCleanup')
+                        .then(({ onRecordingStopped }) => {
+                            onRecordingStopped(room.name);
+                        })
+                        .catch(() => {});
                 } else {
                     toast.success('Recording started successfully', { duration: 5000 });
                     // Track recording start for chat cleanup
-                    import('@/lib/chatCleanup').then(({ onRecordingStarted }) => {
-                        onRecordingStarted(room.name);
-                    }).catch(() => {});
+                    import('@/lib/chatCleanup')
+                        .then(({ onRecordingStarted }) => {
+                            onRecordingStarted(room.name);
+                        })
+                        .catch(() => {});
                 }
             } else {
                 console.error(
@@ -1022,10 +1026,17 @@ export function ControlBar({
                                 title="Sim Transcript (Dev)"
                                 onClick={handleSimTranscript}
                                 disabled={isSimulating}
-                                style={{ background: isSimulating ? '#7c3aed' : 'rgba(124,58,237,0.3)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.5)' }}
+                                style={{
+                                    background: isSimulating ? '#7c3aed' : 'rgba(124,58,237,0.3)',
+                                    color: '#a78bfa',
+                                    border: '1px solid rgba(124,58,237,0.5)',
+                                }}
                             >
                                 {isSimulating ? (
-                                    <LoaderCircle size={isMobile ? 16 : 18} className="animate-spin" />
+                                    <LoaderCircle
+                                        size={isMobile ? 16 : 18}
+                                        className="animate-spin"
+                                    />
                                 ) : (
                                     <span style={{ fontSize: '14px' }}>🧪</span>
                                 )}
@@ -1041,7 +1052,9 @@ export function ControlBar({
                                 onClick={() => onTestHarnessToggle(!showTestHarness)}
                                 aria-pressed={showTestHarness}
                                 style={{
-                                    background: showTestHarness ? '#7c3aed' : 'rgba(124,58,237,0.15)',
+                                    background: showTestHarness
+                                        ? '#7c3aed'
+                                        : 'rgba(124,58,237,0.15)',
                                     color: '#a78bfa',
                                     border: '1px solid rgba(124,58,237,0.5)',
                                 }}

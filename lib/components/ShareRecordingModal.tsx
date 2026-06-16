@@ -19,11 +19,11 @@ interface ShareRecordingModalProps {
     roomName: string;
 }
 
-export const ShareRecordingModal: React.FC<ShareRecordingModalProps> = ({ 
-    isOpen, 
-    onClose, 
+export const ShareRecordingModal: React.FC<ShareRecordingModalProps> = ({
+    isOpen,
+    onClose,
     recordingUrl,
-    roomName 
+    roomName,
 }) => {
     const [isCopying, setIsCopying] = useState(false);
 
@@ -65,9 +65,13 @@ export const ShareRecordingModal: React.FC<ShareRecordingModalProps> = ({
                 <div className="p-6 space-y-6">
                     <div className="space-y-4">
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                            Share the video recording of <span className="font-bold text-slate-900 dark:text-slate-100">{roomName}</span> with others.
+                            Share the video recording of{' '}
+                            <span className="font-bold text-slate-900 dark:text-slate-100">
+                                {roomName}
+                            </span>{' '}
+                            with others.
                         </p>
-                        
+
                         {/* Share Link */}
                         <div className="space-y-3 pt-2">
                             <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">
@@ -122,10 +126,7 @@ export const ShareRecordingModal: React.FC<ShareRecordingModalProps> = ({
                                         url={recordingUrl}
                                         title={`Check out the recording for: ${roomName}`}
                                     >
-                                        <SocialIcon
-                                            network="x"
-                                            style={{ height: 40, width: 40 }}
-                                        />
+                                        <SocialIcon network="x" style={{ height: 40, width: 40 }} />
                                     </TwitterShareButton>
                                 </div>
                                 <div className="snap-start shrink-0">
@@ -137,7 +138,7 @@ export const ShareRecordingModal: React.FC<ShareRecordingModalProps> = ({
                                     </LinkedinShareButton>
                                 </div>
                                 <div className="snap-start shrink-0">
-                                    <EmailShareButton 
+                                    <EmailShareButton
                                         url={recordingUrl}
                                         subject={`Recording for ${roomName}`}
                                         body="Hi, check out this recording from our meeting."

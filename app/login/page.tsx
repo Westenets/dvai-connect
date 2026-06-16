@@ -1,14 +1,35 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { account } from '@/lib/appwrite';
 import { ID, AppwriteException } from 'appwrite';
 import Image from 'next/image';
 
+// Allow only same-origin redirects via ?next= to defend against
+// open-redirect via crafted URL like /login?next=https://evil.tld.
+function safeNextPath(raw: string | null): string {
+    if (!raw) return '/';
+    if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
+    return '/';
+}
+
 export default function LoginPage() {
+    // useSearchParams() must be wrapped in Suspense in Next 16 server
+    // rendering — the inner component reads the param, the outer
+    // export provides the boundary.
+    return (
+        <Suspense fallback={null}>
+            <LoginInner />
+        </Suspense>
+    );
+}
+
+function LoginInner() {
     const router = useRouter();
+    const search = useSearchParams();
+    const next = safeNextPath(search.get('next'));
     const { user, checkSession } = useAuth();
 
     const [isRegistering, setIsRegistering] = useState(false);
@@ -21,9 +42,9 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (user) {
-            router.push('/');
+            router.push(next);
         }
-    }, [user, router]);
+    }, [user, router, next]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,7 +73,7 @@ export default function LoginPage() {
             }
 
             await checkSession();
-            router.push('/');
+            router.push(next);
         } catch (err: any) {
             if (err instanceof AppwriteException) {
                 setError(err.message);
@@ -191,7 +212,7 @@ export default function LoginPage() {
                                     {!isRegistering && (
                                         <a
                                             className="text-xs font-medium text-[#00a8a8] hover:text-[#00a8a8]/80"
-                                            href="#"
+                                            href="/forgot-password"
                                         >
                                             Forgot password?
                                         </a>

@@ -7,9 +7,9 @@ export const Footer: React.FC = () => {
         <footer className="text-center py-4 text-slate-400 dark:text-slate-600 text-sm mt-auto">
             <p>
                 © {new Date().getFullYear()}{' '}
-                <a 
-                    href="https://deepvoiceai.co" 
-                    rel="noopener" 
+                <a
+                    href="https://deepvoiceai.co"
+                    rel="noopener"
                     target="_blank"
                     className="hover:text-[#00a8a8] transition-colors"
                 >

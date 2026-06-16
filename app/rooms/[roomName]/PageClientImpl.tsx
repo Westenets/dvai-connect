@@ -327,7 +327,7 @@ function VideoConferenceComponent(props: {
                                 title: 'Error!',
                                 text: 'You are trying to join an encrypted meeting, but your browser does not support it. Please update it to the latest version and try again.',
                                 icon: 'error',
-                                theme: 'auto'
+                                theme: 'auto',
                             });
                             console.error(e);
                         } else {

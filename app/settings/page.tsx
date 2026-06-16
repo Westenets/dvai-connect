@@ -116,6 +116,32 @@ export default function Settings() {
     const [echoReduction, setEchoReduction] = useState(false);
     const [captionSize, setCaptionSize] = useState(1);
 
+    // Transcription quality is per-device (hardware-dependent), so it lives
+    // in localStorage rather than synced Appwrite prefs. Read via the
+    // useTranscriptionBroadcaster hook on the next meeting join. Cloud STT
+    // was removed on 2026-06-13 — audio never leaves the device by design.
+    const TRANSCRIPTION_PREF_KEY = 'dvai.transcription.userPref.v1';
+    type TranscriptionPref = 'auto' | 'local-ai' | 'basic';
+    const [transcriptionPref, setTranscriptionPref] = useState<TranscriptionPref>('auto');
+    useEffect(() => {
+        if (typeof localStorage === 'undefined') return;
+        const v = localStorage.getItem(TRANSCRIPTION_PREF_KEY) as TranscriptionPref | null;
+        if (v === 'auto' || v === 'local-ai' || v === 'basic') {
+            setTranscriptionPref(v);
+        }
+    }, []);
+    const handleTranscriptionPrefChange = (next: TranscriptionPref) => {
+        setTranscriptionPref(next);
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem(TRANSCRIPTION_PREF_KEY, next);
+        }
+        // Also clear the strategy cache so the next meeting picks fresh.
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('dvai.transcription.strategy.v1');
+        }
+        toast.success('Transcription quality updated. Effective on next meeting.');
+    };
+
     // Video Settings State
     const [videoInputDevice, setVideoInputDevice] = useState('default');
     const [videoQuality, setVideoQuality] = useState('720');
@@ -1279,6 +1305,51 @@ export default function Settings() {
 
                                 <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
+                                        Closed Captions
+                                    </h3>
+                                    <div className="space-y-4 max-w-md">
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Quality
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                                <span className="material-symbols-outlined text-[20px]">
+                                                    closed_caption
+                                                </span>
+                                            </span>
+                                            <select
+                                                value={transcriptionPref}
+                                                onChange={(e) =>
+                                                    handleTranscriptionPrefChange(
+                                                        e.target.value as
+                                                            | 'auto'
+                                                            | 'local-ai'
+                                                            | 'basic',
+                                                    )
+                                                }
+                                                className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
+                                            >
+                                                <option value="auto">Auto (recommended)</option>
+                                                <option value="local-ai">
+                                                    Local AI (best quality; needs capable hardware)
+                                                </option>
+                                                <option value="basic">
+                                                    Basic (browser-native; lowest battery)
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                                            All transcription runs on your device — audio never
+                                            leaves it. Auto picks the best option your hardware can
+                                            run in real-time; falls back to the browser-native API
+                                            on devices that can&apos;t. We don&apos;t offer a cloud
+                                            option. That would break our privacy promise.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
                                         Accessibility
                                     </h3>
                                     <div className="space-y-6">
@@ -1295,26 +1366,35 @@ export default function Settings() {
                                                             Closed Caption Size
                                                         </h4>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                                            Adjust the text size for meeting transcriptions.
+                                                            Adjust the text size for meeting
+                                                            transcriptions.
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4 px-2 mt-4">
-                                                <span className="text-sm font-medium text-slate-500">A</span>
+                                                <span className="text-sm font-medium text-slate-500">
+                                                    A
+                                                </span>
                                                 <input
                                                     type="range"
                                                     min="0"
                                                     max="6"
                                                     step="1"
                                                     value={captionSize}
-                                                    onChange={(e) => setCaptionSize(parseInt(e.target.value))}
+                                                    onChange={(e) =>
+                                                        setCaptionSize(parseInt(e.target.value))
+                                                    }
                                                     className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-[#00a8a8]"
                                                 />
-                                                <span className="text-2xl font-medium leading-none text-slate-500">A</span>
+                                                <span className="text-2xl font-medium leading-none text-slate-500">
+                                                    A
+                                                </span>
                                             </div>
                                             <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 text-center min-h-[80px] flex items-center justify-center">
-                                                <span className={`${['text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl'][captionSize]} text-slate-900 dark:text-white font-medium transition-all`}>
+                                                <span
+                                                    className={`${['text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl'][captionSize]} text-slate-900 dark:text-white font-medium transition-all`}
+                                                >
                                                     Preview Caption Text
                                                 </span>
                                             </div>

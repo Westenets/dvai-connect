@@ -11,7 +11,15 @@ export const CaptionsOverlay = ({ captions }: { captions: CaptionLineData[] }) =
 
     const prefs = user?.prefs as Record<string, any>;
     const captionSizeIdx = prefs?.captionSize ?? 1;
-    const textSizeClass = ['text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl'][captionSizeIdx];
+    const textSizeClass = [
+        'text-sm',
+        'text-base',
+        'text-lg',
+        'text-xl',
+        'text-2xl',
+        'text-3xl',
+        'text-4xl',
+    ][captionSizeIdx];
 
     if (latestCaptions.length === 0) return null;
 

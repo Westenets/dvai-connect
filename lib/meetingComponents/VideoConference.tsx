@@ -49,7 +49,7 @@ import { ChatSidebar } from './ChatSidebar';
 import { PipWindow } from './PipWindow';
 import { InviteModal } from '@/lib/components/InviteModal';
 import { useSetupE2EE } from '@/lib/hooks/useSetupE2EE';
-import { useLocalTranscriptionBroadcaster } from '@/lib/hooks/useLocalTranscriptionBroadcaster';
+import { useTranscriptionBroadcaster } from '@/lib/hooks/useTranscriptionBroadcaster';
 import { useReceiveCaptions, type CaptionLineData } from '@/lib/hooks/useReceiveCaptions';
 import { CaptionsOverlay } from '@/lib/components/CaptionsOverlay';
 import { TestHarnessSidebar } from '@/lib/test/TestHarnessPanel';
@@ -86,7 +86,10 @@ export interface VideoConferenceProps extends React.HTMLAttributes<HTMLDivElemen
  */
 
 /** Wrapper that gives ChatSidebar access to the LayoutContext for toggling */
-function ChatSidebarWrapper({ isOpen, ...props }: React.HTMLAttributes<HTMLDivElement> & { isOpen?: boolean }) {
+function ChatSidebarWrapper({
+    isOpen,
+    ...props
+}: React.HTMLAttributes<HTMLDivElement> & { isOpen?: boolean }) {
     const ctx = useMaybeLayoutContext();
     const openChat = React.useCallback(() => {
         if (!ctx?.widget.state?.showChat) {
@@ -155,7 +158,7 @@ function MeetingUI({
     showTestHarness: boolean;
     setShowTestHarness: (show: boolean) => void;
 }) {
-    useLocalTranscriptionBroadcaster();
+    useTranscriptionBroadcaster();
 
     // Always receive and ingest remote transcripts (even when caption overlay is hidden).
     // This ensures the local DB captures all participants' speech during recording.
@@ -634,11 +637,15 @@ export function VideoConference({
                 // Clean up chat messages based on recording state
                 const { cleanupChatForRoom } = await import('@/lib/chatCleanup');
                 if (room?.name) await cleanupChatForRoom(room.name);
-            } catch { /* ignore */ }
+            } catch {
+                /* ignore */
+            }
             try {
                 const { embedderService } = await import('@/lib/embedder');
                 await embedderService.unload();
-            } catch { /* ignore */ }
+            } catch {
+                /* ignore */
+            }
         };
         room.on(RoomEvent.Disconnected, handleDisconnect);
 
