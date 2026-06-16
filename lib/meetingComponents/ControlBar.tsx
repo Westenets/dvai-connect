@@ -646,9 +646,14 @@ export function ControlBar({
         [saveAudioInputEnabled],
     );
 
+    // Extract the prefs flag so the useCallback dep array stays a simple
+    // expression — eslint-plugin-react-hooks 7.1.1 rejects type-cast
+    // accesses like `(user?.prefs as any)?.foo` inside dep arrays.
+    const endCallForEveryonePref = (user?.prefs as any)?.endCallForEveryone;
+
     const handleLeave = React.useCallback(async () => {
         const isLastParticipant = participants.length === 1;
-        const shouldEndForEveryone = isAdmin && ((user?.prefs as any)?.endCallForEveryone ?? true);
+        const shouldEndForEveryone = isAdmin && (endCallForEveryonePref ?? true);
 
         if (shouldEndForEveryone) {
             const result = await Swal.fire({
@@ -690,7 +695,7 @@ export function ControlBar({
         room.disconnect();
     }, [
         isAdmin,
-        (user?.prefs as any)?.endCallForEveryone,
+        endCallForEveryonePref,
         room,
         localParticipant?.identity,
         participants.length,
