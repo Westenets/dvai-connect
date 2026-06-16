@@ -29,8 +29,26 @@
  * Both must match what the API routes expect.
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import cron from 'node-cron';
+
+// Match Next.js's env-file loading order so this worker reads the
+// SAME CRON_SECRET (and APPWRITE_API_KEY, STRIPE_*, etc.) as the
+// `next start` process. dotenv is first-wins by default, so list the
+// highest-priority files first.
+//
+// Without this, `import 'dotenv/config'` only reads `.env`, missing
+// the `.env.local` / `.env.production` where prod secrets actually
+// live — silently causing every cron tick to 401 against the API.
+const NODE_ENV = process.env.NODE_ENV ?? 'development';
+for (const f of [
+    `.env.${NODE_ENV}.local`,
+    '.env.local',
+    `.env.${NODE_ENV}`,
+    '.env',
+]) {
+    dotenv.config({ path: f });
+}
 
 const BASE_URL = (process.env.APP_BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 const CRON_SECRET = process.env.CRON_SECRET ?? '';
