@@ -83,6 +83,10 @@ const nextConfig = {
             { source: '/billing/:path*', headers: RELAXED },
             { source: '/signup/:path*', headers: RELAXED },
             { source: '/checkout/:path*', headers: RELAXED },
+            { source: '/forgot-password', headers: RELAXED },
+            { source: '/reset-password', headers: RELAXED },
+            { source: '/verify-email', headers: RELAXED },
+            { source: '/login', headers: RELAXED },
         ];
     },
 };
