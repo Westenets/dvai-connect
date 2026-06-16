@@ -8,9 +8,17 @@ export type PipelineStatus = 'idle' | 'running' | 'complete' | 'error';
 export function useMeetingIntelligence(explicitRoomName?: string, batchSize = 100) {
     let room: any;
     try {
+        // The hook intentionally tolerates being used outside a
+        // <LiveKitRoom> provider (post-meeting pipeline runs against
+        // dexie-stored transcripts only). useRoomContext throws when
+        // there's no provider; we catch and continue. The hook-order
+        // contract is preserved because the throw is at the SAME
+        // position every render — useRoomContext is the first call,
+        // and either it always throws or it always returns.
+        // eslint-disable-next-line react-hooks/rules-of-hooks
         room = useRoomContext();
     } catch (e) {
-        // Not in LiveKitRoom context, that's fine for post-meeting fallback
+        // No LiveKitRoom context — post-meeting fallback. See above.
     }
     const roomName = explicitRoomName || room?.name;
     const [isProcessing, setIsProcessing] = useState(false);
