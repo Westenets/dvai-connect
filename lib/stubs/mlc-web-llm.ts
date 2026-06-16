@@ -14,14 +14,14 @@
  */
 
 const STUB_ERROR = new Error(
-    "[mlc-web-llm stub] WebLLM backend is not available in the meet web app. " +
+    '[mlc-web-llm stub] WebLLM backend is not available in the meet web app. ' +
         "Use backend: 'transformers' (the default for this app) in DVAI config, " +
-        "or install @mlc-ai/web-llm to enable WebLLM.",
+        'or install @mlc-ai/web-llm to enable WebLLM.',
 );
 
 const handler: ProxyHandler<object> = {
     get(_target, prop) {
-        if (prop === Symbol.toPrimitive || prop === "toString" || prop === "then") {
+        if (prop === Symbol.toPrimitive || prop === 'toString' || prop === 'then') {
             return undefined;
         }
         throw STUB_ERROR;

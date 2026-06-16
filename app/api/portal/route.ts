@@ -25,10 +25,7 @@ const DB_ID = process.env.APPWRITE_DATABASE_ID || 'dvai-connect';
 async function isUserOnAfricaCohort(userId: string): Promise<boolean> {
     if (!API_KEY) return false;
     try {
-        const client = new ServerClient()
-            .setEndpoint(ENDPOINT)
-            .setProject(PROJECT)
-            .setKey(API_KEY);
+        const client = new ServerClient().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
         const databases = new ServerDatabases(client);
         const res = await databases.listDocuments(DB_ID, 'subscriptions', [
             Query.equal('userId', userId),

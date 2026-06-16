@@ -52,8 +52,14 @@ function CheckoutSuccessInner() {
         const tick = async () => {
             if (cancelled) return;
             try {
-                const res = await fetch(`/api/checkout/verify?session_id=${encodeURIComponent(sessionId)}`);
-                const body = (await res.json()) as { status: string; tier?: string; message?: string };
+                const res = await fetch(
+                    `/api/checkout/verify?session_id=${encodeURIComponent(sessionId)}`,
+                );
+                const body = (await res.json()) as {
+                    status: string;
+                    tier?: string;
+                    message?: string;
+                };
                 if (cancelled) return;
                 if (body.status === 'ready') {
                     setStatus('ready');
@@ -98,16 +104,22 @@ function CheckoutSuccessInner() {
         <div className="bg-[#080c11] text-[#f1f3f4] font-['Inter',sans-serif] h-full overflow-y-auto antialiased flex items-center justify-center p-6">
             <div className="max-w-md w-full rounded-2xl bg-[rgba(30,40,50,0.5)] backdrop-blur-xl border border-white/5 p-8 text-center">
                 <div className="mb-6 flex justify-center">
-                    {status === 'ready' ? <CheckBadge /> : status === 'failed' ? <ErrorBadge /> : <SpinnerBadge />}
+                    {status === 'ready' ? (
+                        <CheckBadge />
+                    ) : status === 'failed' ? (
+                        <ErrorBadge />
+                    ) : (
+                        <SpinnerBadge />
+                    )}
                 </div>
                 <h1 className="text-2xl font-semibold mb-3">
                     {status === 'ready'
                         ? 'You’re all set'
                         : status === 'failed'
-                            ? 'Something went wrong'
-                            : status === 'timeout'
-                                ? 'Almost there'
-                                : 'Activating your plan'}
+                          ? 'Something went wrong'
+                          : status === 'timeout'
+                            ? 'Almost there'
+                            : 'Activating your plan'}
                 </h1>
                 <p className="text-sm text-[#c0c7d5] leading-relaxed mb-6">{message}</p>
                 {tier && (

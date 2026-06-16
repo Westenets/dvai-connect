@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-import {
-    Client as ServerClient,
-    Databases as ServerDatabases,
-    Query,
-    ID,
-} from 'node-appwrite';
+import { Client as ServerClient, Databases as ServerDatabases, Query, ID } from 'node-appwrite';
 import { requireAdmin } from '@/lib/auth/admin';
 import { __resetPricingOverridesCache } from '@/lib/pricing/overrides';
 import type { TierId } from '@/lib/pricing/tiers';
@@ -47,10 +42,7 @@ function buildDatabases(): ServerDatabases | null {
     );
 }
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ tier: string }> },
-) {
+export async function POST(request: Request, context: { params: Promise<{ tier: string }> }) {
     try {
         await requireAdmin();
     } catch {
@@ -62,7 +54,8 @@ export async function POST(
         return NextResponse.json({ error: 'Unknown tier' }, { status: 400 });
     }
     const databases = buildDatabases();
-    if (!databases) return NextResponse.json({ error: 'APPWRITE_API_KEY missing' }, { status: 500 });
+    if (!databases)
+        return NextResponse.json({ error: 'APPWRITE_API_KEY missing' }, { status: 500 });
 
     let body: Record<string, unknown>;
     try {
@@ -74,9 +67,12 @@ export async function POST(
     if (typeof body.displayName === 'string') fields.displayName = body.displayName.trim() || null;
     if (typeof body.badge === 'string') fields.badge = body.badge.trim() || null;
     if (typeof body.description === 'string') fields.description = body.description.trim() || null;
-    if (typeof body.headlineCopy === 'string') fields.headlineCopy = body.headlineCopy.trim() || null;
+    if (typeof body.headlineCopy === 'string')
+        fields.headlineCopy = body.headlineCopy.trim() || null;
     if (Array.isArray(body.bullets)) {
-        const arr = (body.bullets as unknown[]).filter((s): s is string => typeof s === 'string' && s.trim() !== '');
+        const arr = (body.bullets as unknown[]).filter(
+            (s): s is string => typeof s === 'string' && s.trim() !== '',
+        );
         fields.bulletJson = arr.length > 0 ? JSON.stringify(arr) : null;
     }
 
@@ -86,7 +82,12 @@ export async function POST(
             Query.limit(1),
         ]);
         if (existing.documents[0]) {
-            await databases.updateDocument(DB_ID, 'pricing_tiers', existing.documents[0].$id, fields);
+            await databases.updateDocument(
+                DB_ID,
+                'pricing_tiers',
+                existing.documents[0].$id,
+                fields,
+            );
         } else {
             await databases.createDocument(DB_ID, 'pricing_tiers', ID.unique(), fields);
         }
@@ -96,7 +97,9 @@ export async function POST(
         const msg = err?.message ?? String(err);
         if (msg.includes('not found')) {
             return NextResponse.json(
-                { error: 'pricing_tiers collection not migrated. Run scripts/appwrite-migrate-pricing-tiers-2026-06-14.mjs.' },
+                {
+                    error: 'pricing_tiers collection not migrated. Run scripts/appwrite-migrate-pricing-tiers-2026-06-14.mjs.',
+                },
                 { status: 500 },
             );
         }
@@ -104,10 +107,7 @@ export async function POST(
     }
 }
 
-export async function DELETE(
-    _request: Request,
-    context: { params: Promise<{ tier: string }> },
-) {
+export async function DELETE(_request: Request, context: { params: Promise<{ tier: string }> }) {
     try {
         await requireAdmin();
     } catch {
@@ -119,7 +119,8 @@ export async function DELETE(
         return NextResponse.json({ error: 'Unknown tier' }, { status: 400 });
     }
     const databases = buildDatabases();
-    if (!databases) return NextResponse.json({ error: 'APPWRITE_API_KEY missing' }, { status: 500 });
+    if (!databases)
+        return NextResponse.json({ error: 'APPWRITE_API_KEY missing' }, { status: 500 });
     try {
         const existing = await databases.listDocuments(DB_ID, 'pricing_tiers', [
             Query.equal('tier', tier),

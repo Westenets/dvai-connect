@@ -52,14 +52,14 @@ export async function GET() {
         const doc = res.documents[0] as unknown as
             | undefined
             | {
-                tier: string;
-                status: string;
-                currentPeriodEnd: string;
-                cancelAtPeriodEnd?: boolean;
-                isAfricaCohort?: boolean;
-                africaCommitmentEnd?: string;
-                stripeCustomerId: string;
-            };
+                  tier: string;
+                  status: string;
+                  currentPeriodEnd: string;
+                  cancelAtPeriodEnd?: boolean;
+                  isAfricaCohort?: boolean;
+                  africaCommitmentEnd?: string;
+                  stripeCustomerId: string;
+              };
         if (!doc) {
             return NextResponse.json({
                 authenticated: true,

@@ -7,9 +7,12 @@ export function RegenerateCodeButton({ orgId }: { orgId: string }) {
     const [busy, setBusy] = useState(false);
 
     const regen = async () => {
-        if (!confirm(
-            'Regenerate the signup code? Any unread invite URL already sent to cohort members will stop working.',
-        )) return;
+        if (
+            !confirm(
+                'Regenerate the signup code? Any unread invite URL already sent to cohort members will stop working.',
+            )
+        )
+            return;
         setBusy(true);
         try {
             const res = await fetch(

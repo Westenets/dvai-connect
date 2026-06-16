@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireStripe } from '@/lib/stripe';
-import {
-    Client as ServerClient,
-    Databases as ServerDatabases,
-    Query,
-} from 'node-appwrite';
+import { Client as ServerClient, Databases as ServerDatabases, Query } from 'node-appwrite';
 import { AFRICA_COMMITMENT_MONTHS } from '@/lib/africa/commitment';
 
 /**
@@ -80,10 +76,7 @@ async function handle(request: Request) {
     let auditedSubs = 0;
     /* eslint-disable no-constant-condition */
     while (true) {
-        const queries = [
-            Query.equal('isAfricaCohort', true),
-            Query.limit(100),
-        ];
+        const queries = [Query.equal('isAfricaCohort', true), Query.limit(100)];
         if (cursor) queries.push(Query.cursorAfter(cursor));
         const page = await databases
             .listDocuments(DB_ID, 'subscriptions', queries)
@@ -152,9 +145,8 @@ async function handle(request: Request) {
     // --- 2. Audit Africa portal configuration ---
     if (AFRICA_PORTAL_CONFIG_ID) {
         try {
-            const portal = await stripe.billingPortal.configurations.retrieve(
-                AFRICA_PORTAL_CONFIG_ID,
-            );
+            const portal =
+                await stripe.billingPortal.configurations.retrieve(AFRICA_PORTAL_CONFIG_ID);
             const cancelEnabled = portal.features?.subscription_cancel?.enabled;
             const updateEnabled = portal.features?.subscription_update?.enabled;
             if (cancelEnabled || updateEnabled) {
@@ -164,10 +156,7 @@ async function handle(request: Request) {
                 });
             }
         } catch (err: any) {
-            console.warn(
-                '[cron/audit] portal config check failed:',
-                err?.message ?? err,
-            );
+            console.warn('[cron/audit] portal config check failed:', err?.message ?? err);
         }
     } else {
         alerts.push({
@@ -184,10 +173,7 @@ async function handle(request: Request) {
     });
 }
 
-function phaseDurationMonths(phase: {
-    start_date: number;
-    end_date: number;
-}): number {
+function phaseDurationMonths(phase: { start_date: number; end_date: number }): number {
     const seconds = phase.end_date - phase.start_date;
     return seconds / (30 * 86400);
 }

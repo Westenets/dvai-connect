@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 import { ID } from 'appwrite';
 import { storage } from '@/lib/appwrite';
 
-const BRANDING_BUCKET_ID =
-    process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID || 'mvc-files';
+const BRANDING_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID || 'mvc-files';
 
 interface BrandingFields {
     logoUrl?: string;
@@ -18,13 +17,7 @@ interface BrandingFields {
     emailFromAddress?: string;
 }
 
-export function BrandingForm({
-    orgId,
-    initial,
-}: {
-    orgId: string;
-    initial: BrandingFields;
-}) {
+export function BrandingForm({ orgId, initial }: { orgId: string; initial: BrandingFields }) {
     const router = useRouter();
     const [fields, setFields] = useState<BrandingFields>(initial);
     const [busy, setBusy] = useState(false);
@@ -40,11 +33,14 @@ export function BrandingForm({
         setError(null);
         setSaved(false);
         try {
-            const res = await fetch(`/api/admin/organizations/${encodeURIComponent(orgId)}/branding`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(fields),
-            });
+            const res = await fetch(
+                `/api/admin/organizations/${encodeURIComponent(orgId)}/branding`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fields),
+                },
+            );
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
                 throw new Error(body.error ?? `HTTP ${res.status}`);
@@ -61,11 +57,11 @@ export function BrandingForm({
 
     return (
         <form onSubmit={submit} className="space-y-6 max-w-3xl">
-            <Field label="Logo (light bg)" hint="Recommended: 200×60 PNG with transparent background. Upload to your Appwrite bucket or paste any public URL.">
-                <LogoInput
-                    value={fields.logoUrl ?? ''}
-                    onChange={(v) => update('logoUrl', v)}
-                />
+            <Field
+                label="Logo (light bg)"
+                hint="Recommended: 200×60 PNG with transparent background. Upload to your Appwrite bucket or paste any public URL."
+            >
+                <LogoInput value={fields.logoUrl ?? ''} onChange={(v) => update('logoUrl', v)} />
             </Field>
             <Field label="Logo (dark bg)" hint="Optional — defaults to the light logo if blank.">
                 <LogoInput
@@ -89,7 +85,10 @@ export function BrandingForm({
                 </Field>
             </div>
 
-            <Field label="Custom domain" hint="Enterprise only. DNS verification is deferred — enter the host you'll use; we won't switch traffic yet.">
+            <Field
+                label="Custom domain"
+                hint="Enterprise only. DNS verification is deferred — enter the host you'll use; we won't switch traffic yet."
+            >
                 <input
                     type="text"
                     value={fields.customDomain ?? ''}
@@ -99,7 +98,10 @@ export function BrandingForm({
                 />
             </Field>
 
-            <Field label="Login screen copy" hint="Optional — short string shown on the login page for users of this org.">
+            <Field
+                label="Login screen copy"
+                hint="Optional — short string shown on the login page for users of this org."
+            >
                 <textarea
                     rows={3}
                     value={fields.loginScreenCopy ?? ''}
@@ -160,7 +162,15 @@ export function BrandingForm({
     );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({
+    label,
+    hint,
+    children,
+}: {
+    label: string;
+    hint?: string;
+    children: React.ReactNode;
+}) {
     return (
         <label className="block">
             <div className="text-sm font-semibold mb-1">{label}</div>

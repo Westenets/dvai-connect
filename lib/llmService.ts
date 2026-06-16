@@ -1,11 +1,11 @@
-import { DVAI } from "@dvai-bridge/core";
-import { ChatOpenAI } from "@langchain/openai";
+import { DVAI } from '@dvai-bridge/core';
+import { ChatOpenAI } from '@langchain/openai';
 // See lib/embedder.ts for the rationale behind splitting this import.
-import { StatusEmitter } from "./aiServiceStatus";
-import type { AIServiceStatus } from "./aiServiceStatus";
+import { StatusEmitter } from './aiServiceStatus';
+import type { AIServiceStatus } from './aiServiceStatus';
 
-const MOCK_URL = "https://api.openai.local/v1/chat/completions";
-const BASE_URL = "https://api.openai.local/v1";
+const MOCK_URL = 'https://api.openai.local/v1/chat/completions';
+const BASE_URL = 'https://api.openai.local/v1';
 
 /**
  * LLMService — Gemma 4 E2B running in a Web Worker via @dvai-bridge/core v4.
@@ -47,22 +47,22 @@ class LLMService {
         }
 
         this.dvai = new DVAI({
-            backend: "transformers",
-            transformersModelId: "onnx-community/gemma-4-E2B-it-qat-mobile-ONNX",
-            pipelineTask: "image-text-to-text",
+            backend: 'transformers',
+            transformersModelId: 'onnx-community/gemma-4-E2B-it-qat-mobile-ONNX',
+            pipelineTask: 'image-text-to-text',
             // q4 (not q4f16) for the QAT variant — qat-mobile is published
             // with int4 weights and the int4 dtype enables the runtime to
             // skip the f16-cast path on WebGPU. If the QAT model fails to
             // load with dtype: "q4", fall back to "q4f16" or "auto".
-            dtype: "q4",
-            device: "webgpu",
+            dtype: 'q4',
+            device: 'webgpu',
             generationTimeout: 300_000,
             // Declarative multimodal loader — runs in the worker. The worker
             // calls `Gemma4ForCausalLM.from_pretrained(modelId)` and applies
             // the disable-encoders pass post-load.
-            transformersModelClass: "Gemma4ForCausalLM",
-            transformersProcessorClass: "AutoProcessor",
-            transformersDisableEncoders: ["vision_encoder", "audio_encoder"],
+            transformersModelClass: 'Gemma4ForCausalLM',
+            transformersProcessorClass: 'AutoProcessor',
+            transformersDisableEncoders: ['vision_encoder', 'audio_encoder'],
             // Default worker URL ("/dvai-transformers.worker.js") — the meet
             // app keeps this file in public/ via scripts/sync-workers.mjs.
             mockUrl: MOCK_URL,
@@ -88,7 +88,7 @@ class LLMService {
             })
             .then(() => {
                 this.model = new ChatOpenAI({
-                    apiKey: "not-needed",
+                    apiKey: 'not-needed',
                     configuration: { baseURL: BASE_URL },
                     temperature: 0,
                     maxTokens: 512,

@@ -105,9 +105,9 @@ export default function BillingPage() {
                     {isFree && (
                         <>
                             <p className="text-sm text-[#c0c7d5] mb-6">
-                                You're on the Free plan — 40-minute meetings, up to 10
-                                participants, no cloud recording. Upgrade to unlock longer
-                                meetings, recording, and meeting agents.
+                                You're on the Free plan — 40-minute meetings, up to 10 participants,
+                                no cloud recording. Upgrade to unlock longer meetings, recording,
+                                and meeting agents.
                             </p>
                             <a
                                 href="/pricing"
@@ -121,7 +121,10 @@ export default function BillingPage() {
                     {sub && (
                         <>
                             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6 text-sm mb-6">
-                                <Row label="Next bill on" value={formatDate(sub.currentPeriodEnd)} />
+                                <Row
+                                    label="Next bill on"
+                                    value={formatDate(sub.currentPeriodEnd)}
+                                />
                                 {sub.cancelAtPeriodEnd && (
                                     <Row
                                         label="Cancellation"
@@ -145,8 +148,8 @@ export default function BillingPage() {
                                     <strong className="font-semibold">Africa Cohort:</strong>{' '}
                                     Cancellation requires coordination with your cohort
                                     administrator while the commitment is active. After the
-                                    commitment ends, you can manage the subscription normally
-                                    from the portal.
+                                    commitment ends, you can manage the subscription normally from
+                                    the portal.
                                 </div>
                             )}
 

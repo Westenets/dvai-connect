@@ -19,8 +19,7 @@ export interface HardwareProbeResult {
     fingerprint: string;
 }
 
-const isMobileUa = (ua: string): boolean =>
-    /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
+const isMobileUa = (ua: string): boolean => /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
 
 const safeGet = <T>(fn: () => T, fallback: T): T => {
     try {
@@ -45,8 +44,7 @@ export function probeHardware(): HardwareProbeResult {
             return {
                 category: 'definitely-tier-2',
                 recommendedModel: 'whisper-base',
-                reasoning:
-                    'WebGPU + desktop + 8+ cores + 4GB+ RAM → whisper-base real-time',
+                reasoning: 'WebGPU + desktop + 8+ cores + 4GB+ RAM → whisper-base real-time',
                 fingerprint,
             };
         }

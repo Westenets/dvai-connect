@@ -108,9 +108,7 @@ function skippedStage(name: string, reason: string): StageResult {
  * subsequent stages (except where there's a hard data dependency,
  * e.g. RAG depends on embedder being loaded).
  */
-export async function runFullSmokeSuite(
-    opts: RunSmokeSuiteOptions = {},
-): Promise<SmokeReport> {
+export async function runFullSmokeSuite(opts: RunSmokeSuiteOptions = {}): Promise<SmokeReport> {
     const t0 = performance.now();
     const device = collectDevice();
     const cls = classifyDevice(device);
@@ -259,7 +257,9 @@ export async function runFullSmokeSuite(
     const ragStage = await runStage(
         'rag.retrieval',
         async (extra) => {
-            const queryVec = await embedderService.embed('What was discussed about the project timeline?');
+            const queryVec = await embedderService.embed(
+                'What was discussed about the project timeline?',
+            );
             const results = await searchWithLlamaIndex(queryVec, MOCK_MEETING_ROOM, 5);
             extra.hitCount = results.length;
         },

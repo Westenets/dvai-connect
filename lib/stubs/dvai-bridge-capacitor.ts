@@ -13,13 +13,13 @@
  */
 
 const STUB_ERROR = new Error(
-    "[dvai-bridge-capacitor stub] Capacitor transport is not available in the meet web app. " +
+    '[dvai-bridge-capacitor stub] Capacitor transport is not available in the meet web app. ' +
         "Set transport: 'auto' or 'msw' in DVAI config.",
 );
 
 const handler: ProxyHandler<object> = {
     get(_target, prop) {
-        if (prop === Symbol.toPrimitive || prop === "toString" || prop === "then") {
+        if (prop === Symbol.toPrimitive || prop === 'toString' || prop === 'then') {
             return undefined;
         }
         throw STUB_ERROR;

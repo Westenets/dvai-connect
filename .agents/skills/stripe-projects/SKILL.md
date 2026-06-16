@@ -1,26 +1,25 @@
 ---
 name: stripe-projects
 description: >
-  Use when the user wants to provision infrastructure or third-party services
-  using Stripe Projects. Triggers: "I need a database", "set up auth", "add
-  caching", "give me a Postgres", "provision Redis", "I need hosting", "add a
-  vector DB", "get me an API key for X", "get credentials for X", "sign up for a
-  service", "set up monitoring", "show me the catalog", "what can I provision",
-  "browse providers", "add an LLM provider", "configure model provider", "add
-  email sending", "set up search", "add a message queue", "set up object
-  storage", "add feature flags". Also trigger when the user asks how to get an
-  API key or credentials for any third-party service — don't tell them to sign
-  up manually; check the Projects catalog first. Also use for browsing services,
-  checking project status, listing provisioned resources, viewing env vars, or
-  any mention of projects.dev or adding/provisioning/connecting a cloud service.
+    Use when the user wants to provision infrastructure or third-party services
+    using Stripe Projects. Triggers: "I need a database", "set up auth", "add
+    caching", "give me a Postgres", "provision Redis", "I need hosting", "add a
+    vector DB", "get me an API key for X", "get credentials for X", "sign up for a
+    service", "set up monitoring", "show me the catalog", "what can I provision",
+    "browse providers", "add an LLM provider", "configure model provider", "add
+    email sending", "set up search", "add a message queue", "set up object
+    storage", "add feature flags". Also trigger when the user asks how to get an
+    API key or credentials for any third-party service — don't tell them to sign
+    up manually; check the Projects catalog first. Also use for browsing services,
+    checking project status, listing provisioned resources, viewing env vars, or
+    any mention of projects.dev or adding/provisioning/connecting a cloud service.
 allowed-tools:
-  - Bash(stripe *)
-  - Bash(which stripe)
-  - Bash(brew install stripe/stripe-cli/stripe)
-  - Bash(brew upgrade stripe/stripe-cli/stripe)
-  - Skill
-  - Read
-
+    - Bash(stripe *)
+    - Bash(which stripe)
+    - Bash(brew install stripe/stripe-cli/stripe)
+    - Bash(brew upgrade stripe/stripe-cli/stripe)
+    - Skill
+    - Read
 ---
 
 ## Stripe Projects — Service Provisioning

@@ -37,9 +37,7 @@ export default async function PricingPage() {
     return (
         // h-full + overflow-y-auto override the global PageTransition
         // wrapper's overflow-hidden so the page actually scrolls.
-        <div
-            className="bg-[#080c11] text-[#f1f3f4] font-['Inter',sans-serif] h-full overflow-y-auto antialiased"
-        >
+        <div className="bg-[#080c11] text-[#f1f3f4] font-['Inter',sans-serif] h-full overflow-y-auto antialiased">
             <TopNav />
 
             <main className="relative pt-32 pb-24 px-6 max-w-7xl mx-auto">
@@ -103,17 +101,19 @@ function TopNav() {
     return (
         <nav className="fixed top-0 left-0 right-0 z-40 flex justify-between items-center px-6 py-4 bg-[#101922]/90 backdrop-blur-xl border-b border-white/5">
             <a href="/" className="inline-flex items-center gap-2">
-                <img
-                    src="/images/livekit-meet-home.svg"
-                    alt="DVAI Connect"
-                    className="h-7"
-                />
+                <img src="/images/livekit-meet-home.svg" alt="DVAI Connect" className="h-7" />
             </a>
             <div className="hidden md:flex gap-8 items-center text-sm">
-                <a className="text-emerald-300 font-semibold border-b-2 border-emerald-400 pb-1" href="/pricing">
+                <a
+                    className="text-emerald-300 font-semibold border-b-2 border-emerald-400 pb-1"
+                    href="/pricing"
+                >
                     Pricing
                 </a>
-                <a className="text-[#c0c7d5] hover:text-white transition-colors font-medium" href="/">
+                <a
+                    className="text-[#c0c7d5] hover:text-white transition-colors font-medium"
+                    href="/"
+                >
                     Home
                 </a>
                 <a
@@ -150,28 +150,53 @@ interface TierCopy {
 
 const TIER_COPY: Record<TierId, TierCopy> = {
     free: {
-        bullets: ['40-minute meetings', 'Up to 10 participants', 'No cloud recording', 'No meeting agent'],
+        bullets: [
+            '40-minute meetings',
+            'Up to 10 participants',
+            'No cloud recording',
+            'No meeting agent',
+        ],
         securityBullet: 'End-to-end encryption',
         ctaLabel: 'Get started',
     },
     pro_africa: {
         // Listed for completeness even though hidden from this page.
-        bullets: ['1-hour meetings', 'Up to 100 participants', 'Cloud recording', '1 meeting agent'],
+        bullets: [
+            '1-hour meetings',
+            'Up to 100 participants',
+            'Cloud recording',
+            '1 meeting agent',
+        ],
         securityBullet: 'End-to-end encryption',
         ctaLabel: 'Subscribe',
     },
     pro: {
-        bullets: ['1-hour meetings', 'Up to 100 participants', 'Cloud recording', '1 meeting agent'],
+        bullets: [
+            '1-hour meetings',
+            'Up to 100 participants',
+            'Cloud recording',
+            '1 meeting agent',
+        ],
         securityBullet: 'End-to-end encryption',
         ctaLabel: 'Subscribe',
     },
     business: {
-        bullets: ['1-hour meetings + hourly overage', 'Up to 300 participants', 'Cloud recording', '1 meeting agent'],
+        bullets: [
+            '1-hour meetings + hourly overage',
+            'Up to 300 participants',
+            'Cloud recording',
+            '1 meeting agent',
+        ],
         securityBullet: 'Admin dashboard + custom branding',
         ctaLabel: 'Go Business',
     },
     enterprise: {
-        bullets: ['3-hour meetings', 'Up to 1,000 participants', 'Dedicated LiveKit node', 'Custom branding + admin dash'],
+        bullets: [
+            '3-hour meetings',
+            'Up to 1,000 participants',
+            'Dedicated LiveKit node',
+            'Custom branding + admin dash',
+        ],
         securityBullet: '24/7 support + partitioned data',
         ctaLabel: 'Contact sales',
     },
@@ -193,9 +218,8 @@ function TierCard({
     const isFeatured = id === 'pro';
     const effectiveDisplayName = override?.displayName ?? tier.displayName;
     const effectiveBadge = override?.badge ?? (isFeatured ? 'Most popular' : undefined);
-    const effectiveBullets = override?.bullets && override.bullets.length > 0
-        ? override.bullets
-        : copy.bullets;
+    const effectiveBullets =
+        override?.bullets && override.bullets.length > 0 ? override.bullets : copy.bullets;
 
     return (
         <div
@@ -237,7 +261,11 @@ function TierCard({
                 {!override?.bullets && (
                     <>
                         <BulletEmphasized>{copy.securityBullet}</BulletEmphasized>
-                        <Bullet>{tier.support === '24-7' ? '24/7 priority support' : 'Community support'}</Bullet>
+                        <Bullet>
+                            {tier.support === '24-7'
+                                ? '24/7 priority support'
+                                : 'Community support'}
+                        </Bullet>
                     </>
                 )}
             </ul>
@@ -316,12 +344,12 @@ function ShieldIcon({ className = '' }: { className?: string }) {
 function DisclosureBanner() {
     return (
         <div className="mt-16 mb-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 px-6 py-5 text-sm text-amber-100 max-w-4xl mx-auto">
-            <strong className="font-semibold text-amber-50">A note on recording:</strong>{' '}
-            Cloud recording uses server-side encryption (not end-to-end). To generate a
-            recordable file, the meeting's media keys are released to a server-side recording
-            worker that we control. The live meeting itself remains E2EE between
-            participants. If end-to-end confidentiality is non-negotiable for a particular
-            session, do not enable cloud recording for that session.
+            <strong className="font-semibold text-amber-50">A note on recording:</strong> Cloud
+            recording uses server-side encryption (not end-to-end). To generate a recordable file,
+            the meeting's media keys are released to a server-side recording worker that we control.
+            The live meeting itself remains E2EE between participants. If end-to-end confidentiality
+            is non-negotiable for a particular session, do not enable cloud recording for that
+            session.
         </div>
     );
 }
@@ -331,7 +359,10 @@ function FeatureMatrix() {
         { label: 'Meeting length', get: (t) => `${TIERS[t].meetingMaxMinutes} min` },
         { label: 'Attendee cap', get: (t) => TIERS[t].attendeeCap.toLocaleString() },
         { label: 'Cloud recording', get: (t) => (TIERS[t].cloudRecording ? '✓' : '—') },
-        { label: 'Meeting agent', get: (t) => (TIERS[t].meetingAgentQuota > 0 ? `${TIERS[t].meetingAgentQuota}` : '—') },
+        {
+            label: 'Meeting agent',
+            get: (t) => (TIERS[t].meetingAgentQuota > 0 ? `${TIERS[t].meetingAgentQuota}` : '—'),
+        },
         { label: 'Notetaking', get: (t) => (TIERS[t].notetaking ? '✓' : '—') },
         { label: 'Custom branding', get: (t) => (TIERS[t].customBranding ? '✓' : '—') },
         { label: 'Admin dashboard', get: (t) => (TIERS[t].adminDashboard ? '✓' : '—') },
@@ -346,7 +377,9 @@ function FeatureMatrix() {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-white/5">
-                            <th className="text-left py-4 px-5 font-semibold text-[#c0c7d5]">Feature</th>
+                            <th className="text-left py-4 px-5 font-semibold text-[#c0c7d5]">
+                                Feature
+                            </th>
                             {VISIBLE_PUBLIC_TIER_IDS.map((id) => (
                                 <th key={id} className="text-center py-4 px-3 font-semibold">
                                     {TIERS[id].displayName}
@@ -396,9 +429,9 @@ function TrustSection() {
                     >
                         WebRTC Encoded Transform
                     </a>
-                    . Keys are negotiated client-side using AES-GCM and are never released to
-                    our servers. The only exception is opt-in cloud recording, which is
-                    clearly disclosed every time and uses server-side encryption at rest.
+                    . Keys are negotiated client-side using AES-GCM and are never released to our
+                    servers. The only exception is opt-in cloud recording, which is clearly
+                    disclosed every time and uses server-side encryption at rest.
                 </p>
                 <div className="flex flex-wrap justify-center gap-6 text-sm text-[#c0c7d5]">
                     <Pillar label="Client-negotiated keys" />
@@ -465,20 +498,27 @@ function Footer() {
         <footer className="w-full py-12 px-6 border-t border-white/5 bg-[#080c11]">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex flex-col items-center md:items-start gap-3">
-                    <img
-                        src="/images/livekit-meet-home.svg"
-                        alt="DVAI Connect"
-                        className="h-7"
-                    />
+                    <img src="/images/livekit-meet-home.svg" alt="DVAI Connect" className="h-7" />
                     <p className="text-xs text-[#c0c7d5]">
                         © {new Date().getFullYear()} Deep Voice AI Limited. Built for privacy.
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-6 justify-center text-xs text-[#c0c7d5]">
-                    <a href="/legal/privacy" className="hover:text-emerald-300 transition">Privacy Policy</a>
-                    <a href="/legal/terms" className="hover:text-emerald-300 transition">Terms of Service</a>
-                    <a href="/legal/security" className="hover:text-emerald-300 transition">Security</a>
-                    <a href="https://status.deepvoiceai.co" className="hover:text-emerald-300 transition">Status</a>
+                    <a href="/legal/privacy" className="hover:text-emerald-300 transition">
+                        Privacy Policy
+                    </a>
+                    <a href="/legal/terms" className="hover:text-emerald-300 transition">
+                        Terms of Service
+                    </a>
+                    <a href="/legal/security" className="hover:text-emerald-300 transition">
+                        Security
+                    </a>
+                    <a
+                        href="https://status.deepvoiceai.co"
+                        className="hover:text-emerald-300 transition"
+                    >
+                        Status
+                    </a>
                 </div>
             </div>
         </footer>

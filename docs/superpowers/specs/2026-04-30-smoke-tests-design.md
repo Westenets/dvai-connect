@@ -140,27 +140,27 @@ Tunable in `smokeSuiteThresholds.ts`. Apply per device class.
 
 ### Modern desktop (WebGPU, ≥8 cores, ≥8GB)
 
-| Stage | Pass | Warn | Fail |
-|---|---|---|---|
-| Embedder load | <8s | 8–15s | >15s |
-| Embedder first embed | <500ms | 500–2000ms | >2000ms |
-| Gemma load | <60s | 60–120s | >120s |
-| Gemma first inference | <8s | 8–20s | >20s |
-| Transcription tier (Tier 2) first transcript | <2s | 2–5s | >5s |
-| RAG retrieval | <500ms | 500–2000ms | >2000ms |
-| Full AI pipeline (mock meeting) | <120s | 120–240s | >240s |
-| Heap delta (per model load) | <500MB | 500–1500MB | >1500MB |
+| Stage                                        | Pass   | Warn       | Fail    |
+| -------------------------------------------- | ------ | ---------- | ------- |
+| Embedder load                                | <8s    | 8–15s      | >15s    |
+| Embedder first embed                         | <500ms | 500–2000ms | >2000ms |
+| Gemma load                                   | <60s   | 60–120s    | >120s   |
+| Gemma first inference                        | <8s    | 8–20s      | >20s    |
+| Transcription tier (Tier 2) first transcript | <2s    | 2–5s       | >5s     |
+| RAG retrieval                                | <500ms | 500–2000ms | >2000ms |
+| Full AI pipeline (mock meeting)              | <120s  | 120–240s   | >240s   |
+| Heap delta (per model load)                  | <500MB | 500–1500MB | >1500MB |
 
 ### Budget mobile / older laptop (no WebGPU)
 
-| Stage | Pass | Warn | Fail |
-|---|---|---|---|
-| Embedder load | <30s | 30–60s | >60s |
-| Embedder first embed | <2s | 2–5s | >5s |
-| Gemma load | (skipped — would never finish on this hardware) |
-| Transcription tier (Tier 3) first transcript | <2s | 2–5s | >5s |
-| RAG retrieval | <2s | 2–5s | >5s |
-| Heap delta (per model load) | <300MB | 300–800MB | >800MB |
+| Stage                                        | Pass                                            | Warn      | Fail   |
+| -------------------------------------------- | ----------------------------------------------- | --------- | ------ |
+| Embedder load                                | <30s                                            | 30–60s    | >60s   |
+| Embedder first embed                         | <2s                                             | 2–5s      | >5s    |
+| Gemma load                                   | (skipped — would never finish on this hardware) |
+| Transcription tier (Tier 3) first transcript | <2s                                             | 2–5s      | >5s    |
+| RAG retrieval                                | <2s                                             | 2–5s      | >5s    |
+| Heap delta (per model load)                  | <300MB                                          | 300–800MB | >800MB |
 
 These thresholds are suggested defaults based on published
 transformers.js + WebGPU benchmarks (mid-2025). Adjust based on real

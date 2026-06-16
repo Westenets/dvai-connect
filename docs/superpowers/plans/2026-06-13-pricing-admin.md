@@ -8,17 +8,19 @@
 flow, and admin panel end-to-end across 6 sequential PRs.
 
 **Architecture:** Appwrite Teams as org primitive. Stripe Embedded Checkout
-+ Customer Portal + webhooks → `subscriptions` + `stripe_events` collections.
-Generic `organizations` collection powers cohort signup-with-code (Africa
-cohort is the first instance, extensible). Admin panel at `/admin/*` with
-RBAC layered defense. Hero copy: "We cannot see what's said in your
-meetings." Recording disclosure: "Cloud recording uses server-side encryption
-(not end-to-end)..." Deepgram is REMOVED — fall back to Web Speech only.
+
+- Customer Portal + webhooks → `subscriptions` + `stripe_events` collections.
+  Generic `organizations` collection powers cohort signup-with-code (Africa
+  cohort is the first instance, extensible). Admin panel at `/admin/*` with
+  RBAC layered defense. Hero copy: "We cannot see what's said in your
+  meetings." Recording disclosure: "Cloud recording uses server-side encryption
+  (not end-to-end)..." Deepgram is REMOVED — fall back to Web Speech only.
 
 **Tech stack:** Next.js 16 (Turbopack), Appwrite (Teams + Databases + Realtime),
 Stripe (Embedded Checkout + Customer Portal + Billing Meters + Schedules
-+ Tax + Adaptive Pricing), TanStack Table v8, Tremor blocks (vendored,
-preflight-safe), Recharts, react-hot-toast, vitest + happy-dom.
+
+- Tax + Adaptive Pricing), TanStack Table v8, Tremor blocks (vendored,
+  preflight-safe), Recharts, react-hot-toast, vitest + happy-dom.
 
 **Spec source of truth:**
 `docs/superpowers/specs/2026-06-13-pricing-admin-design.md`
@@ -26,6 +28,7 @@ preflight-safe), Recharts, react-hot-toast, vitest + happy-dom.
 ## Pre-flight
 
 Before starting any PR:
+
 - Branch off `dvai-bridge-v2-migration` (or rename it; this plan assumes the
   current feature branch).
 - `pnpm install` must succeed (handled by Task 2 — bridge migration).
@@ -70,6 +73,7 @@ plan tier into room_admins; gate participant joins by tier cap.
 ### Task 1: Single-source-of-truth pricing tiers
 
 **Files:**
+
 - Create: `lib/pricing/tiers.ts`
 
 - [ ] Create the tier definitions matching Tab 2:
@@ -98,7 +102,7 @@ export interface TierDefinition {
     /** Stripe Price ID — overridden by admin Pricing CRUD when prices rotate. */
     stripePriceId: string | null;
     meetingMaxMinutes: number; // 40 | 60 | 60 | 60 | 180
-    attendeeCap: number;       // 10 | 100 | 100 | 300 | 1000
+    attendeeCap: number; // 10 | 100 | 100 | 300 | 1000
     cloudRecording: boolean;
     meetingAgentQuota: number; // 0 | 1 | 1 | 1 | 1
     notetaking: boolean;
@@ -114,54 +118,99 @@ export interface TierDefinition {
 
 export const TIERS: Record<TierId, TierDefinition> = {
     free: {
-        id: 'free', displayName: 'Free', basePriceUsd: 0,
+        id: 'free',
+        displayName: 'Free',
+        basePriceUsd: 0,
         stripePriceId: null,
-        meetingMaxMinutes: 40, attendeeCap: 10,
-        cloudRecording: false, meetingAgentQuota: 0,
-        notetaking: false, screenShare: true,
-        customBranding: false, adminDashboard: false,
-        dedicatedNode: false, support: 'community',
-        e2ee: true, sales: 'self-serve', cohortRestricted: false,
+        meetingMaxMinutes: 40,
+        attendeeCap: 10,
+        cloudRecording: false,
+        meetingAgentQuota: 0,
+        notetaking: false,
+        screenShare: true,
+        customBranding: false,
+        adminDashboard: false,
+        dedicatedNode: false,
+        support: 'community',
+        e2ee: true,
+        sales: 'self-serve',
+        cohortRestricted: false,
     },
     pro_africa: {
-        id: 'pro_africa', displayName: 'Pro (Africa Cohort)', basePriceUsd: 14.99,
+        id: 'pro_africa',
+        displayName: 'Pro (Africa Cohort)',
+        basePriceUsd: 14.99,
         stripePriceId: null,
-        meetingMaxMinutes: 60, attendeeCap: 100,
-        cloudRecording: true, meetingAgentQuota: 1,
-        notetaking: true, screenShare: true,
-        customBranding: false, adminDashboard: false,
-        dedicatedNode: false, support: 'community',
-        e2ee: true, sales: 'self-serve', cohortRestricted: true,
+        meetingMaxMinutes: 60,
+        attendeeCap: 100,
+        cloudRecording: true,
+        meetingAgentQuota: 1,
+        notetaking: true,
+        screenShare: true,
+        customBranding: false,
+        adminDashboard: false,
+        dedicatedNode: false,
+        support: 'community',
+        e2ee: true,
+        sales: 'self-serve',
+        cohortRestricted: true,
     },
     pro: {
-        id: 'pro', displayName: 'Pro', basePriceUsd: 18.99,
+        id: 'pro',
+        displayName: 'Pro',
+        basePriceUsd: 18.99,
         stripePriceId: null,
-        meetingMaxMinutes: 60, attendeeCap: 100,
-        cloudRecording: true, meetingAgentQuota: 1,
-        notetaking: true, screenShare: true,
-        customBranding: false, adminDashboard: false,
-        dedicatedNode: false, support: 'community',
-        e2ee: true, sales: 'self-serve', cohortRestricted: false,
+        meetingMaxMinutes: 60,
+        attendeeCap: 100,
+        cloudRecording: true,
+        meetingAgentQuota: 1,
+        notetaking: true,
+        screenShare: true,
+        customBranding: false,
+        adminDashboard: false,
+        dedicatedNode: false,
+        support: 'community',
+        e2ee: true,
+        sales: 'self-serve',
+        cohortRestricted: false,
     },
     business: {
-        id: 'business', displayName: 'Business', basePriceUsd: 48.99,
+        id: 'business',
+        displayName: 'Business',
+        basePriceUsd: 48.99,
         stripePriceId: null,
-        meetingMaxMinutes: 60, attendeeCap: 300,
-        cloudRecording: true, meetingAgentQuota: 1,
-        notetaking: true, screenShare: true,
-        customBranding: true, adminDashboard: true,
-        dedicatedNode: false, support: 'community',
-        e2ee: true, sales: 'sales-assisted', cohortRestricted: false,
+        meetingMaxMinutes: 60,
+        attendeeCap: 300,
+        cloudRecording: true,
+        meetingAgentQuota: 1,
+        notetaking: true,
+        screenShare: true,
+        customBranding: true,
+        adminDashboard: true,
+        dedicatedNode: false,
+        support: 'community',
+        e2ee: true,
+        sales: 'sales-assisted',
+        cohortRestricted: false,
     },
     enterprise: {
-        id: 'enterprise', displayName: 'Enterprise', basePriceUsd: 449.99,
+        id: 'enterprise',
+        displayName: 'Enterprise',
+        basePriceUsd: 449.99,
         stripePriceId: null,
-        meetingMaxMinutes: 180, attendeeCap: 1000,
-        cloudRecording: true, meetingAgentQuota: 1,
-        notetaking: true, screenShare: true,
-        customBranding: true, adminDashboard: true,
-        dedicatedNode: true, support: '24-7',
-        e2ee: true, sales: 'sales-led', cohortRestricted: false,
+        meetingMaxMinutes: 180,
+        attendeeCap: 1000,
+        cloudRecording: true,
+        meetingAgentQuota: 1,
+        notetaking: true,
+        screenShare: true,
+        customBranding: true,
+        adminDashboard: true,
+        dedicatedNode: true,
+        support: '24-7',
+        e2ee: true,
+        sales: 'sales-led',
+        cohortRestricted: false,
     },
 };
 
@@ -178,6 +227,7 @@ git commit -m "pricing: add single-source-of-truth tier definitions (Tab 2 locke
 ### Task 2: Auth role + admin + org helpers
 
 **Files:**
+
 - Create: `lib/auth/admin.ts`, `lib/auth/role.ts`, `lib/auth/org.ts`
 - Test: `lib/auth/__tests__/admin.test.ts`, `role.test.ts`, `org.test.ts`
 
@@ -197,9 +247,11 @@ export async function getUserRoles(userId: string): Promise<Map<string, AppRole>
     const memberships = await teams.listMemberships(/* teamId? — use listAll instead */);
     const roles = new Map<string, AppRole>();
     for (const m of memberships.memberships) {
-        const role = m.roles.includes('owner') ? 'owner'
-            : m.roles.includes('admin') ? 'admin'
-            : 'member';
+        const role = m.roles.includes('owner')
+            ? 'owner'
+            : m.roles.includes('admin')
+              ? 'admin'
+              : 'member';
         roles.set(m.teamId, role);
     }
     return roles;
@@ -312,7 +364,8 @@ export async function reserveSignupSeat(org: Org): Promise<boolean> {
 }
 
 export function generateSignupCode(programName: string): string {
-    const random = crypto.getRandomValues(new Uint8Array(6))
+    const random = crypto
+        .getRandomValues(new Uint8Array(6))
         .reduce((s, b) => s + b.toString(36).padStart(2, '0').toUpperCase(), '');
     return `${programName.toUpperCase()}-${random}`;
 }
@@ -323,12 +376,13 @@ export function generateSignupCode(programName: string): string {
 ### Task 3: Session-cookie auth + paid-feature gates
 
 **Files:**
+
 - Create: `lib/auth/session.ts` (if missing)
 - Modify: `app/api/record/start/route.ts`, `app/api/record/stop/route.ts`,
   `app/api/agent/route.ts`, `app/api/connection-details/route.ts`
 
 - [ ] Implement `lib/auth/session.ts` — uniform server-side session check via
-  Appwrite session cookie:
+      Appwrite session cookie:
 
 ```ts
 // lib/auth/session.ts
@@ -379,20 +433,20 @@ if (TIERS[plan].meetingAgentQuota === 0) {
 // Concurrency: count AGENT participants in the room
 const roomService = new RoomServiceClient(/* ... */);
 const participants = await roomService.listParticipants(roomName);
-const agentCount = participants.filter(p => p.kind === ParticipantInfo_Kind.AGENT).length;
+const agentCount = participants.filter((p) => p.kind === ParticipantInfo_Kind.AGENT).length;
 if (agentCount >= TIERS[plan].meetingAgentQuota) {
     return Response.json({ error: 'Meeting agent quota reached for this room.' }, { status: 409 });
 }
 ```
 
 - [ ] Modify `app/api/connection-details/route.ts`:
-  - On `isCreator=true`: snapshot the creator's plan tier into `room_admins`
-    doc (new field `creator_plan`).
-  - On `isCreator=false`: read the creator's plan from `room_admins`, count
-    current participants via `roomService.listParticipants`, reject 403 if
-    over `TIERS[plan].attendeeCap`.
-  - Always: insert into `session_logs` collection with
-    `{ identity, orgId, ip: x-forwarded-for, userAgent, joinedAt, roomSid }`.
+    - On `isCreator=true`: snapshot the creator's plan tier into `room_admins`
+      doc (new field `creator_plan`).
+    - On `isCreator=false`: read the creator's plan from `room_admins`, count
+      current participants via `roomService.listParticipants`, reject 403 if
+      over `TIERS[plan].attendeeCap`.
+    - Always: insert into `session_logs` collection with
+      `{ identity, orgId, ip: x-forwarded-for, userAgent, joinedAt, roomSid }`.
 
 - [ ] Run tests; verify pass; commit
 
@@ -401,8 +455,8 @@ if (agentCount >= TIERS[plan].meetingAgentQuota) {
 - [ ] `pnpm vitest run lib/auth lib/pricing` — all green
 - [ ] `pnpm build` — passes
 - [ ] Manual: try to call `/api/agent` without auth → 401; with Free tier
-  auth → 402; with Pro auth but already 1 agent in room → 409; with Pro
-  auth and no agent → 200.
+      auth → 402; with Pro auth but already 1 agent in room → 409; with Pro
+      auth and no agent → 200.
 - [ ] Commit + push as `feat(pricing-3a-1): foundation — auth + org primitive + paid-feature gates`
 
 ---
@@ -417,11 +471,12 @@ Stripe Tax + COOP/COEP relaxation for `/pricing` route.
 ### Task 1: Appwrite collection migration script
 
 **Files:**
+
 - Create: `scripts/appwrite-migrate-2026-06-13.mjs`
 
 - [ ] Write the migration script — creates 6 collections with indexes:
-  `subscriptions`, `stripe_events`, `organizations`, `active_rooms`,
-  `session_logs`, `org_branding`.
+      `subscriptions`, `stripe_events`, `organizations`, `active_rooms`,
+      `session_logs`, `org_branding`.
 
 ```js
 // scripts/appwrite-migrate-2026-06-13.mjs
@@ -468,15 +523,27 @@ function applyAttr(collId, a) {
 }
 
 // subscriptions
-await ensureCollection('subscriptions', 'subscriptions',
+await ensureCollection(
+    'subscriptions',
+    'subscriptions',
     [
         { name: 'userId', type: 'string', required: true, size: 64 },
         { name: 'orgId', type: 'string', required: false, size: 64 },
         { name: 'stripeCustomerId', type: 'string', required: true, size: 128 },
         { name: 'stripeSubscriptionId', type: 'string', required: true, size: 128 },
         { name: 'stripeScheduleId', type: 'string', size: 128 },
-        { name: 'tier', type: 'enum', elements: ['free','pro_africa','pro','business','enterprise'], required: true },
-        { name: 'status', type: 'enum', elements: ['active','past_due','canceled','trialing','incomplete','unpaid'], required: true },
+        {
+            name: 'tier',
+            type: 'enum',
+            elements: ['free', 'pro_africa', 'pro', 'business', 'enterprise'],
+            required: true,
+        },
+        {
+            name: 'status',
+            type: 'enum',
+            elements: ['active', 'past_due', 'canceled', 'trialing', 'incomplete', 'unpaid'],
+            required: true,
+        },
         { name: 'currentPeriodStart', type: 'datetime', required: true },
         { name: 'currentPeriodEnd', type: 'datetime', required: true },
         { name: 'cancelAtPeriodEnd', type: 'boolean', required: true },
@@ -490,11 +557,13 @@ await ensureCollection('subscriptions', 'subscriptions',
         { key: 'idx_orgId', type: 'key', attributes: ['orgId'] },
         { key: 'idx_stripeCustomerId', type: 'unique', attributes: ['stripeCustomerId'] },
         { key: 'idx_stripeSubscriptionId', type: 'unique', attributes: ['stripeSubscriptionId'] },
-    ]
+    ],
 );
 
 // stripe_events
-await ensureCollection('stripe_events', 'stripe_events',
+await ensureCollection(
+    'stripe_events',
+    'stripe_events',
     [
         { name: 'type', type: 'string', required: true, size: 64 },
         { name: 'payload', type: 'string', required: true, size: 1048576 },
@@ -502,13 +571,13 @@ await ensureCollection('stripe_events', 'stripe_events',
         { name: 'processedAt', type: 'datetime' },
         { name: 'error', type: 'string', size: 1024 },
     ],
-    [
-        { key: 'idx_processed', type: 'key', attributes: ['processed'] },
-    ]
+    [{ key: 'idx_processed', type: 'key', attributes: ['processed'] }],
 );
 
 // organizations
-await ensureCollection('organizations', 'organizations',
+await ensureCollection(
+    'organizations',
+    'organizations',
     [
         { name: 'appwriteTeamId', type: 'string', required: true, size: 64 },
         { name: 'name', type: 'string', required: true, size: 128 },
@@ -530,11 +599,13 @@ await ensureCollection('organizations', 'organizations',
     [
         { key: 'idx_signup_code', type: 'unique', attributes: ['signup_code'] },
         { key: 'idx_appwriteTeamId', type: 'unique', attributes: ['appwriteTeamId'] },
-    ]
+    ],
 );
 
 // active_rooms
-await ensureCollection('active_rooms', 'active_rooms',
+await ensureCollection(
+    'active_rooms',
+    'active_rooms',
     [
         { name: 'roomName', type: 'string', required: true, size: 256 },
         { name: 'creatorOrgId', type: 'string', size: 64 },
@@ -546,11 +617,13 @@ await ensureCollection('active_rooms', 'active_rooms',
     [
         { key: 'idx_creatorOrgId', type: 'key', attributes: ['creatorOrgId'] },
         { key: 'idx_lastEventAt', type: 'key', attributes: ['lastEventAt'] },
-    ]
+    ],
 );
 
 // session_logs
-await ensureCollection('session_logs', 'session_logs',
+await ensureCollection(
+    'session_logs',
+    'session_logs',
     [
         { name: 'identity', type: 'string', required: true, size: 64 },
         { name: 'orgId', type: 'string', size: 64 },
@@ -560,13 +633,13 @@ await ensureCollection('session_logs', 'session_logs',
         { name: 'leftAt', type: 'datetime' },
         { name: 'roomSid', type: 'string', required: true, size: 64 },
     ],
-    [
-        { key: 'idx_roomSid', type: 'key', attributes: ['roomSid'] },
-    ]
+    [{ key: 'idx_roomSid', type: 'key', attributes: ['roomSid'] }],
 );
 
 // org_branding
-await ensureCollection('org_branding', 'org_branding',
+await ensureCollection(
+    'org_branding',
+    'org_branding',
     [
         { name: 'logoUrl', type: 'string', size: 512 },
         { name: 'darkLogoUrl', type: 'string', size: 512 },
@@ -577,14 +650,14 @@ await ensureCollection('org_branding', 'org_branding',
         { name: 'emailFromName', type: 'string', size: 128 },
         { name: 'emailFromAddress', type: 'string', size: 128 },
     ],
-    []
+    [],
 );
 
 console.log('Migration complete.');
 ```
 
 - [ ] Document the migration script as a sidelined user-action item (TaskCreate
-  #12) — user needs to run it against production with their `APPWRITE_API_KEY`.
+      #12) — user needs to run it against production with their `APPWRITE_API_KEY`.
 
 ### Task 2-N: Stripe integration
 
@@ -595,6 +668,7 @@ Enterprise concurrent-big-room meter at 1000-participant threshold with
 `roomSid:sessionId` idempotency key, Stripe Tax, COOP/COEP relaxation.)
 
 Detailed task breakdown in the spec; implement in this order:
+
 1. `lib/actions/stripe.ts` (createCheckoutSession, createPortalSession)
 2. `app/api/webhooks/stripe/route.ts` (ack-fast, signature verify, idempotency)
 3. `app/api/cron/process-stripe-events/route.ts` (drain + apply state)
@@ -611,7 +685,7 @@ Detailed task breakdown in the spec; implement in this order:
 - [ ] `pnpm build` — passes
 - [ ] Local Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
 - [ ] Trigger test events: `stripe trigger checkout.session.completed` etc.
-  Verify `subscriptions` collection populated correctly.
+      Verify `subscriptions` collection populated correctly.
 - [ ] Commit + push as `feat(pricing-3b): Stripe + webhooks + collections + meters`
 
 ---
@@ -652,9 +726,9 @@ export async function isPaidUser(userId: string): Promise<boolean> {
 ```
 
 - [ ] Update `AuthProvider.tsx` — hydrate `plan` + `org` + `roles` on login,
-  expose via context.
+      expose via context.
 - [ ] Update all 8 caller sites to either: (a) consume context (React), or
-  (b) await the async helper (server-side).
+      (b) await the async helper (server-side).
 - [ ] `pnpm vitest run` + `pnpm build` — all green
 - [ ] Commit + push as `feat(pricing-3a-2): isPaidUser async rewrite + tier-aware gates`
 
@@ -668,21 +742,21 @@ eligibility gate, signup-with-code flow.
 ### Tasks
 
 - [ ] `app/pricing/page.tsx` — server component reading `lib/pricing/tiers.ts`
-  + admin overrides from `pricing_tiers` Appwrite collection
-- [ ] Hero copy: *"End-to-end encryption on every plan, including Free.
-  We cannot see what's said in your meetings."*
+    - admin overrides from `pricing_tiers` Appwrite collection
+- [ ] Hero copy: _"End-to-end encryption on every plan, including Free.
+      We cannot see what's said in your meetings."_
 - [ ] 4-tier comparison table (Free / Pro / Business / Enterprise)
 - [ ] Recording disclosure banner above Recording row (copy per spec §2.2)
 - [ ] FAQ section (E2EE-vs-recording, Dedicated Node, big-room fee, hourly overage)
 - [ ] CTA button → opens `<CheckoutDrawer />` with embedded Stripe Checkout
 - [ ] `app/pricing/africa/page.tsx` — Africa eligibility gate page
-  (requires signed JWT cohort token in `?token=` query param)
+      (requires signed JWT cohort token in `?token=` query param)
 - [ ] `app/api/pricing/africa-eligibility/route.ts` — HMAC-JWT verification
 - [ ] `app/signup/page.tsx` — read `?code=` into HIDDEN input, validate via
-  `lib/auth/org.ts > reserveSignupSeat`, create user + team membership +
-  per-member Pro Africa Stripe subscription, redirect to onboarding
+      `lib/auth/org.ts > reserveSignupSeat`, create user + team membership +
+      per-member Pro Africa Stripe subscription, redirect to onboarding
 - [ ] Anti-enumeration: signup-code errors return the same generic
-  "This invite link is no longer valid" message
+      "This invite link is no longer valid" message
 - [ ] `pnpm vitest run` + `pnpm build` — all green
 - [ ] Commit + push as `feat(pricing-3c): public /pricing + signup-with-code flow`
 
@@ -697,16 +771,16 @@ eligibility gate, signup-with-code flow.
 - [ ] `middleware.ts` (admin route protection — Layer 1)
 - [ ] `app/admin/layout.tsx` (server component — calls `requireAdmin()` — Layer 2)
 - [ ] `app/admin/page.tsx` (dashboard with KPI cards: MRR, paid customers,
-  active rooms now, recordings stored)
+      active rooms now, recordings stored)
 - [ ] `lib/components/admin/DataTable.tsx` (TanStack Table v8 wrapper)
 - [ ] `lib/components/admin/KpiCard.tsx` (vendored Tremor-style)
 - [ ] `lib/components/admin/Sidebar.tsx`
 - [ ] `scripts/lint-tailwind.mjs` (CI lint — regex `^@import\s+['"]tailwindcss['"];?\s*$`
-  applied to all `app/**/*.css` — fails if matched)
+      applied to all `app/**/*.css` — fails if matched)
 - [ ] Empty pages for Pricing, Organizations, Recordings, Rooms, Branding
 - [ ] `pnpm vitest run` + `pnpm build` — all green
 - [ ] Manual RBAC test: log in as non-admin → middleware redirects;
-  log in as admin team member → loads
+      log in as admin team member → loads
 - [ ] Commit + push as `feat(pricing-3d): admin panel scaffold`
 
 ---
@@ -718,27 +792,27 @@ eligibility gate, signup-with-code flow.
 ### Tasks
 
 - [ ] `app/admin/pricing/page.tsx` — Pricing CRUD (display fields editable,
-  Stripe price ID mapping with confirm dialog), MRR KPI cards, admin-modifiable
-  hourly overage rate + concurrent big-room fee rate
+      Stripe price ID mapping with confirm dialog), MRR KPI cards, admin-modifiable
+      hourly overage rate + concurrent big-room fee rate
 - [ ] `app/admin/organizations/page.tsx` + `[id]/page.tsx` — Orgs CRUD,
-  signup-code regenerator, member list, share-URL copy-to-clipboard,
-  Layer 3 RBAC in each handler
+      signup-code regenerator, member list, share-URL copy-to-clipboard,
+      Layer 3 RBAC in each handler
 - [ ] `app/admin/recordings/page.tsx` — bypass `participant_ids` filter via
-  admin SDK, filters (org/date/status), per-recording detail, admin actions
-  (download/delete/force-stop egress), storage growth chart (Recharts)
+      admin SDK, filters (org/date/status), per-recording detail, admin actions
+      (download/delete/force-stop egress), storage growth chart (Recharts)
 - [ ] `app/admin/rooms/page.tsx` — Appwrite Realtime sub on `active_rooms`,
-  5s polling fallback, per-room drill-down at `[roomSid]/page.tsx`
+      5s polling fallback, per-room drill-down at `[roomSid]/page.tsx`
 - [ ] Per-room participant table — full field set per spec §6.5 (identity,
-  name, email-if-same-org, kind badges, region, SDK info, IP from
-  `session_logs`, per-track encryption badge)
+      name, email-if-same-org, kind badges, region, SDK info, IP from
+      `session_logs`, per-track encryption badge)
 - [ ] Disclosure banner pinned to room views
 - [ ] Admin actions per room: end-for-everyone, force-stop recording, kick
-  participant — gated by org boundary
+      participant — gated by org boundary
 - [ ] `app/admin/branding/page.tsx` — `org_branding` CRUD, logo upload,
-  primary/accent color, custom domain (Enterprise only — DNS verification
-  flow deferred to Phase 2)
+      primary/accent color, custom domain (Enterprise only — DNS verification
+      flow deferred to Phase 2)
 - [ ] `lib/components/Header.tsx` — `/admin` link in avatar dropdown when
-  `isOrgAdmin AND plan ∈ {business, enterprise}`
+      `isOrgAdmin AND plan ∈ {business, enterprise}`
 - [ ] `pnpm vitest run` + `pnpm build` — all green
 - [ ] Manual smoke per spec §10 acceptance criteria
 - [ ] Commit + push as `feat(pricing-3e): admin features (Pricing, Orgs, Recordings, Rooms, Branding)`
@@ -748,9 +822,9 @@ eligibility gate, signup-with-code flow.
 ## Post-PR: refresh ancillary docs
 
 - [ ] Refresh `docs/dvai-connect-cost-and-pricing-analysis.docx` — Tab 2
-  pricing, strip STT line items (Deepgram removed), update margins, add
-  recording-server-side-encryption disclosure
+      pricing, strip STT line items (Deepgram removed), update margins, add
+      recording-server-side-encryption disclosure
 - [ ] Archive `docs/superpowers/specs/2026-04-30-payments-strawman.md` —
-  add SUPERSEDED banner pointing at this plan + the new spec
+      add SUPERSEDED banner pointing at this plan + the new spec
 - [ ] Update `CLAUDE.md` with the new tier system + Deepgram-removed
-  transcription floor
+      transcription floor

@@ -28,11 +28,7 @@ line is an SLA-critical preflight:
 - [ ] Signed annual contract on file (Notion → Legal → Enterprise Contracts).
 - [ ] Stripe subscription on `enterprise_monthly` price is **active**
       (Dashboard → Customers → search → status: active, not trialing).
-- [ ] `organizations` row exists in Appwrite with:
-      - `tier_override = 'enterprise'`
-      - `commitment_months >= 12`
-      - `signup_code` set (so admin can finalize team invite flow)
-      - `expires_at` matching contract end date
+- [ ] `organizations` row exists in Appwrite with: - `tier_override = 'enterprise'` - `commitment_months >= 12` - `signup_code` set (so admin can finalize team invite flow) - `expires_at` matching contract end date
 - [ ] Customer-confirmed region: `eu-central` (Falkenstein), `us-east`
       (Ashburn), or `ap-southeast` (Singapore). Default `eu-central` if
       unstated. Customers in regulated jurisdictions (DE/FR/CH GDPR,
@@ -118,10 +114,10 @@ network — never expose 22 to public internet on Enterprise nodes.
 
 Two `A` records in Cloudflare (DVAI master zone):
 
-| Subdomain | Type | Target | TTL | Proxy |
-|---|---|---|---|---|
-| `lk-${CUSTOMER_SLUG}.deepvoiceai.co` | A | `<lk_node_ipv4>` | 300 | DNS only |
-| `lk-turn-${CUSTOMER_SLUG}.deepvoiceai.co` | A | `<lk_node_ipv4>` | 300 | DNS only |
+| Subdomain                                 | Type | Target           | TTL | Proxy    |
+| ----------------------------------------- | ---- | ---------------- | --- | -------- |
+| `lk-${CUSTOMER_SLUG}.deepvoiceai.co`      | A    | `<lk_node_ipv4>` | 300 | DNS only |
+| `lk-turn-${CUSTOMER_SLUG}.deepvoiceai.co` | A    | `<lk_node_ipv4>` | 300 | DNS only |
 
 Both **must** be DNS-only (gray cloud). Cloudflare proxy on these breaks
 both Caddy's Let's Encrypt challenge AND the TURN protocol.
@@ -146,15 +142,15 @@ docker run --rm -it -v$PWD:/output livekit/generate
 
 Answers to the interactive prompts:
 
-| Prompt | Value |
-|---|---|
-| Primary domain | `lk-${CUSTOMER_SLUG}.deepvoiceai.co` |
-| TURN domain | `lk-turn-${CUSTOMER_SLUG}.deepvoiceai.co` |
-| Enable Redis | **yes** (required for Egress coordination) |
-| Enable Egress | **yes** |
-| Enable Ingress | **no** (we don't currently support RTMP / WHIP) |
-| LiveKit API key | press Enter to auto-generate |
-| LiveKit API secret | press Enter to auto-generate |
+| Prompt             | Value                                           |
+| ------------------ | ----------------------------------------------- |
+| Primary domain     | `lk-${CUSTOMER_SLUG}.deepvoiceai.co`            |
+| TURN domain        | `lk-turn-${CUSTOMER_SLUG}.deepvoiceai.co`       |
+| Enable Redis       | **yes** (required for Egress coordination)      |
+| Enable Egress      | **yes**                                         |
+| Enable Ingress     | **no** (we don't currently support RTMP / WHIP) |
+| LiveKit API key    | press Enter to auto-generate                    |
+| LiveKit API secret | press Enter to auto-generate                    |
 
 This produces `~/lk-configs/lk-${CUSTOMER_SLUG}.deepvoiceai.co/` with:
 
@@ -310,10 +306,10 @@ the customer until all three code paths read per-org config.**
 
 - Cloud Monitoring dashboard: filter by label `customer=${CUSTOMER_SLUG}`.
 - Alerts (configured in Hetzner Cloud Console):
-  - CPU > 80% sustained 10 min
-  - Memory > 85% sustained 10 min
-  - Outbound network > 800 Mbps sustained 5 min (CCX53 has 1 Gbps shared)
-  - Disk usage > 75%
+    - CPU > 80% sustained 10 min
+    - Memory > 85% sustained 10 min
+    - Outbound network > 800 Mbps sustained 5 min (CCX53 has 1 Gbps shared)
+    - Disk usage > 75%
 
 ### 8.2 LiveKit-side (application)
 
@@ -363,18 +359,18 @@ A human runs this checklist:
       export. Default retention window is 30 days post-cancellation
       regardless of original retention policy.
 - [ ] Snapshot the recordings bucket to cold storage:
-      ```bash
-      hcloud object-storage bucket sync \
-        "recordings-${CUSTOMER_SLUG}" \
-        "archive-recordings-${CUSTOMER_SLUG}-$(date -u +%Y%m%d)"
-      ```
+      `bash
+hcloud object-storage bucket sync \
+  "recordings-${CUSTOMER_SLUG}" \
+  "archive-recordings-${CUSTOMER_SLUG}-$(date -u +%Y%m%d)"
+`
       Set archive bucket lifecycle to delete after 365 days (legal hold
       flag overrides this — coordinate with Legal).
 - [ ] Stop and remove the VM:
-      ```bash
-      hcloud server delete "lk-${CUSTOMER_SLUG}"
-      hcloud firewall delete "lk-${CUSTOMER_SLUG}-fw"
-      ```
+      `bash
+hcloud server delete "lk-${CUSTOMER_SLUG}"
+hcloud firewall delete "lk-${CUSTOMER_SLUG}-fw"
+`
 - [ ] Delete DNS records (both `lk-` and `lk-turn-` subdomains).
 - [ ] Move the 1Password vault entry to `Enterprise / Archived /` and
       add `decommissioned_at` field.
@@ -400,17 +396,17 @@ If a previously-cancelled customer returns within 12 months:
 
 ## Appendix A — Quick reference
 
-| What | Where |
-|---|---|
-| Hardware spec | Hetzner CCX53 (32 vCPU, 128 GB RAM) |
-| Monthly real cost | ~$250 VM + ~$30 storage + ~$15 bandwidth ≈ **$295** |
-| Customer monthly price | **$449.99** (Enterprise tier base) |
+| What                     | Where                                                               |
+| ------------------------ | ------------------------------------------------------------------- |
+| Hardware spec            | Hetzner CCX53 (32 vCPU, 128 GB RAM)                                 |
+| Monthly real cost        | ~$250 VM + ~$30 storage + ~$15 bandwidth ≈ **$295**                 |
+| Customer monthly price   | **$449.99** (Enterprise tier base)                                  |
 | Real margin per customer | ~35% gross (before overage and the concurrent-big-room metered fee) |
-| Recording storage | Hetzner Object Storage (fsn1) or Cloudflare R2 (ash / sin) |
-| TLS | Caddy + Let's Encrypt (automatic) |
-| Auth | LiveKit API key + secret, server-minted JWTs (5-min TTL) |
-| Source-of-truth | Appwrite `organizations` row + 1Password vault |
-| LiveKit version | Pinned in `docker-compose.yaml` — upgrade per §12 |
+| Recording storage        | Hetzner Object Storage (fsn1) or Cloudflare R2 (ash / sin)          |
+| TLS                      | Caddy + Let's Encrypt (automatic)                                   |
+| Auth                     | LiveKit API key + secret, server-minted JWTs (5-min TTL)            |
+| Source-of-truth          | Appwrite `organizations` row + 1Password vault                      |
+| LiveKit version          | Pinned in `docker-compose.yaml` — upgrade per §12                   |
 
 ## Appendix B — Upgrade cadence
 
@@ -421,13 +417,13 @@ LiveKit ships ~monthly. Schedule:
 - After 2 weeks of clean shared-cluster operation, roll Enterprise nodes
   one at a time during the customer's contracted maintenance window.
 - Patch path on each Enterprise node:
-  ```bash
-  ssh root@lk-${CUSTOMER_SLUG}.deepvoiceai.co
-  cd /opt/livekit
-  vim docker-compose.yaml    # bump image: livekit/livekit-server:v<X>
-  docker compose pull && docker compose up -d
-  docker compose logs --tail=100 livekit | grep "started"
-  ```
+    ```bash
+    ssh root@lk-${CUSTOMER_SLUG}.deepvoiceai.co
+    cd /opt/livekit
+    vim docker-compose.yaml    # bump image: livekit/livekit-server:v<X>
+    docker compose pull && docker compose up -d
+    docker compose logs --tail=100 livekit | grep "started"
+    ```
 - Notify customer 7 days in advance via the dedicated Slack Connect.
 
 ## Appendix C — Open automation work (Phase 2)

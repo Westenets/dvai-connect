@@ -81,10 +81,9 @@ export default async function AdminOverview() {
             </div>
             {!kpis && (
                 <div className="mt-6 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-5 py-4 text-sm text-amber-900 dark:text-amber-100">
-                    <strong className="font-semibold">KPIs unavailable.</strong>{' '}
-                    APPWRITE_API_KEY isn't configured for this environment.
-                    Set it in .env.local and reload to populate the
-                    dashboard.
+                    <strong className="font-semibold">KPIs unavailable.</strong> APPWRITE_API_KEY
+                    isn't configured for this environment. Set it in .env.local and reload to
+                    populate the dashboard.
                 </div>
             )}
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">

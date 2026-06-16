@@ -91,16 +91,18 @@ export default async function AdminOrgBrandingPage({
     return (
         <div>
             <div className="mb-6">
-                <Link href={`/admin/organizations/${data.org.$id}`} className="text-sm text-slate-500 hover:text-emerald-500">
+                <Link
+                    href={`/admin/organizations/${data.org.$id}`}
+                    className="text-sm text-slate-500 hover:text-emerald-500"
+                >
                     ← {data.org.name}
                 </Link>
             </div>
             <header className="mb-6">
                 <h1 className="text-2xl font-semibold mb-1">Branding</h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Customization for <strong>{data.org.name}</strong>. Runtime
-                    only honors these values when the org's tier has
-                    customBranding=true (Business + Enterprise).
+                    Customization for <strong>{data.org.name}</strong>. Runtime only honors these
+                    values when the org's tier has customBranding=true (Business + Enterprise).
                 </p>
             </header>
 

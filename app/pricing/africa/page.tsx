@@ -45,8 +45,8 @@ export default function AfricaPricingPage() {
                     {tier.displayName}
                 </h1>
                 <p className="text-lg text-slate-600 dark:text-slate-400 mb-2">
-                    A partner program tier for cohort members in Africa-based
-                    accelerators: SAV, BAM, PAIN, and TEF.
+                    A partner program tier for cohort members in Africa-based accelerators: SAV,
+                    BAM, PAIN, and TEF.
                 </p>
                 <p className="text-3xl font-semibold mt-8 mb-1">
                     ${tier.basePriceUsd.toFixed(2)}{' '}
@@ -65,23 +65,20 @@ export default function AfricaPricingPage() {
                 </ul>
 
                 <div className="mt-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 px-5 py-4 text-sm">
-                    <strong className="font-semibold">How to sign up:</strong>{' '}
-                    Your cohort administrator will share a personalized invite
-                    URL with you that contains a signup code. Use that link to
-                    create your account. This tier is not self-serve from the
-                    public pricing page — invites are issued by program
-                    administrators only.
+                    <strong className="font-semibold">How to sign up:</strong> Your cohort
+                    administrator will share a personalized invite URL with you that contains a
+                    signup code. Use that link to create your account. This tier is not self-serve
+                    from the public pricing page — invites are issued by program administrators
+                    only.
                 </div>
 
                 <div className="mt-12 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-5 py-4 text-sm text-amber-900 dark:text-amber-100">
-                    <strong className="font-semibold">About the 24-month commitment:</strong>{' '}
-                    Pro (Africa Cohort) subscriptions are wrapped in a Stripe
-                    Subscription Schedule for the first 24 months. Cancellation
-                    during this period requires direct coordination with the
-                    program administrator. After the 24th month the
-                    subscription releases to standard month-to-month billing
-                    and customers may cancel via the Customer Portal at any
-                    time.
+                    <strong className="font-semibold">About the 24-month commitment:</strong> Pro
+                    (Africa Cohort) subscriptions are wrapped in a Stripe Subscription Schedule for
+                    the first 24 months. Cancellation during this period requires direct
+                    coordination with the program administrator. After the 24th month the
+                    subscription releases to standard month-to-month billing and customers may
+                    cancel via the Customer Portal at any time.
                 </div>
 
                 <p className="mt-12 text-center text-sm text-slate-500 dark:text-slate-400">

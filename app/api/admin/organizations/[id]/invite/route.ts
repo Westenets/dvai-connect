@@ -26,10 +26,7 @@ const APP_BASE_URL = process.env.APP_BASE_URL ?? 'https://connect.deepvoiceai.co
 
 const ALLOWED_ROLES = new Set(['member', 'admin', 'owner']);
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
     try {
         await requireAdmin();
     } catch {
@@ -80,9 +77,6 @@ export async function POST(
             confirmed: membership.confirm,
         });
     } catch (err: any) {
-        return NextResponse.json(
-            { error: err?.message ?? 'Invite failed' },
-            { status: 500 },
-        );
+        return NextResponse.json({ error: err?.message ?? 'Invite failed' }, { status: 500 });
     }
 }

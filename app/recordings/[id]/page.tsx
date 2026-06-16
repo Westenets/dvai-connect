@@ -66,7 +66,9 @@ export default function RecordingDetailPage({ params }: PageProps) {
             <div className="min-h-screen bg-white dark:bg-[#101922] flex items-center justify-center text-slate-400">
                 <div className="flex flex-col items-center gap-3">
                     <div className="size-10 border-4 border-[#00a8a8] border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-sm font-medium animate-pulse text-slate-500 dark:text-slate-400">Loading recording...</p>
+                    <p className="text-sm font-medium animate-pulse text-slate-500 dark:text-slate-400">
+                        Loading recording...
+                    </p>
                 </div>
             </div>
         );

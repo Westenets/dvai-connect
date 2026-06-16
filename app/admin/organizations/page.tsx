@@ -1,10 +1,6 @@
 import Link from 'next/link';
 import { Client as ServerClient, Databases as ServerDatabases, Query } from 'node-appwrite';
-import {
-    DataTable,
-    formatDateTime,
-    type Column,
-} from '@/lib/components/admin/DataTable';
+import { DataTable, formatDateTime, type Column } from '@/lib/components/admin/DataTable';
 import type { Org } from '@/lib/auth/org';
 
 /**
@@ -78,9 +74,7 @@ export default async function AdminOrganizationsPage() {
             header: 'Seats',
             align: 'right',
             render: (o) =>
-                o.max_seats > 0
-                    ? `${o.signup_count} / ${o.max_seats}`
-                    : `${o.signup_count} / ∞`,
+                o.max_seats > 0 ? `${o.signup_count} / ${o.max_seats}` : `${o.signup_count} / ∞`,
         },
         {
             key: 'expires_at',
@@ -107,9 +101,8 @@ export default async function AdminOrganizationsPage() {
                 <div>
                     <h1 className="text-2xl font-semibold mb-1">Organizations</h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Cohorts / programs with their signup codes, seat caps, and
-                        tier overrides. Click a row to manage members and regenerate
-                        the signup code.
+                        Cohorts / programs with their signup codes, seat caps, and tier overrides.
+                        Click a row to manage members and regenerate the signup code.
                     </p>
                 </div>
                 <Link

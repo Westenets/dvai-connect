@@ -1,10 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-    Client as ServerClient,
-    Databases as ServerDatabases,
-    Query,
-} from 'node-appwrite';
+import { Client as ServerClient, Databases as ServerDatabases, Query } from 'node-appwrite';
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { DataTable, formatRelative, type Column } from '@/lib/components/admin/DataTable';
 import { EndRoomButton } from './EndRoomButton';
@@ -138,14 +134,28 @@ export default async function AdminRoomDetailPage({
     const { room, sessions, liveParticipants } = data;
 
     const sessionColumns: Array<Column<SessionLog>> = [
-        { key: 'identity', header: 'Identity', render: (r) => <code className="font-mono text-xs">{r.identity}</code> },
+        {
+            key: 'identity',
+            header: 'Identity',
+            render: (r) => <code className="font-mono text-xs">{r.identity}</code>,
+        },
         { key: 'orgId', header: 'Org', muted: true, render: (r) => r.orgId ?? '—' },
-        { key: 'joinedAt', header: 'Joined', muted: true, render: (r) => formatRelative(r.joinedAt) },
+        {
+            key: 'joinedAt',
+            header: 'Joined',
+            muted: true,
+            render: (r) => formatRelative(r.joinedAt),
+        },
         {
             key: 'leftAt',
             header: 'Left',
             muted: true,
-            render: (r) => (r.leftAt ? formatRelative(r.leftAt) : <span className="text-emerald-500">Still in</span>),
+            render: (r) =>
+                r.leftAt ? (
+                    formatRelative(r.leftAt)
+                ) : (
+                    <span className="text-emerald-500">Still in</span>
+                ),
         },
         { key: 'ip', header: 'IP', muted: true, render: (r) => r.ip ?? '—' },
         {
@@ -161,7 +171,11 @@ export default async function AdminRoomDetailPage({
     ];
 
     const liveColumns: Array<Column<LiveParticipant>> = [
-        { key: 'identity', header: 'Identity', render: (p) => <code className="font-mono text-xs">{p.identity}</code> },
+        {
+            key: 'identity',
+            header: 'Identity',
+            render: (p) => <code className="font-mono text-xs">{p.identity}</code>,
+        },
         { key: 'name', header: 'Name', render: (p) => p.name },
         {
             key: 'kind',
@@ -174,8 +188,8 @@ export default async function AdminRoomDetailPage({
                         (p.kind === 4
                             ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200'
                             : p.kind === 2
-                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200'
-                                : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200')
+                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200'
+                              : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200')
                     }
                 >
                     {PARTICIPANT_KIND_LABEL[p.kind] ?? p.kind}
@@ -230,7 +244,9 @@ export default async function AdminRoomDetailPage({
 
             <DisclosureBanner />
 
-            <h2 className="text-lg font-semibold mb-3">Live participants ({liveParticipants.length})</h2>
+            <h2 className="text-lg font-semibold mb-3">
+                Live participants ({liveParticipants.length})
+            </h2>
             <DataTable
                 columns={liveColumns}
                 rows={liveParticipants}
@@ -242,7 +258,9 @@ export default async function AdminRoomDetailPage({
                 }
             />
 
-            <h2 className="text-lg font-semibold mt-10 mb-3">Session audit log ({sessions.length})</h2>
+            <h2 className="text-lg font-semibold mt-10 mb-3">
+                Session audit log ({sessions.length})
+            </h2>
             <DataTable
                 columns={sessionColumns}
                 rows={sessions}
@@ -256,11 +274,10 @@ export default async function AdminRoomDetailPage({
 function DisclosureBanner() {
     return (
         <div className="mb-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-5 py-4 text-sm text-amber-900 dark:text-amber-100">
-            <strong className="font-semibold">Privacy:</strong>{' '}
-            Identities, IPs, and user agents below come from session_logs. The
-            meeting's audio and video remain end-to-end encrypted — this admin
-            view never displays media content. Ending the meeting terminates
-            the room for everyone but does not generate a transcript.
+            <strong className="font-semibold">Privacy:</strong> Identities, IPs, and user agents
+            below come from session_logs. The meeting's audio and video remain end-to-end encrypted
+            — this admin view never displays media content. Ending the meeting terminates the room
+            for everyone but does not generate a transcript.
         </div>
     );
 }

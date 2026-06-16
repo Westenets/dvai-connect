@@ -74,11 +74,7 @@ async function loadOrg(id: string): Promise<{
     }
 }
 
-export default async function AdminOrgDetailPage({
-    params,
-}: {
-    params: Promise<{ id: string }>;
-}) {
+export default async function AdminOrgDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const data = await loadOrg(id);
     if (data === null) {
@@ -101,7 +97,10 @@ export default async function AdminOrgDetailPage({
     return (
         <div>
             <div className="mb-6">
-                <Link href="/admin/organizations" className="text-sm text-slate-500 hover:text-emerald-500">
+                <Link
+                    href="/admin/organizations"
+                    className="text-sm text-slate-500 hover:text-emerald-500"
+                >
                     ← All organizations
                 </Link>
             </div>
@@ -116,7 +115,9 @@ export default async function AdminOrgDetailPage({
                     {org.commitment_months && ` · ${org.commitment_months}-month commitment`}
                     {' · '}
                     {org.is_active ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Active</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                            Active
+                        </span>
                     ) : (
                         <span className="text-slate-400">Inactive</span>
                     )}
@@ -138,10 +139,16 @@ export default async function AdminOrgDetailPage({
                         Contacts
                     </h3>
                     <dl className="text-sm space-y-2">
-                        <Field label="Primary" value={`${org.primary_contact_name ?? '—'} (${org.primary_contact_email ?? '—'})`} />
+                        <Field
+                            label="Primary"
+                            value={`${org.primary_contact_name ?? '—'} (${org.primary_contact_email ?? '—'})`}
+                        />
                         <Field label="Billing" value={org.billing_contact_email ?? '—'} />
                         <Field label="Tier override" value={org.tier_override ?? 'default'} />
-                        <Field label="Backing team" value={<code className="text-xs">{org.appwriteTeamId}</code>} />
+                        <Field
+                            label="Backing team"
+                            value={<code className="text-xs">{org.appwriteTeamId}</code>}
+                        />
                     </dl>
                 </div>
             </section>
@@ -152,11 +159,10 @@ export default async function AdminOrgDetailPage({
                 <h3 className="text-sm font-semibold mb-3">Invite a member</h3>
                 <InviteForm orgId={org.$id} />
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
-                    Appwrite emails the invitee a confirmation link. They appear here
-                    once they accept; the badge below shows pending vs joined.
+                    Appwrite emails the invitee a confirmation link. They appear here once they
+                    accept; the badge below shows pending vs joined.
                 </p>
             </div>
-
 
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                 <table className="min-w-full text-sm">
@@ -178,16 +184,26 @@ export default async function AdminOrgDetailPage({
                         )}
                         {members.map((m) => (
                             <tr key={m.$id}>
-                                <td className="px-4 py-3 font-medium">{m.userName || m.userEmail}</td>
+                                <td className="px-4 py-3 font-medium">
+                                    {m.userName || m.userEmail}
+                                </td>
                                 <td className="px-4 py-3 text-slate-500">{m.userEmail}</td>
                                 <td className="px-4 py-3 text-xs">
-                                    {m.roles.includes('owner') ? 'Owner' : m.roles.includes('admin') ? 'Admin' : 'Member'}
+                                    {m.roles.includes('owner')
+                                        ? 'Owner'
+                                        : m.roles.includes('admin')
+                                          ? 'Admin'
+                                          : 'Member'}
                                 </td>
                                 <td className="px-4 py-3 text-xs">
                                     {m.confirm ? (
-                                        <span className="text-emerald-600 dark:text-emerald-400">Joined</span>
+                                        <span className="text-emerald-600 dark:text-emerald-400">
+                                            Joined
+                                        </span>
                                     ) : (
-                                        <span className="text-amber-600 dark:text-amber-400">Pending</span>
+                                        <span className="text-amber-600 dark:text-amber-400">
+                                            Pending
+                                        </span>
                                     )}
                                 </td>
                             </tr>
@@ -218,5 +234,9 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-    return <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-left">{children}</th>;
+    return (
+        <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wide text-left">
+            {children}
+        </th>
+    );
 }

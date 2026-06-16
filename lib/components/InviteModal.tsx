@@ -299,10 +299,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, roomN
                                     url={meetingLink}
                                     title={`Join my meeting: ${roomName}`}
                                 >
-                                    <SocialIcon
-                                        network="x"
-                                        style={{ height: 40, width: 40 }}
-                                    />
+                                    <SocialIcon network="x" style={{ height: 40, width: 40 }} />
                                 </TwitterShareButton>
                             </div>
                             <div className="snap-start shrink-0">

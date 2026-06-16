@@ -1,10 +1,12 @@
 # ⚠ SUPERSEDED — Payments + Subscriptions Strawman (2026-04-30)
 
 > **This spec is SUPERSEDED by:**
+>
 > - `docs/superpowers/specs/2026-06-13-pricing-admin-design.md` (new pricing + admin panel)
 > - `docs/superpowers/plans/2026-06-13-pricing-admin.md` (6-PR implementation plan)
 >
 > **What changed (2026-06-13):**
+>
 > - Pricing replaced with Tab 2 of the user's MD: `$0 / $14.99 Africa per-member / $18.99 Pro per-org / $48.99 Business per-org / $449.99 Enterprise per-org`. Old prices ($12 / $20 Team-per-seat / $40 Business-per-seat / $50K Enterprise) are obsolete.
 > - Team tier removed entirely.
 > - Pro split into Pro Africa (cohort-restricted, 24-month commit) and Pro Mainstream.
@@ -15,6 +17,7 @@
 > - Apple Intelligence backend on iOS 26+ for the Capacitor mobile path (Phase 1 of the mobile ADR).
 >
 > **What stays from this spec:**
+>
 > - High-level Stripe + Appwrite architecture (collections, webhook patterns, idempotency log).
 > - 4-layer Pro Africa commitment lock (now with admin-modifiable Customer Portal config + daily drift-detection cron).
 > - Acquisition narrative.
@@ -39,17 +42,18 @@ quality" button automatically come alive for paid users.
 
 ## 1. Pricing tiers — LOCKED
 
-| Tier | Monthly | Annual (16% off) | Min seats | Sales motion |
-|---|---|---|---|---|
-| **Free** | $0 | — | 1 | Self-serve |
-| **Pro** | $12/user/mo | $120/user/yr ($10/mo equiv) | 1 | Self-serve |
-| **Team** | $20/seat/mo | $200/seat/yr ($16.67/mo equiv) | 3 | Self-serve |
-| **Business** | $40/seat/mo | $400/seat/yr | 10 | Sales-assisted |
-| **Enterprise** | Custom (start at $50K/year) | annual only | typically 25+ | Sales-led |
+| Tier           | Monthly                     | Annual (16% off)               | Min seats     | Sales motion   |
+| -------------- | --------------------------- | ------------------------------ | ------------- | -------------- |
+| **Free**       | $0                          | —                              | 1             | Self-serve     |
+| **Pro**        | $12/user/mo                 | $120/user/yr ($10/mo equiv)    | 1             | Self-serve     |
+| **Team**       | $20/seat/mo                 | $200/seat/yr ($16.67/mo equiv) | 3             | Self-serve     |
+| **Business**   | $40/seat/mo                 | $400/seat/yr                   | 10            | Sales-assisted |
+| **Enterprise** | Custom (start at $50K/year) | annual only                    | typically 25+ | Sales-led      |
 
 ### Per-tier feature gates and limits
 
 **Free** (loss leader; conversion engine):
+
 - 60-min meeting length cap, 5-min warning before cap
 - Up to 8 participants per meeting
 - 5 GB recording storage
@@ -59,6 +63,7 @@ quality" button automatically come alive for paid users.
 - Web Speech captions (browser-native, free)
 
 **Pro**:
+
 - Unlimited meeting length
 - Up to 25 participants per meeting
 - 100 GB recording storage
@@ -69,6 +74,7 @@ quality" button automatically come alive for paid users.
 - Single user (no team workspace)
 
 **Team** (3-seat minimum = $60/mo floor):
+
 - Pro features per seat
 - Org workspace + basic admin
 - 200 GB shared storage pool
@@ -76,6 +82,7 @@ quality" button automatically come alive for paid users.
 - Up to 100 participants per meeting
 
 **Business** (10-seat minimum = $400/mo floor):
+
 - Team features per seat
 - SSO/SAML, audit logs, advanced admin
 - 1 TB shared storage
@@ -86,6 +93,7 @@ quality" button automatically come alive for paid users.
 - Sales-assisted onboarding (one human call)
 
 **Enterprise** (annual contracts only, $50K floor):
+
 - Dedicated infrastructure (own LiveKit node, partitioned data security)
 - HIPAA BAA, SOC2 Type II reports
 - White-label included
@@ -148,8 +156,8 @@ Why this shape:
   vectors.
 - **Appwrite stores a denormalized subscription snapshot** so we don't
   hit Stripe on every page render. Snapshot is `{ tier, status,
-  currentPeriodEnd, cancelAtPeriodEnd, stripeCustomerId,
-  stripeSubscriptionId }`.
+currentPeriodEnd, cancelAtPeriodEnd, stripeCustomerId,
+stripeSubscriptionId }`.
 - **`isPaidUser()` becomes** `useAuth().user?.prefs?.subscription?.tier !== 'free'`
   with a current-period-end check.
 
@@ -159,8 +167,7 @@ These you create in the Stripe dashboard, not in code:
 
 - [ ] **Products** — one per tier (Free, Pro, Team, Enterprise). Free
       and Enterprise are "metadata-only" products with no price.
-- [ ] **Prices** — for Pro (monthly + annual), Team (monthly per seat
-      + annual per seat). Mark all in USD; add other currencies later.
+- [ ] **Prices** — for Pro (monthly + annual), Team (monthly per seat + annual per seat). Mark all in USD; add other currencies later.
 - [ ] **Customer portal** — enable in Settings → Billing → Customer
       portal so users can self-serve cancel/upgrade/payment-method
       changes.
@@ -183,10 +190,10 @@ interface SubscriptionSnapshot {
     status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
     stripeCustomerId: string | null;
     stripeSubscriptionId: string | null;
-    currentPeriodEnd: number | null;  // unix ms
+    currentPeriodEnd: number | null; // unix ms
     cancelAtPeriodEnd: boolean;
-    seats?: number;  // for team tier
-    teamId?: string;  // for team tier members (link to team owner)
+    seats?: number; // for team tier
+    teamId?: string; // for team tier members (link to team owner)
 }
 ```
 
@@ -196,7 +203,7 @@ interface SubscriptionSnapshot {
 interface SubscriptionEvent {
     $id: string;
     userId: string;
-    stripeEventId: string;  // for idempotency
+    stripeEventId: string; // for idempotency
     eventType: string;
     payload: Record<string, unknown>;
     createdAt: number;

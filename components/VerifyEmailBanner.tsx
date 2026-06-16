@@ -27,7 +27,10 @@ export function VerifyEmailBanner() {
             setHidden(true);
             return;
         }
-        if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('dvai.hideVerifyBanner') === '1') {
+        if (
+            typeof sessionStorage !== 'undefined' &&
+            sessionStorage.getItem('dvai.hideVerifyBanner') === '1'
+        ) {
             setHidden(true);
             return;
         }

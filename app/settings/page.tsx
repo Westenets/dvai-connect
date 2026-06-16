@@ -1321,7 +1321,10 @@ export default function Settings() {
                                                 value={transcriptionPref}
                                                 onChange={(e) =>
                                                     handleTranscriptionPrefChange(
-                                                        e.target.value as 'auto' | 'local-ai' | 'basic',
+                                                        e.target.value as
+                                                            | 'auto'
+                                                            | 'local-ai'
+                                                            | 'basic',
                                                     )
                                                 }
                                                 className="pl-10 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#00a8a8] focus:ring-[#00a8a8] focus:ring-1 shadow-sm py-2.5 outline-none transition-colors"
@@ -1330,15 +1333,17 @@ export default function Settings() {
                                                 <option value="local-ai">
                                                     Local AI (best quality; needs capable hardware)
                                                 </option>
-                                                <option value="basic">Basic (browser-native; lowest battery)</option>
+                                                <option value="basic">
+                                                    Basic (browser-native; lowest battery)
+                                                </option>
                                             </select>
                                         </div>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            All transcription runs on your device — audio never leaves it.
-                                            Auto picks the best option your hardware can run in real-time;
-                                            falls back to the browser-native API on devices that can&apos;t.
-                                            We don&apos;t offer a cloud option. That would break our privacy
-                                            promise.
+                                            All transcription runs on your device — audio never
+                                            leaves it. Auto picks the best option your hardware can
+                                            run in real-time; falls back to the browser-native API
+                                            on devices that can&apos;t. We don&apos;t offer a cloud
+                                            option. That would break our privacy promise.
                                         </p>
                                     </div>
                                 </div>
@@ -1361,26 +1366,35 @@ export default function Settings() {
                                                             Closed Caption Size
                                                         </h4>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                                            Adjust the text size for meeting transcriptions.
+                                                            Adjust the text size for meeting
+                                                            transcriptions.
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4 px-2 mt-4">
-                                                <span className="text-sm font-medium text-slate-500">A</span>
+                                                <span className="text-sm font-medium text-slate-500">
+                                                    A
+                                                </span>
                                                 <input
                                                     type="range"
                                                     min="0"
                                                     max="6"
                                                     step="1"
                                                     value={captionSize}
-                                                    onChange={(e) => setCaptionSize(parseInt(e.target.value))}
+                                                    onChange={(e) =>
+                                                        setCaptionSize(parseInt(e.target.value))
+                                                    }
                                                     className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-[#00a8a8]"
                                                 />
-                                                <span className="text-2xl font-medium leading-none text-slate-500">A</span>
+                                                <span className="text-2xl font-medium leading-none text-slate-500">
+                                                    A
+                                                </span>
                                             </div>
                                             <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 text-center min-h-[80px] flex items-center justify-center">
-                                                <span className={`${['text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl'][captionSize]} text-slate-900 dark:text-white font-medium transition-all`}>
+                                                <span
+                                                    className={`${['text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl'][captionSize]} text-slate-900 dark:text-white font-medium transition-all`}
+                                                >
                                                     Preview Caption Text
                                                 </span>
                                             </div>

@@ -13,10 +13,7 @@ import { requireAdmin } from '@/lib/auth/admin';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(
-    _request: Request,
-    context: { params: Promise<{ name: string }> },
-) {
+export async function POST(_request: Request, context: { params: Promise<{ name: string }> }) {
     try {
         await requireAdmin();
     } catch {

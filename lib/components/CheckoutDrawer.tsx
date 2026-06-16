@@ -127,15 +127,10 @@ export function CheckoutDrawer({ open, tier, signupCode, quantity, onClose }: Pr
                         </div>
                     )}
                     {stripe && error && (
-                        <div className="p-6 text-sm text-red-600 dark:text-red-400">
-                            {error}
-                        </div>
+                        <div className="p-6 text-sm text-red-600 dark:text-red-400">{error}</div>
                     )}
                     {stripe && clientSecret && (
-                        <EmbeddedCheckoutProvider
-                            stripe={stripe}
-                            options={{ clientSecret }}
-                        >
+                        <EmbeddedCheckoutProvider stripe={stripe} options={{ clientSecret }}>
                             <EmbeddedCheckout />
                         </EmbeddedCheckoutProvider>
                     )}

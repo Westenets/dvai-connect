@@ -1,10 +1,10 @@
-import { DVAI } from "@dvai-bridge/core";
+import { DVAI } from '@dvai-bridge/core';
 // Split into two statements — Turbopack 16.1.6 occasionally fails to
 // resolve a value+type combined import after a hot-reload cycle, with
 // "Export StatusEmitter doesn't exist in target module" even though
 // the export is right there. Two-statement form sidesteps the bug.
-import { StatusEmitter } from "./aiServiceStatus";
-import type { AIServiceStatus } from "./aiServiceStatus";
+import { StatusEmitter } from './aiServiceStatus';
+import type { AIServiceStatus } from './aiServiceStatus';
 
 const EMBEDDING_DIM = 384; // all-MiniLM-L6-v2 hidden size
 
@@ -18,11 +18,11 @@ class EmbedderService {
         if (!this.embedAI) {
             if (!this.initPromise) {
                 this.embedAI = new DVAI({
-                    backend: "transformers",
-                    transformersModelId: "Xenova/all-MiniLM-L6-v2",
-                    pipelineTask: "feature-extraction",
+                    backend: 'transformers',
+                    transformersModelId: 'Xenova/all-MiniLM-L6-v2',
+                    pipelineTask: 'feature-extraction',
                     // No HTTP/MSW transport — we call runPipeline() directly.
-                    transport: "none",
+                    transport: 'none',
                     // Default transformersWorkerUrl ("/dvai-transformers.worker.js")
                     // runs the model in a Web Worker so it doesn't block the
                     // meeting UI on every transcription line.

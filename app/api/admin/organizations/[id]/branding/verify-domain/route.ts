@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
-import {
-    Client as ServerClient,
-    Databases as ServerDatabases,
-    Query,
-} from 'node-appwrite';
+import { Client as ServerClient, Databases as ServerDatabases, Query } from 'node-appwrite';
 import { requireAdmin } from '@/lib/auth/admin';
 import { verifyCustomDomain } from '@/lib/branding/domain-verify';
 
@@ -31,10 +27,7 @@ interface BrandingRow {
     customDomainVerificationToken?: string;
 }
 
-export async function POST(
-    _request: Request,
-    context: { params: Promise<{ id: string }> },
-) {
+export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
     try {
         await requireAdmin();
     } catch {
@@ -106,8 +99,7 @@ export async function POST(
         if (msg.includes('not found')) {
             return NextResponse.json(
                 {
-                    error:
-                        'org_branding collection is missing the verification columns. Run scripts/appwrite-migrate-domain-verify-2026-06-14.mjs.',
+                    error: 'org_branding collection is missing the verification columns. Run scripts/appwrite-migrate-domain-verify-2026-06-14.mjs.',
                 },
                 { status: 500 },
             );

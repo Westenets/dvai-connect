@@ -76,8 +76,8 @@ function ResetInner() {
                     <h1 className="text-2xl font-semibold mb-6">Set a new password</h1>
                     {!valid && (
                         <p className="text-sm text-red-600 dark:text-red-400">
-                            This link is missing required parameters. Request a fresh reset
-                            link from{' '}
+                            This link is missing required parameters. Request a fresh reset link
+                            from{' '}
                             <Link href="/forgot-password" className="underline">
                                 forgot password
                             </Link>
@@ -114,7 +114,9 @@ function ResetInner() {
                                 />
                             </label>
                             {error && (
-                                <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+                                <div className="text-sm text-red-600 dark:text-red-400">
+                                    {error}
+                                </div>
                             )}
                             <button
                                 type="submit"

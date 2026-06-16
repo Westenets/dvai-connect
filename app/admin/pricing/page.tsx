@@ -59,17 +59,13 @@ async function probePrice(envName: string): Promise<PriceProbe> {
         probe.active = price.active;
         const product = price.product;
         probe.productName =
-            typeof product === 'string'
-                ? product
-                : 'name' in product
-                    ? product.name
-                    : product.id;
+            typeof product === 'string' ? product : 'name' in product ? product.name : product.id;
         probe.recurring = price.recurring
             ? {
-                interval: price.recurring.interval,
-                usage_type: price.recurring.usage_type,
-                meter: price.recurring.meter ?? null,
-            }
+                  interval: price.recurring.interval,
+                  usage_type: price.recurring.usage_type,
+                  meter: price.recurring.meter ?? null,
+              }
             : undefined;
     } catch (err: any) {
         probe.error = err?.message ?? String(err);
@@ -77,7 +73,14 @@ async function probePrice(envName: string): Promise<PriceProbe> {
     return probe;
 }
 
-async function probeMeter(envName: string): Promise<{ envName: string; id: string | null; error?: string; displayName?: string; eventName?: string; status?: string }> {
+async function probeMeter(envName: string): Promise<{
+    envName: string;
+    id: string | null;
+    error?: string;
+    displayName?: string;
+    eventName?: string;
+    status?: string;
+}> {
     const id = process.env[envName] ?? null;
     if (!id) return { envName, id: null, error: 'Env var not set' };
     if (!stripe) return { envName, id, error: 'Stripe key not set' };
@@ -136,18 +139,16 @@ export default async function AdminPricingPage() {
             <header className="mb-6">
                 <h1 className="text-2xl font-semibold mb-1">Pricing</h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Read-only view of the locked tier definitions plus the live
-                    Stripe-side state for every price and meter this deployment
-                    references.
+                    Read-only view of the locked tier definitions plus the live Stripe-side state
+                    for every price and meter this deployment references.
                 </p>
             </header>
 
             <Section title="Tier definitions">
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                    Source: <code>lib/pricing/tiers.ts</code> (locked Tab 2). To
-                    edit copy or feature flags, change the file and redeploy.
-                    An editable override flow is tracked as a follow-up
-                    (additive <code>pricing_tiers</code> collection).
+                    Source: <code>lib/pricing/tiers.ts</code> (locked Tab 2). To edit copy or
+                    feature flags, change the file and redeploy. An editable override flow is
+                    tracked as a follow-up (additive <code>pricing_tiers</code> collection).
                 </p>
                 <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                     <table className="min-w-full text-sm">
@@ -172,11 +173,19 @@ export default async function AdminPricingPage() {
                                     <td className="px-4 py-2 text-right">${t.basePriceUsd}</td>
                                     <td className="px-4 py-2 text-right">{t.meetingMaxMinutes}</td>
                                     <td className="px-4 py-2 text-right">{t.attendeeCap}</td>
-                                    <td className="px-4 py-2 text-center">{t.cloudRecording ? '✓' : '—'}</td>
+                                    <td className="px-4 py-2 text-center">
+                                        {t.cloudRecording ? '✓' : '—'}
+                                    </td>
                                     <td className="px-4 py-2 text-center">{t.meetingAgentQuota}</td>
-                                    <td className="px-4 py-2 text-center">{t.customBranding ? '✓' : '—'}</td>
-                                    <td className="px-4 py-2 text-center">{t.adminDashboard ? '✓' : '—'}</td>
-                                    <td className="px-4 py-2 text-center">{t.dedicatedNode ? '✓' : '—'}</td>
+                                    <td className="px-4 py-2 text-center">
+                                        {t.customBranding ? '✓' : '—'}
+                                    </td>
+                                    <td className="px-4 py-2 text-center">
+                                        {t.adminDashboard ? '✓' : '—'}
+                                    </td>
+                                    <td className="px-4 py-2 text-center">
+                                        {t.dedicatedNode ? '✓' : '—'}
+                                    </td>
                                     <td className="px-4 py-2 text-xs">{t.support}</td>
                                 </tr>
                             ))}
@@ -187,23 +196,21 @@ export default async function AdminPricingPage() {
 
             <Section title="Display copy overrides">
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                    Edit what users see on <code>/pricing</code> without
-                    changing tier behavior. Pricing, caps, and feature flags
-                    stay in <code>lib/pricing/tiers.ts</code> (the source of
-                    truth for billing and gates). Empty fields revert to the
-                    static default. Requires the <code>pricing_tiers</code>{' '}
-                    collection — run{' '}
-                    <code>scripts/appwrite-migrate-pricing-tiers-2026-06-14.mjs</code>{' '}
-                    if you haven't yet.
+                    Edit what users see on <code>/pricing</code> without changing tier behavior.
+                    Pricing, caps, and feature flags stay in <code>lib/pricing/tiers.ts</code> (the
+                    source of truth for billing and gates). Empty fields revert to the static
+                    default. Requires the <code>pricing_tiers</code> collection — run{' '}
+                    <code>scripts/appwrite-migrate-pricing-tiers-2026-06-14.mjs</code> if you
+                    haven't yet.
                 </p>
                 <TierOverridesEditor initialRows={overrideRows} />
             </Section>
 
             <Section title="Stripe configuration">
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                    Pinned to API version <code>{STRIPE_API_VERSION}</code>.
-                    Edits to rate or product naming happen in the Stripe
-                    Dashboard or via <code>scripts/stripe-setup-2026-06-13.mjs</code>.
+                    Pinned to API version <code>{STRIPE_API_VERSION}</code>. Edits to rate or
+                    product naming happen in the Stripe Dashboard or via{' '}
+                    <code>scripts/stripe-setup-2026-06-13.mjs</code>.
                 </p>
                 <h3 className="font-semibold mb-2 mt-6">Base subscription prices</h3>
                 <PriceList probes={[proAfricaPrice, proPrice, businessPrice, enterprisePrice]} />
@@ -214,7 +221,10 @@ export default async function AdminPricingPage() {
                 <h3 className="font-semibold mb-2 mt-8">Portal configurations</h3>
                 <ul className="text-sm space-y-2">
                     <PortalConfigRow label="Default" envName="STRIPE_PORTAL_CONFIG_DEFAULT" />
-                    <PortalConfigRow label="Africa cohort (locked: cancel + update disabled)" envName="STRIPE_PORTAL_CONFIG_AFRICA" />
+                    <PortalConfigRow
+                        label="Africa cohort (locked: cancel + update disabled)"
+                        envName="STRIPE_PORTAL_CONFIG_AFRICA"
+                    />
                 </ul>
             </Section>
         </div>
@@ -230,12 +240,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     );
 }
 
-function Th({ children, align = 'left' }: { children: React.ReactNode; align?: 'left' | 'right' | 'center' }) {
+function Th({
+    children,
+    align = 'left',
+}: {
+    children: React.ReactNode;
+    align?: 'left' | 'right' | 'center';
+}) {
     return (
         <th
             className={
                 'px-4 py-3 font-semibold text-xs uppercase tracking-wide whitespace-nowrap ' +
-                (align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left')
+                (align === 'right'
+                    ? 'text-right'
+                    : align === 'center'
+                      ? 'text-center'
+                      : 'text-left')
             }
         >
             {children}
@@ -247,7 +267,10 @@ function PriceList({ probes }: { probes: PriceProbe[] }) {
     return (
         <ul className="space-y-2">
             {probes.map((p) => (
-                <li key={p.envName} className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                <li
+                    key={p.envName}
+                    className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4"
+                >
                     <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                         <code className="font-mono text-xs text-slate-500">{p.envName}</code>
                         {p.id && <CopyValue value={p.id} />}
@@ -258,10 +281,13 @@ function PriceList({ probes }: { probes: PriceProbe[] }) {
                     ) : (
                         <div className="text-xs text-slate-600 dark:text-slate-400 mt-2 space-y-1">
                             <div>
-                                <strong className="text-slate-900 dark:text-slate-100">{p.productName ?? '—'}</strong>
+                                <strong className="text-slate-900 dark:text-slate-100">
+                                    {p.productName ?? '—'}
+                                </strong>
                                 {' · '}
-                                {p.unitAmount != null ? `$${(p.unitAmount / 100).toFixed(2)}` : '—'}
-                                {' '}
+                                {p.unitAmount != null
+                                    ? `$${(p.unitAmount / 100).toFixed(2)}`
+                                    : '—'}{' '}
                                 {p.currency?.toUpperCase()}
                                 {p.recurring && ` / ${p.recurring.interval}`}
                                 {p.recurring?.usage_type === 'metered' && ' · metered'}
@@ -269,7 +295,8 @@ function PriceList({ probes }: { probes: PriceProbe[] }) {
                             </div>
                             {p.recurring?.meter && (
                                 <div>
-                                    Bound to meter <code className="font-mono">{p.recurring.meter}</code>
+                                    Bound to meter{' '}
+                                    <code className="font-mono">{p.recurring.meter}</code>
                                 </div>
                             )}
                         </div>
@@ -280,11 +307,25 @@ function PriceList({ probes }: { probes: PriceProbe[] }) {
     );
 }
 
-function MeterList({ probes }: { probes: Array<{ envName: string; id: string | null; error?: string; displayName?: string; eventName?: string; status?: string }> }) {
+function MeterList({
+    probes,
+}: {
+    probes: Array<{
+        envName: string;
+        id: string | null;
+        error?: string;
+        displayName?: string;
+        eventName?: string;
+        status?: string;
+    }>;
+}) {
     return (
         <ul className="space-y-2">
             {probes.map((p) => (
-                <li key={p.envName} className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+                <li
+                    key={p.envName}
+                    className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4"
+                >
                     <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                         <code className="font-mono text-xs text-slate-500">{p.envName}</code>
                         {p.id && <CopyValue value={p.id} />}
@@ -294,8 +335,12 @@ function MeterList({ probes }: { probes: Array<{ envName: string; id: string | n
                         <p className="text-xs text-red-600 dark:text-red-400 mt-2">{p.error}</p>
                     ) : (
                         <div className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-                            <strong className="text-slate-900 dark:text-slate-100">{p.displayName}</strong>{' · '}
-                            event_name <code className="font-mono">{p.eventName}</code>{' · '}
+                            <strong className="text-slate-900 dark:text-slate-100">
+                                {p.displayName}
+                            </strong>
+                            {' · '}
+                            event_name <code className="font-mono">{p.eventName}</code>
+                            {' · '}
                             status <code>{p.status}</code>
                         </div>
                     )}
@@ -312,7 +357,11 @@ function PortalConfigRow({ label, envName }: { label: string; envName: string })
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                 <span className="text-sm">{label}</span>
                 <code className="font-mono text-xs text-slate-500">{envName}</code>
-                {value ? <CopyValue value={value} /> : <span className="text-xs text-red-500">unset</span>}
+                {value ? (
+                    <CopyValue value={value} />
+                ) : (
+                    <span className="text-xs text-red-500">unset</span>
+                )}
             </div>
         </li>
     );

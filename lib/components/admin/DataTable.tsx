@@ -55,8 +55,8 @@ export function DataTable<T>({ columns, rows, rowKey, actions, emptyState }: Pro
                                     (c.align === 'right'
                                         ? 'text-right'
                                         : c.align === 'center'
-                                            ? 'text-center'
-                                            : 'text-left')
+                                          ? 'text-center'
+                                          : 'text-left')
                                 }
                             >
                                 {c.header}
@@ -76,7 +76,9 @@ export function DataTable<T>({ columns, rows, rowKey, actions, emptyState }: Pro
                             className="hover:bg-slate-50 dark:hover:bg-slate-800/40"
                         >
                             {columns.map((c) => {
-                                const value = c.render ? c.render(row) : ((row as any)[c.key] ?? '');
+                                const value = c.render
+                                    ? c.render(row)
+                                    : ((row as any)[c.key] ?? '');
                                 return (
                                     <td
                                         key={c.key}
@@ -85,8 +87,8 @@ export function DataTable<T>({ columns, rows, rowKey, actions, emptyState }: Pro
                                             (c.align === 'right'
                                                 ? 'text-right'
                                                 : c.align === 'center'
-                                                    ? 'text-center'
-                                                    : 'text-left') +
+                                                  ? 'text-center'
+                                                  : 'text-left') +
                                             (c.muted
                                                 ? ' text-slate-500 dark:text-slate-400 text-xs'
                                                 : ' text-slate-900 dark:text-slate-100')

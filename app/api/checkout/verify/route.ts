@@ -78,9 +78,7 @@ export async function GET(request: Request) {
     // Stripe says paid. Now check whether the webhook event processor
     // has reflected the subscription locally.
     const subId =
-        typeof session.subscription === 'string'
-            ? session.subscription
-            : session.subscription?.id;
+        typeof session.subscription === 'string' ? session.subscription : session.subscription?.id;
     if (!subId) {
         return NextResponse.json({
             status: 'pending',
@@ -96,10 +94,12 @@ export async function GET(request: Request) {
         const client = new ServerClient().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
         const databases = new ServerDatabases(client);
         const lookup = async () =>
-            (await databases.listDocuments(DB_ID, 'subscriptions', [
-                Query.equal('stripeSubscriptionId', subId),
-                Query.limit(1),
-            ])).documents[0] as unknown as { tier: string } | undefined;
+            (
+                await databases.listDocuments(DB_ID, 'subscriptions', [
+                    Query.equal('stripeSubscriptionId', subId),
+                    Query.limit(1),
+                ])
+            ).documents[0] as unknown as { tier: string } | undefined;
 
         let doc = await lookup();
         if (!doc) {

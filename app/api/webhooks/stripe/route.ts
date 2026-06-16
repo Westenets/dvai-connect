@@ -64,10 +64,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ received: true, dropped: true }, { status: 200 });
     }
 
-    const client = new ServerClient()
-        .setEndpoint(ENDPOINT)
-        .setProject(PROJECT)
-        .setKey(API_KEY);
+    const client = new ServerClient().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
     const databases = new ServerDatabases(client);
 
     try {

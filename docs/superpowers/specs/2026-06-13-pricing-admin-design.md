@@ -4,6 +4,7 @@
 **Owner:** Deep + Claude (research synthesis 2026-06-13, adversarial-verified)
 **Supersedes:** `docs/superpowers/specs/2026-04-30-payments-strawman.md`
 **Companion docs:**
+
 - Mobile strategy ADR: `docs/superpowers/specs/2026-06-13-mobile-strategy-adr.md`
 - Bridge v4 migration plan: `docs/superpowers/plans/2026-06-13-bridge-v4-migration.md`
 - Cost analysis: `docs/dvai-connect-cost-and-pricing-analysis.docx` (refresh pending)
@@ -37,13 +38,13 @@ Five SKUs. Flat per organization (NOT per-seat) for Pro Mainstream / Business
 / Enterprise. Pro Africa is **$14.99 per member** (per-user subscription).
 No Team tier.
 
-| SKU | Price | Length | Attendees | Recording | Agent | Notetaking | Screen | Notes |
-|---|---|---|---|---|---|---|---|---|
-| Free | $0 | 40 min | 10 | ❌ | ❌ | ❌ | ✅ | E2EE on |
-| Pro Africa | $14.99 / mo / member | 1 hr | 100 | ✅ | 1 | ✅ | ✅ | 24-mo commit, no annual disc., cohort-gated. Each member has own Stripe subscription. |
-| Pro Mainstream | $18.99 / mo / org | 1 hr | 100 | ✅ | 1 | ✅ | ✅ | Single Stripe subscription per org. |
-| Business | $48.99 / mo / org | 1 hr (+$35/hr blocks, admin-modifiable) | 300 | ✅ | 1 | ✅ | ✅ | + Custom Branding + Admin Dashboard. |
-| Enterprise | $449.99 / mo / org | 3 hr (overage admin-modifiable, default $35/hr) | 1000 | ✅ | 1 | ✅ | ✅ | + Dedicated LiveKit Node + Partitioned Data Security + 24/7 Support + Custom Branding + Admin Dashboard. **+ admin-modifiable fee per concurrent 1000-attendee session.** |
+| SKU            | Price                | Length                                          | Attendees | Recording | Agent | Notetaking | Screen | Notes                                                                                                                                                                     |
+| -------------- | -------------------- | ----------------------------------------------- | --------- | --------- | ----- | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Free           | $0                   | 40 min                                          | 10        | ❌        | ❌    | ❌         | ✅     | E2EE on                                                                                                                                                                   |
+| Pro Africa     | $14.99 / mo / member | 1 hr                                            | 100       | ✅        | 1     | ✅         | ✅     | 24-mo commit, no annual disc., cohort-gated. Each member has own Stripe subscription.                                                                                     |
+| Pro Mainstream | $18.99 / mo / org    | 1 hr                                            | 100       | ✅        | 1     | ✅         | ✅     | Single Stripe subscription per org.                                                                                                                                       |
+| Business       | $48.99 / mo / org    | 1 hr (+$35/hr blocks, admin-modifiable)         | 300       | ✅        | 1     | ✅         | ✅     | + Custom Branding + Admin Dashboard.                                                                                                                                      |
+| Enterprise     | $449.99 / mo / org   | 3 hr (overage admin-modifiable, default $35/hr) | 1000      | ✅        | 1     | ✅         | ✅     | + Dedicated LiveKit Node + Partitioned Data Security + 24/7 Support + Custom Branding + Admin Dashboard. **+ admin-modifiable fee per concurrent 1000-attendee session.** |
 
 ### 2.1 Hero copy (public pricing page)
 
@@ -84,6 +85,7 @@ E2EE were considered:
 ### 3.1 Org primitive: Appwrite Teams
 
 Each paying SKU = one Appwrite Team. Team membership roles:
+
 - **owner** (1 per team, the Stripe billing contact)
 - **admin** (can access `/admin`)
 - **member**
@@ -147,11 +149,11 @@ Following the 2026-06-13 decision to remove Deepgram entirely:
   or Apple Intelligence on mobile per the ADR).
 - **Tier 2 — Web Speech API** universal fallback. Triggers an in-app
   notification on first use:
-  > *"Your device can't run our on-device speech recognition. We've
-  > switched to the browser's built-in speech API for this call.
-  > Transcription quality and meeting intelligence may be reduced.
-  > We don't fall back to the cloud — that would break our privacy
-  > promise."*
+    > _"Your device can't run our on-device speech recognition. We've
+    > switched to the browser's built-in speech API for this call.
+    > Transcription quality and meeting intelligence may be reduced.
+    > We don't fall back to the cloud — that would break our privacy
+    > promise."_
 - If neither viable, transcription is **OFF** with a settings explainer.
 - The previously-shipped "Improve transcript quality" button on the
   recording detail page is **removed**. Re-transcription as a paid
@@ -188,7 +190,7 @@ admin Pricing CRUD).
   Drawer/modal on the same page (no off-domain redirect).
 - **COOP/COEP relaxation required for the `/pricing` route** —
   Stripe's iframe is blocked by the global `Cross-Origin-Opener-Policy:
-  same-origin` + `Cross-Origin-Embedder-Policy: credentialless` headers.
+same-origin` + `Cross-Origin-Embedder-Policy: credentialless` headers.
   Add per-route header override in `next.config.js`.
 - Pro Africa cohort signups use Stripe **Hosted Checkout** (separate
   redirect flow, lower volume, simpler error handling). The URL is
@@ -202,27 +204,28 @@ For Pro Africa and any future cohort program:
    (e.g., `AFRIKA-SAV-2026-X7K9`).
 2. Share URL pattern: `https://meet.deepvoiceai.co/signup?code=AFRIKA-SAV-2026-X7K9`
 3. Signup page (`app/signup/page.tsx`):
-   - Reads `code` from `searchParams` server-side.
-   - Stores in a **hidden** `<input type="hidden" name="cohortCode" />`
-     (NOT editable, NOT visible to user).
-   - On form submit, the Server Action validates the code against
-     the `organizations` collection: must be `is_active`, not expired,
-     `signup_count < max_seats`.
-   - On success:
-     - Creates Appwrite User.
-     - Adds user to the org's Team as `member` role.
-     - For Pro Africa: creates per-member Stripe Customer + Subscription
-       with 24-month schedule.
-     - Increments `signup_count` atomically.
-     - Redirects to onboarding or post-checkout success.
-   - On failure: clear error ("This invite link is no longer valid")
-     without leaking why (active vs expired vs full — anti-enumeration).
+    - Reads `code` from `searchParams` server-side.
+    - Stores in a **hidden** `<input type="hidden" name="cohortCode" />`
+      (NOT editable, NOT visible to user).
+    - On form submit, the Server Action validates the code against
+      the `organizations` collection: must be `is_active`, not expired,
+      `signup_count < max_seats`.
+    - On success:
+        - Creates Appwrite User.
+        - Adds user to the org's Team as `member` role.
+        - For Pro Africa: creates per-member Stripe Customer + Subscription
+          with 24-month schedule.
+        - Increments `signup_count` atomically.
+        - Redirects to onboarding or post-checkout success.
+    - On failure: clear error ("This invite link is no longer valid")
+      without leaking why (active vs expired vs full — anti-enumeration).
 
 ## 5. Subscription backend
 
 ### 5.1 Appwrite collections (NEW)
 
 **`subscriptions`**
+
 - `$id`, `userId` (indexed), `orgId` (indexed, FK to Teams)
 - `stripeCustomerId` (unique index), `stripeSubscriptionId` (unique index)
 - `stripeScheduleId` (nullable, for Pro Africa 24-mo schedule)
@@ -237,6 +240,7 @@ For Pro Africa and any future cohort program:
 - `createdAt`, `updatedAt`
 
 **`stripe_events`** (webhook idempotency log)
+
 - `$id` = Stripe event id (unique PK)
 - `type` (e.g., `customer.subscription.updated`)
 - `payload` (string, JSON)
@@ -246,6 +250,7 @@ For Pro Africa and any future cohort program:
 - `createdAt`
 
 **`organizations`** (the generic cohort/code primitive)
+
 - `$id`, `appwriteTeamId` (unique idx)
 - `name`, `country`, `program_name` (string — e.g., `SAV`, freeform for extensibility)
 - `signup_code` (unique idx, URL-safe random string)
@@ -263,6 +268,7 @@ For Pro Africa and any future cohort program:
 - `createdAt`
 
 **`active_rooms`** (mirrored from LiveKit webhooks for admin live monitor)
+
 - `$id` = roomSid (unique PK)
 - `roomName`, `createdAt`
 - `creatorOrgId` (indexed)
@@ -272,6 +278,7 @@ For Pro Africa and any future cohort program:
 - `lastEventAt`
 
 **`session_logs`** (per-join audit — IP + UA capture)
+
 - `$id` = sessionId (unique)
 - `identity` (Appwrite userId), `orgId`
 - `ip` (from `x-forwarded-for` at `/api/connection-details`)
@@ -280,6 +287,7 @@ For Pro Africa and any future cohort program:
 - `roomSid` (indexed)
 
 **`org_branding`** (Business+ custom branding)
+
 - `$id` = appwriteTeamId
 - `logoUrl`, `primaryColor`, `accentColor`, `darkLogoUrl`
 - `customDomain` (nullable, Enterprise only)
@@ -289,6 +297,7 @@ For Pro Africa and any future cohort program:
 ### 5.2 Stripe Checkout (embedded)
 
 Server Action `lib/actions/stripe.ts > createCheckoutSession(priceId, options)`:
+
 - `ui_mode: 'embedded'`
 - `mode: 'subscription'`
 - `customer = existing stripeCustomerId or creates new with metadata { appwriteUserId, appwriteTeamId }`
@@ -299,6 +308,7 @@ Server Action `lib/actions/stripe.ts > createCheckoutSession(priceId, options)`:
 ### 5.3 Customer Portal
 
 Server Action `createPortalSession()` returns `session.url`:
+
 - Pro Africa cohort customers: pass `configuration = STRIPE_PORTAL_CONFIG_AFRICA`
   (configured in Stripe Dashboard to hide cancel feature).
 - Everyone else: default config.
@@ -306,6 +316,7 @@ Server Action `createPortalSession()` returns `session.url`:
 ### 5.4 Webhook handler
 
 `app/api/webhooks/stripe/route.ts`:
+
 - `export const runtime = 'nodejs'`
 - Reads body via `req.text()` (NOT `req.json()` — would corrupt signature).
 - Verifies via `stripe.webhooks.constructEvent`.
@@ -317,6 +328,7 @@ Server Action `createPortalSession()` returns `session.url`:
   `customer.subscription.deleted`.
 
 `app/api/cron/process-stripe-events/route.ts` (Vercel Cron, every 1 min):
+
 - Drains unprocessed `stripe_events`.
 - Updates `subscriptions` row.
 - Marks event as `processed`.
@@ -340,11 +352,12 @@ Server Action `createPortalSession()` returns `session.url`:
 
 The `organizations.max_seats` field, enforced atomically at signup-code
 validation time, is the primary defense:
+
 - New member submits signup form with `?code=...`
 - Server reads `organizations` row WHERE `signup_code = code AND is_active = true`
 - Server checks `signup_count < max_seats` (if `max_seats > 0`)
 - If pass, atomically: `INSERT user + ADD to team + CREATE Stripe sub +
-  INCREMENT signup_count`. Race-protected via Appwrite document
+INCREMENT signup_count`. Race-protected via Appwrite document
   conditional update (`If-Match` on document `$updatedAt`).
 - If fail (no seats), return 403 with anti-enumeration error.
 
@@ -356,6 +369,7 @@ admin can also revoke `is_active` on a code to stop all new signups.
 ### 5.7 Business hourly overage meter
 
 Stripe Billing Meter `business_extra_hours`:
+
 - Fires at meeting-end webhook handler when `meeting_duration_minutes > 60`
   on a Business subscription.
 - Computes `extra_hours = Math.ceil((duration_minutes - 60) / 60)`.
@@ -367,6 +381,7 @@ Stripe Billing Meter `business_extra_hours`:
 ### 5.8 Enterprise concurrent big-room meter
 
 Stripe Billing Meter `concurrent_big_room_session`:
+
 - Fires from `app/api/livekit/webhook/route.ts` on `participant_joined`
   when `participant_count` crosses 1000 for the first time in that session.
 - Idempotency key: `roomSid:sessionId` — fires ONCE per session that
@@ -379,6 +394,7 @@ Stripe Billing Meter `concurrent_big_room_session`:
 ### 6.1 Layout
 
 `app/admin/*` with three-layer RBAC defense:
+
 1. **Middleware** (`middleware.ts`) — verifies session cookie, redirects
    unauthenticated to `/login`.
 2. **Layout** (`app/admin/layout.tsx`) — server component, calls
@@ -393,6 +409,7 @@ Reads from `lib/pricing/tiers.ts` (single source of truth, shared with
 public `/pricing`).
 
 Editable from admin:
+
 - Display name, marketing badges (e.g., "Best value")
 - Feature checkmarks (display in comparison table)
 - Description / FAQ copy
@@ -404,6 +421,7 @@ Editable from admin:
 - Enterprise concurrent big-room fee rate
 
 NOT editable from admin (managed in Stripe Dashboard):
+
 - Base subscription price ($0 / $14.99 / $18.99 / $48.99 / $449.99) —
   Stripe doesn't allow editing active prices; admin's "edit price"
   flow creates a new Stripe Price and swaps the mapping. Old
@@ -446,10 +464,10 @@ Realtime subscription on the client. 5s polling fallback.
 
 - New endpoint `app/api/livekit/webhook/route.ts` registered in
   self-hosted LiveKit. Listens for:
-  - `room_started` / `room_finished` → upsert `active_rooms`
-  - `participant_joined` / `participant_left` → update
-    `participantCount` + fire concurrent-big-room meter at 1000 threshold
-  - `egress_started` / `egress_ended` → update `isRecording`
+    - `room_started` / `room_finished` → upsert `active_rooms`
+    - `participant_joined` / `participant_left` → update
+      `participantCount` + fire concurrent-big-room meter at 1000 threshold
+    - `egress_started` / `egress_ended` → update `isRecording`
 - Client at `/admin/rooms` subscribes via Appwrite Realtime.
 - Per-room drill-down at `/admin/rooms/[roomSid]` shows participant table
   via `GET /api/admin/rooms/{roomSid}/participants` which calls
@@ -487,8 +505,8 @@ participant list with identity + name only — no email exposed.
 
 #### Disclosure banner (pinned to top of room views)
 
-> *You can see who joined and when, but not what they said. End-to-end
-> encryption is on by default for every plan.*
+> _You can see who joined and when, but not what they said. End-to-end
+> encryption is on by default for every plan._
 
 ### 6.6 Email visibility under E2EE (GDPR-aware)
 
@@ -501,6 +519,7 @@ participant list with identity + name only — no email exposed.
 ### 6.7 Branding (`/admin/branding`)
 
 For Business + Enterprise. Reads/writes `org_branding`:
+
 - Logo upload (light + dark variants)
 - Primary color, accent color (CSS-variable theming in client)
 - Custom domain (Enterprise only — requires DNS verification flow)

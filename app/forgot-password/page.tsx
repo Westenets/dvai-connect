@@ -73,8 +73,8 @@ function ForgotInner() {
                     {!done ? (
                         <>
                             <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-                                Enter the email you signed up with. We'll send you a link to
-                                set a new password.
+                                Enter the email you signed up with. We'll send you a link to set a
+                                new password.
                             </p>
                             <form onSubmit={submit} className="space-y-4">
                                 <input
@@ -86,7 +86,9 @@ function ForgotInner() {
                                     className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm"
                                 />
                                 {error && (
-                                    <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+                                    <div className="text-sm text-red-600 dark:text-red-400">
+                                        {error}
+                                    </div>
                                 )}
                                 <button
                                     type="submit"
@@ -99,13 +101,16 @@ function ForgotInner() {
                         </>
                     ) : (
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                            If an account with that email exists, we just sent a reset link.
-                            Check your inbox (and spam folder). The link expires in 1 hour.
+                            If an account with that email exists, we just sent a reset link. Check
+                            your inbox (and spam folder). The link expires in 1 hour.
                         </p>
                     )}
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-6">
                         Remembered it?{' '}
-                        <Link href="/login" className="underline decoration-dotted underline-offset-4 hover:text-emerald-600 dark:hover:text-emerald-400">
+                        <Link
+                            href="/login"
+                            className="underline decoration-dotted underline-offset-4 hover:text-emerald-600 dark:hover:text-emerald-400"
+                        >
                             Back to sign in
                         </Link>
                     </p>

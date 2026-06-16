@@ -37,9 +37,7 @@ function TierRow({ initial }: { initial: OverrideRow }) {
     const [badge, setBadge] = useState(initial.badge ?? '');
     const [description, setDescription] = useState(initial.description ?? '');
     const [headlineCopy, setHeadlineCopy] = useState(initial.headlineCopy ?? '');
-    const [bulletsText, setBulletsText] = useState(
-        (initial.bullets ?? []).join('\n'),
-    );
+    const [bulletsText, setBulletsText] = useState((initial.bullets ?? []).join('\n'));
     const [busy, setBusy] = useState<'save' | 'clear' | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [saved, setSaved] = useState(false);
@@ -165,7 +163,9 @@ function TierRow({ initial }: { initial: OverrideRow }) {
                         />
                     </Field>
                     {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
-                    {saved && <div className="text-sm text-emerald-600 dark:text-emerald-400">Saved.</div>}
+                    {saved && (
+                        <div className="text-sm text-emerald-600 dark:text-emerald-400">Saved.</div>
+                    )}
                     <div className="flex gap-2">
                         <button
                             type="button"
@@ -210,7 +210,9 @@ function TierRow({ initial }: { initial: OverrideRow }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <label className="block">
-            <div className="text-xs font-semibold tracking-widest text-slate-500 uppercase mb-1">{label}</div>
+            <div className="text-xs font-semibold tracking-widest text-slate-500 uppercase mb-1">
+                {label}
+            </div>
             {children}
         </label>
     );

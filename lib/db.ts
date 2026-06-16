@@ -47,8 +47,8 @@ export interface ChatMessage {
     timestamp: number;
     embedding: Float32Array | number[];
     media_url?: string;
-    media_type?: string;  // 'image' | 'file' | 'video' | etc
-    media_name?: string;  // Original filename
+    media_type?: string; // 'image' | 'file' | 'video' | etc
+    media_name?: string; // Original filename
 }
 
 class EdgeMeetingIntelligenceDB extends Dexie {
@@ -123,7 +123,9 @@ export async function ingestTranscript(
 }
 
 // Helper to ingest chat messages with embeddings. Returns the DB id.
-export async function ingestChatMessage(msg: Omit<ChatMessage, 'id' | 'embedding'>): Promise<number | undefined> {
+export async function ingestChatMessage(
+    msg: Omit<ChatMessage, 'id' | 'embedding'>,
+): Promise<number | undefined> {
     try {
         const { embedderService } = await import('./embedder');
         const embedding = msg.text ? await embedderService.embed(msg.text) : new Float32Array(384);

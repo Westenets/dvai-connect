@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server';
 import { WebhookReceiver } from 'livekit-server-sdk';
-import {
-    Client as ServerClient,
-    Databases as ServerDatabases,
-    Query,
-    ID,
-} from 'node-appwrite';
+import { Client as ServerClient, Databases as ServerDatabases, Query, ID } from 'node-appwrite';
 import { requireStripe } from '@/lib/stripe';
 import type { TierId } from '@/lib/pricing/tiers';
 
@@ -168,12 +163,7 @@ async function upsertActiveRoom(
         await databases.updateDocument(DB_ID, 'active_rooms', existing.$id, writeFields);
         return { ...existing, ...(writeFields as Partial<ActiveRoom>) } as ActiveRoom;
     }
-    const created = await databases.createDocument(
-        DB_ID,
-        'active_rooms',
-        ID.unique(),
-        writeFields,
-    );
+    const created = await databases.createDocument(DB_ID, 'active_rooms', ID.unique(), writeFields);
     return created as unknown as ActiveRoom;
 }
 
@@ -288,10 +278,7 @@ export async function POST(request: Request) {
                             // Stripe duplicate-identifier returns a benign error — log and continue.
                             const msg = err?.message ?? String(err);
                             if (!/idempotent|duplicate/i.test(msg)) {
-                                console.error(
-                                    '[livekit/webhook] big-room meter failed:',
-                                    msg,
-                                );
+                                console.error('[livekit/webhook] big-room meter failed:', msg);
                             }
                         }
                     }
@@ -340,12 +327,7 @@ export async function POST(request: Request) {
                 break;
         }
     } catch (err: any) {
-        console.error(
-            '[livekit/webhook] handler for',
-            event.event,
-            'failed:',
-            err?.message ?? err,
-        );
+        console.error('[livekit/webhook] handler for', event.event, 'failed:', err?.message ?? err);
         // Still 200 — LiveKit retries are not idempotent and a poison
         // event would loop forever. Surface via logs / monitoring.
     }

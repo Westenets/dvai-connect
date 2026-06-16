@@ -17,7 +17,10 @@ describe('probeHardware', () => {
     beforeEach(() => {
         original = {
             gpu: Object.getOwnPropertyDescriptor(globalThis.navigator, 'gpu'),
-            hardwareConcurrency: Object.getOwnPropertyDescriptor(globalThis.navigator, 'hardwareConcurrency'),
+            hardwareConcurrency: Object.getOwnPropertyDescriptor(
+                globalThis.navigator,
+                'hardwareConcurrency',
+            ),
             deviceMemory: Object.getOwnPropertyDescriptor(globalThis.navigator, 'deviceMemory'),
             userAgent: Object.getOwnPropertyDescriptor(globalThis.navigator, 'userAgent'),
         };

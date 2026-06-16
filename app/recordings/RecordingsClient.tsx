@@ -240,7 +240,9 @@ export default function RecordingsClient({ user }: RecordingsClientProps) {
                                             {recordings.map((rec) => (
                                                 <tr
                                                     key={rec.$id}
-                                                    onClick={() => router.push(`/recordings/${rec.$id}`)}
+                                                    onClick={() =>
+                                                        router.push(`/recordings/${rec.$id}`)
+                                                    }
                                                     className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
                                                 >
                                                     <td className="px-6 py-4">
@@ -290,7 +292,9 @@ export default function RecordingsClient({ user }: RecordingsClientProps) {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    router.push(`/recordings/${rec.$id}`);
+                                                                    router.push(
+                                                                        `/recordings/${rec.$id}`,
+                                                                    );
                                                                 }}
                                                                 className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-[#00a8a8] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-0 bg-transparent cursor-pointer"
                                                                 title="Watch"

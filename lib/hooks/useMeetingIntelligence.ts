@@ -27,13 +27,17 @@ export function useMeetingIntelligence(explicitRoomName?: string, batchSize = 10
     const processingRef = useRef(false);
 
     const processingTracker = useLiveQuery(
-        async () => roomName ? await db.processing_tracker.where('room_name').equals(roomName).first() : undefined,
-        [roomName]
+        async () =>
+            roomName
+                ? await db.processing_tracker.where('room_name').equals(roomName).first()
+                : undefined,
+        [roomName],
     );
 
     const latestTranscript = useLiveQuery(
-        async () => roomName ? await db.transcripts.where('room_name').equals(roomName).last() : undefined,
-        [roomName]
+        async () =>
+            roomName ? await db.transcripts.where('room_name').equals(roomName).last() : undefined,
+        [roomName],
     );
 
     // Auto-trigger batch processing during live meetings
@@ -106,7 +110,9 @@ export function useMeetingIntelligence(explicitRoomName?: string, batchSize = 10
         if (!roomName) return;
 
         setPipelineStatus('running');
-        setPipelineMessage('Processing meeting transcript locally... This may take a few minutes. Please don\'t close this window.');
+        setPipelineMessage(
+            "Processing meeting transcript locally... This may take a few minutes. Please don't close this window.",
+        );
 
         try {
             const { runFullPipelineForRoom } = await import('../intelligencePipeline');

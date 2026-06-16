@@ -14,13 +14,13 @@ clearly disclosed, and uses server-side encryption at rest (not E2EE).
 
 ## Pricing — locked (Tab 2, 2026-06-13)
 
-| Tier            | USD/mo     | Sales motion     | Per-org or per-member |
-| --------------- | ---------- | ---------------- | --------------------- |
-| Free            | 0          | self-serve       | n/a                   |
-| Pro (Africa)    | 14.99      | cohort-restricted| per member            |
-| Pro             | 18.99      | self-serve       | per org               |
-| Business        | 48.99      | sales-assisted   | per org               |
-| Enterprise      | 449.99     | sales-led        | per org (annual)      |
+| Tier         | USD/mo | Sales motion      | Per-org or per-member |
+| ------------ | ------ | ----------------- | --------------------- |
+| Free         | 0      | self-serve        | n/a                   |
+| Pro (Africa) | 14.99  | cohort-restricted | per member            |
+| Pro          | 18.99  | self-serve        | per org               |
+| Business     | 48.99  | sales-assisted    | per org               |
+| Enterprise   | 449.99 | sales-led         | per org (annual)      |
 
 Behavior, caps, gates: `lib/pricing/tiers.ts` (single source of
 truth). Editable display copy: `pricing_tiers` Appwrite collection,
@@ -86,9 +86,9 @@ creates products, prices, meters, portal configs.
 
 Runtime contract:
 
-- `STRIPE_RESTRICTED_KEY` (rk_…) — preferred runtime key. Scope it
+- `STRIPE_RESTRICTED_KEY` (rk\_…) — preferred runtime key. Scope it
   to the operations listed in the script's header comment.
-- `STRIPE_SECRET_KEY` (sk_…) — only used by the setup script.
+- `STRIPE_SECRET_KEY` (sk\_…) — only used by the setup script.
 - `STRIPE_WEBHOOK_SECRET` — verifies incoming webhook signatures.
 
 Event flow:
@@ -127,9 +127,9 @@ Webhook setup is in the server's `livekit.yaml`:
 
 ```yaml
 webhook:
-  api_key: <same key the app uses to mint participant tokens>
-  urls:
-    - https://connect.deepvoiceai.co/api/livekit/webhook
+    api_key: <same key the app uses to mint participant tokens>
+    urls:
+        - https://connect.deepvoiceai.co/api/livekit/webhook
 ```
 
 Enterprise customers get **real per-customer LiveKit nodes**, not
@@ -141,7 +141,7 @@ labeled-shared-with-quota. Provisioning runbook:
 - **No emoji unless the user explicitly asks.** Anywhere — comments,
   console logs, UI copy.
 - **Don't add comments that just describe what the code does.**
-  Comments should capture *why*, not *what*.
+  Comments should capture _why_, not _what_.
 - **Marketing pages (`/pricing`, `/pricing/africa`, `/signup`,
   `/billing`, `/checkout/success`, `/forgot-password`,
   `/reset-password`, `/verify-email`) use `h-full overflow-y-auto`**
@@ -160,15 +160,15 @@ labeled-shared-with-quota. Provisioning runbook:
 ## Common gotchas
 
 - Stripe Node SDK v22 with API `2026-05-27.dahlia`:
-  - `Subscription.current_period_*` moved to
-    `SubscriptionItem.current_period_*` (each item now has its own
-    billing period).
-  - `Invoice.subscription` moved to
-    `Invoice.parent.subscription_details.subscription` (gated on
-    `parent.type === 'subscription_details'`).
-  - `SubscriptionSchedule.Phase.iterations` replaced by
-    `Phase.duration: { interval, interval_count }`.
-  - `ui_mode` accepts `embedded_page`, not `embedded`.
+    - `Subscription.current_period_*` moved to
+      `SubscriptionItem.current_period_*` (each item now has its own
+      billing period).
+    - `Invoice.subscription` moved to
+      `Invoice.parent.subscription_details.subscription` (gated on
+      `parent.type === 'subscription_details'`).
+    - `SubscriptionSchedule.Phase.iterations` replaced by
+      `Phase.duration: { interval, interval_count }`.
+    - `ui_mode` accepts `embedded_page`, not `embedded`.
 - Next.js 16 uses `proxy.ts` instead of `middleware.ts`. Both
   cannot coexist; the build fails.
 - Appwrite `createBooleanAttribute`: `required: true` AND a default

@@ -44,18 +44,17 @@ export function DomainVerifyPanel({
     if (!customDomain) {
         return (
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4 text-sm text-slate-600 dark:text-slate-300">
-                Enter a <code>customDomain</code> above and save to start the DNS
-                verification flow.
+                Enter a <code>customDomain</code> above and save to start the DNS verification flow.
             </div>
         );
     }
     if (!token) {
         return (
             <div className="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm text-amber-900 dark:text-amber-100">
-                Save the branding form to mint a verification token. If you've
-                already saved and still see this, run{' '}
-                <code>scripts/appwrite-migrate-domain-verify-2026-06-14.mjs</code>{' '}
-                to add the verification columns to <code>org_branding</code>.
+                Save the branding form to mint a verification token. If you've already saved and
+                still see this, run{' '}
+                <code>scripts/appwrite-migrate-domain-verify-2026-06-14.mjs</code> to add the
+                verification columns to <code>org_branding</code>.
             </div>
         );
     }
@@ -103,9 +102,8 @@ export function DomainVerifyPanel({
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400">
-                Add a single TXT record at your DNS provider to prove you own
-                this domain. Routing live traffic to it is a separate step
-                handled at your Apache / reverse proxy layer.
+                Add a single TXT record at your DNS provider to prove you own this domain. Routing
+                live traffic to it is a separate step handled at your Apache / reverse proxy layer.
             </p>
 
             <div className="space-y-2 text-xs">
@@ -131,8 +129,7 @@ export function DomainVerifyPanel({
 
             {result?.kind === 'ok' && (
                 <div className="rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100">
-                    Verified. We resolved the matching TXT record at{' '}
-                    <code>{txtHost}</code>.
+                    Verified. We resolved the matching TXT record at <code>{txtHost}</code>.
                 </div>
             )}
             {result?.kind === 'err' && (
@@ -162,14 +159,12 @@ export function DomainVerifyPanel({
             <div className="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap gap-4">
                 {verifiedAt && (
                     <span>
-                        Verified at{' '}
-                        <time dateTime={verifiedAt}>{formatTime(verifiedAt)}</time>
+                        Verified at <time dateTime={verifiedAt}>{formatTime(verifiedAt)}</time>
                     </span>
                 )}
                 {checkedAt && (
                     <span>
-                        Last checked{' '}
-                        <time dateTime={checkedAt}>{formatTime(checkedAt)}</time>
+                        Last checked <time dateTime={checkedAt}>{formatTime(checkedAt)}</time>
                     </span>
                 )}
             </div>

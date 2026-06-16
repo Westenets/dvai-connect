@@ -70,16 +70,20 @@ export async function POST(request: Request) {
             signup_code: signupCode,
             tier_override: body.tier_override ? String(body.tier_override) : null,
             commitment_months:
-                typeof body.commitment_months === 'number'
-                    ? body.commitment_months
-                    : null,
+                typeof body.commitment_months === 'number' ? body.commitment_months : null,
             max_seats: typeof body.max_seats === 'number' ? body.max_seats : 0,
             signup_count: 0,
             expires_at: body.expires_at ? String(body.expires_at) : null,
             is_active: true,
-            primary_contact_name: body.primary_contact_name ? String(body.primary_contact_name) : null,
-            primary_contact_email: body.primary_contact_email ? String(body.primary_contact_email) : null,
-            billing_contact_email: body.billing_contact_email ? String(body.billing_contact_email) : null,
+            primary_contact_name: body.primary_contact_name
+                ? String(body.primary_contact_name)
+                : null,
+            primary_contact_email: body.primary_contact_email
+                ? String(body.primary_contact_email)
+                : null,
+            billing_contact_email: body.billing_contact_email
+                ? String(body.billing_contact_email)
+                : null,
             notes: body.notes ? String(body.notes) : null,
             createdBy: adminCtx.userId,
         };
@@ -91,12 +95,12 @@ export async function POST(request: Request) {
             try {
                 await teams.delete(teamId);
             } catch (rollbackErr: any) {
-                console.error('[admin/orgs] rollback team delete failed:', rollbackErr?.message ?? rollbackErr);
+                console.error(
+                    '[admin/orgs] rollback team delete failed:',
+                    rollbackErr?.message ?? rollbackErr,
+                );
             }
         }
-        return NextResponse.json(
-            { error: err?.message ?? 'Create failed' },
-            { status: 500 },
-        );
+        return NextResponse.json({ error: err?.message ?? 'Create failed' }, { status: 500 });
     }
 }

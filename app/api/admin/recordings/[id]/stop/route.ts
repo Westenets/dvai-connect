@@ -17,10 +17,7 @@ const PROJECT = process.env.NEXT_PUBLIC_APPWRITE_PROJECT!;
 const API_KEY = process.env.APPWRITE_API_KEY;
 const DB_ID = process.env.APPWRITE_DATABASE_ID || 'dvai-connect';
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
     try {
         await requireAdmin();
     } catch {
@@ -43,7 +40,11 @@ export async function POST(
     let stoppedCount = 0;
     try {
         const all = await egressClient.listEgress();
-        const active = all.filter((e: any) => e.status < 2 && (e.roomName === roomName || e.web?.url?.includes(`/rooms/${roomName}`)));
+        const active = all.filter(
+            (e: any) =>
+                e.status < 2 &&
+                (e.roomName === roomName || e.web?.url?.includes(`/rooms/${roomName}`)),
+        );
         for (const e of active) {
             try {
                 await egressClient.stopEgress(e.egressId);
@@ -53,10 +54,7 @@ export async function POST(
             }
         }
     } catch (err: any) {
-        return NextResponse.json(
-            { error: err?.message ?? 'List egress failed' },
-            { status: 500 },
-        );
+        return NextResponse.json({ error: err?.message ?? 'List egress failed' }, { status: 500 });
     }
 
     // Mark our recording row as completed so the UI updates.

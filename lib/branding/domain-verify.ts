@@ -83,7 +83,10 @@ export async function verifyCustomDomain(
             return { ok: false, error: `No TXT records found at ${host} (${code}).` };
         }
         if (code === 'ETIMEOUT') {
-            return { ok: false, error: `DNS lookup for ${host} timed out — try again in a minute.` };
+            return {
+                ok: false,
+                error: `DNS lookup for ${host} timed out — try again in a minute.`,
+            };
         }
         return {
             ok: false,

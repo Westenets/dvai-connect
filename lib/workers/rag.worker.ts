@@ -25,7 +25,8 @@ self.onmessage = (e: MessageEvent) => {
             const emb = record.embedding;
             if (!emb || emb.length !== qLen) continue; // skip dimension mismatches
 
-            let dot = 0, eNorm = 0;
+            let dot = 0,
+                eNorm = 0;
             for (let j = 0; j < qLen; j++) {
                 dot += queryEmbedding[j] * emb[j];
                 eNorm += emb[j] * emb[j];
@@ -38,7 +39,7 @@ self.onmessage = (e: MessageEvent) => {
             results.push({
                 text: `[${record.speaker}]: ${record.text}`,
                 score,
-                id: record.id
+                id: record.id,
             });
         }
 

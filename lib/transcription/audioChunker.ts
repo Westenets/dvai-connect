@@ -78,8 +78,7 @@ export class AudioChunker {
             }
 
             const closeOnSilence =
-                elapsedMs >= this.opts.minChunkMs &&
-                this.silentRunMs >= this.opts.silenceMs;
+                elapsedMs >= this.opts.minChunkMs && this.silentRunMs >= this.opts.silenceMs;
             const closeOnMax = elapsedMs >= this.opts.maxChunkMs;
 
             if (closeOnSilence || closeOnMax) {

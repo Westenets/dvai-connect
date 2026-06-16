@@ -38,7 +38,9 @@ export function onRecordingStopped(roomName: string) {
         const last = spans[spans.length - 1];
         if (!last.stoppedAt) {
             last.stoppedAt = Date.now();
-            console.log(`[ChatCleanup] Recording stopped for "${roomName}" at ${new Date().toISOString()}`);
+            console.log(
+                `[ChatCleanup] Recording stopped for "${roomName}" at ${new Date().toISOString()}`,
+            );
         }
     }
 }
@@ -71,8 +73,8 @@ function extractFileId(url: string): string | null {
 /** Delete Appwrite files for a list of chat messages. Silently ignores failures. */
 async function deleteAppwriteFiles(messages: ChatMessage[]) {
     const fileIds = messages
-        .filter(m => m.media_url)
-        .map(m => extractFileId(m.media_url!))
+        .filter((m) => m.media_url)
+        .map((m) => extractFileId(m.media_url!))
         .filter((id): id is string => !!id);
 
     for (const fileId of fileIds) {
@@ -92,7 +94,7 @@ async function deleteAppwriteFiles(messages: ChatMessage[]) {
  */
 function isWithinRecordedTime(timestamp: number, spans: RecordingSpan[]): boolean {
     const BUFFER_MS = 2000;
-    return spans.some(span => {
+    return spans.some((span) => {
         const start = span.startedAt - BUFFER_MS;
         const end = (span.stoppedAt ?? Date.now()) + BUFFER_MS;
         return timestamp >= start && timestamp <= end;
@@ -107,12 +109,12 @@ export async function cleanupChatForRoom(roomName: string): Promise<void> {
     const spans = getRecordingSpans(roomName);
     const wasRecorded = spans.length > 0;
 
-    console.log(`[ChatCleanup] Cleaning up chat for "${roomName}" (recorded: ${wasRecorded}, spans: ${spans.length})`);
+    console.log(
+        `[ChatCleanup] Cleaning up chat for "${roomName}" (recorded: ${wasRecorded}, spans: ${spans.length})`,
+    );
 
     try {
-        const allMessages = await db.chat_messages
-            .where('room_name').equals(roomName)
-            .toArray();
+        const allMessages = await db.chat_messages.where('room_name').equals(roomName).toArray();
 
         if (allMessages.length === 0) {
             roomRecordingSpans.delete(roomName);
@@ -121,7 +123,9 @@ export async function cleanupChatForRoom(roomName: string): Promise<void> {
 
         if (!wasRecorded) {
             // Case 1: NOT recorded → delete everything
-            console.log(`[ChatCleanup] No recording — deleting all ${allMessages.length} chat messages.`);
+            console.log(
+                `[ChatCleanup] No recording — deleting all ${allMessages.length} chat messages.`,
+            );
             await deleteAppwriteFiles(allMessages);
             await db.chat_messages.where('room_name').equals(roomName).delete();
         } else {
@@ -131,16 +135,22 @@ export async function cleanupChatForRoom(roomName: string): Promise<void> {
                 if (!span.stoppedAt) span.stoppedAt = Date.now();
             }
 
-            const toDelete = allMessages.filter(m => !isWithinRecordedTime(m.timestamp, spans));
+            const toDelete = allMessages.filter((m) => !isWithinRecordedTime(m.timestamp, spans));
             const toKeep = allMessages.length - toDelete.length;
 
             if (toDelete.length > 0) {
-                console.log(`[ChatCleanup] Keeping ${toKeep} messages within recorded timespan, deleting ${toDelete.length} outside.`);
+                console.log(
+                    `[ChatCleanup] Keeping ${toKeep} messages within recorded timespan, deleting ${toDelete.length} outside.`,
+                );
                 await deleteAppwriteFiles(toDelete);
-                const idsToDelete = toDelete.map(m => m.id).filter((id): id is number => id !== undefined);
+                const idsToDelete = toDelete
+                    .map((m) => m.id)
+                    .filter((id): id is number => id !== undefined);
                 await db.chat_messages.bulkDelete(idsToDelete);
             } else {
-                console.log(`[ChatCleanup] All ${allMessages.length} messages fall within recorded timespan.`);
+                console.log(
+                    `[ChatCleanup] All ${allMessages.length} messages fall within recorded timespan.`,
+                );
             }
         }
     } catch (e) {

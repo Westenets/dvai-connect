@@ -1,16 +1,9 @@
-"use client";
+'use client';
 
-import {
-    createContext,
-    useContext,
-    useEffect,
-    useMemo,
-    useState,
-    type ReactNode,
-} from "react";
-import { embedderService } from "../embedder";
-import { llmService } from "../llmService";
-import type { AIServiceStatus } from "../aiServiceStatus";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { embedderService } from '../embedder';
+import { llmService } from '../llmService';
+import type { AIServiceStatus } from '../aiServiceStatus';
 
 /**
  * MeetAIProvider — reactive view onto the two on-device AI service singletons.
@@ -53,12 +46,10 @@ export interface MeetAIProviderProps {
 }
 
 export function MeetAIProvider({ children }: MeetAIProviderProps) {
-    const [embedderStatus, setEmbedderStatus] = useState<AIServiceStatus>(
-        () => embedderService.getStatus(),
+    const [embedderStatus, setEmbedderStatus] = useState<AIServiceStatus>(() =>
+        embedderService.getStatus(),
     );
-    const [gemmaStatus, setGemmaStatus] = useState<AIServiceStatus>(
-        () => llmService.getStatus(),
-    );
+    const [gemmaStatus, setGemmaStatus] = useState<AIServiceStatus>(() => llmService.getStatus());
 
     useEffect(() => {
         const unsubEmbedder = embedderService.status.subscribe(setEmbedderStatus);
@@ -83,7 +74,7 @@ export function MeetAIProvider({ children }: MeetAIProviderProps) {
 export function useMeetAI(): MeetAIContextValue {
     const ctx = useContext(MeetAIContext);
     if (!ctx) {
-        throw new Error("useMeetAI must be used within a <MeetAIProvider>.");
+        throw new Error('useMeetAI must be used within a <MeetAIProvider>.');
     }
     return ctx;
 }

@@ -56,9 +56,7 @@ describe('stripe-config', () => {
 
         it('throws when the env var is missing', () => {
             setEnv('STRIPE_PRICE_ID_BUSINESS', undefined);
-            expect(() => requireStripePriceId('business')).toThrow(
-                /STRIPE_PRICE_ID_BUSINESS/,
-            );
+            expect(() => requireStripePriceId('business')).toThrow(/STRIPE_PRICE_ID_BUSINESS/);
         });
     });
 

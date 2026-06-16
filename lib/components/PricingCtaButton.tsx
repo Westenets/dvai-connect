@@ -64,11 +64,7 @@ export function PricingCtaButton({
             >
                 {label}
             </button>
-            <CheckoutDrawer
-                open={open}
-                tier={tier}
-                onClose={() => setOpen(false)}
-            />
+            <CheckoutDrawer open={open} tier={tier} onClose={() => setOpen(false)} />
         </>
     );
 }

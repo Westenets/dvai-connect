@@ -77,19 +77,45 @@ export function NewOrgForm() {
     return (
         <form onSubmit={submit} className="space-y-6 max-w-2xl">
             <Field label="Name *">
-                <input type="text" required value={f.name} onChange={(e) => update('name', e.target.value)} className="input" />
+                <input
+                    type="text"
+                    required
+                    value={f.name}
+                    onChange={(e) => update('name', e.target.value)}
+                    className="input"
+                />
             </Field>
             <div className="grid grid-cols-2 gap-6">
                 <Field label="Country (ISO-3166 alpha-2) *">
-                    <input type="text" maxLength={2} required value={f.country} onChange={(e) => update('country', e.target.value)} className="input" />
+                    <input
+                        type="text"
+                        maxLength={2}
+                        required
+                        value={f.country}
+                        onChange={(e) => update('country', e.target.value)}
+                        className="input"
+                    />
                 </Field>
                 <Field label="Program name * (used as signup-code prefix)">
-                    <input type="text" required value={f.program_name} onChange={(e) => update('program_name', e.target.value)} className="input" placeholder="SAV" />
+                    <input
+                        type="text"
+                        required
+                        value={f.program_name}
+                        onChange={(e) => update('program_name', e.target.value)}
+                        className="input"
+                        placeholder="SAV"
+                    />
                 </Field>
             </div>
             <div className="grid grid-cols-2 gap-6">
                 <Field label="Tier override">
-                    <select value={f.tier_override} onChange={(e) => update('tier_override', e.target.value as OrgInput['tier_override'])} className="input">
+                    <select
+                        value={f.tier_override}
+                        onChange={(e) =>
+                            update('tier_override', e.target.value as OrgInput['tier_override'])
+                        }
+                        className="input"
+                    >
                         <option value="">(none — members pick at checkout)</option>
                         <option value="pro_africa">Pro (Africa Cohort)</option>
                         <option value="pro">Pro</option>
@@ -98,35 +124,77 @@ export function NewOrgForm() {
                     </select>
                 </Field>
                 <Field label="Commitment months (optional)">
-                    <input type="number" min={0} value={f.commitment_months} onChange={(e) => update('commitment_months', e.target.value)} className="input" placeholder="24" />
+                    <input
+                        type="number"
+                        min={0}
+                        value={f.commitment_months}
+                        onChange={(e) => update('commitment_months', e.target.value)}
+                        className="input"
+                        placeholder="24"
+                    />
                 </Field>
             </div>
             <div className="grid grid-cols-2 gap-6">
                 <Field label="Max seats (0 = unlimited)">
-                    <input type="number" min={0} value={f.max_seats} onChange={(e) => update('max_seats', e.target.value)} className="input" />
+                    <input
+                        type="number"
+                        min={0}
+                        value={f.max_seats}
+                        onChange={(e) => update('max_seats', e.target.value)}
+                        className="input"
+                    />
                 </Field>
                 <Field label="Expires at (ISO date, optional)">
-                    <input type="datetime-local" value={f.expires_at} onChange={(e) => update('expires_at', e.target.value)} className="input" />
+                    <input
+                        type="datetime-local"
+                        value={f.expires_at}
+                        onChange={(e) => update('expires_at', e.target.value)}
+                        className="input"
+                    />
                 </Field>
             </div>
             <Field label="Primary contact name">
-                <input type="text" value={f.primary_contact_name} onChange={(e) => update('primary_contact_name', e.target.value)} className="input" />
+                <input
+                    type="text"
+                    value={f.primary_contact_name}
+                    onChange={(e) => update('primary_contact_name', e.target.value)}
+                    className="input"
+                />
             </Field>
             <div className="grid grid-cols-2 gap-6">
                 <Field label="Primary contact email">
-                    <input type="email" value={f.primary_contact_email} onChange={(e) => update('primary_contact_email', e.target.value)} className="input" />
+                    <input
+                        type="email"
+                        value={f.primary_contact_email}
+                        onChange={(e) => update('primary_contact_email', e.target.value)}
+                        className="input"
+                    />
                 </Field>
                 <Field label="Billing contact email">
-                    <input type="email" value={f.billing_contact_email} onChange={(e) => update('billing_contact_email', e.target.value)} className="input" />
+                    <input
+                        type="email"
+                        value={f.billing_contact_email}
+                        onChange={(e) => update('billing_contact_email', e.target.value)}
+                        className="input"
+                    />
                 </Field>
             </div>
             <Field label="Notes">
-                <textarea rows={3} value={f.notes} onChange={(e) => update('notes', e.target.value)} className="input" />
+                <textarea
+                    rows={3}
+                    value={f.notes}
+                    onChange={(e) => update('notes', e.target.value)}
+                    className="input"
+                />
             </Field>
 
             {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
 
-            <button type="submit" disabled={busy} className="rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-900 font-semibold px-5 py-2.5">
+            <button
+                type="submit"
+                disabled={busy}
+                className="rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-900 font-semibold px-5 py-2.5"
+            >
                 {busy ? 'Creating…' : 'Create organization'}
             </button>
 

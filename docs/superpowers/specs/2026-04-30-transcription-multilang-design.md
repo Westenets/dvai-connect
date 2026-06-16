@@ -84,11 +84,11 @@ own specs when prioritized.
 
 ### 5.1 The 3-tier model
 
-| Tier | Where | Model | Selected when | Quality | Code-switch? |
-|---|---|---|---|---|---|
-| **1 — Cloud STT** | Provider (Deepgram Nova-3 default) | Provider's multilingual model | Paid user has explicitly enabled cloud, OR adaptive monitor demoted from Tier 2 with cloud as fallback | Best | Native |
-| **2 — Local Whisper** | Browser worker via `@westenets/dvai-bridge-core` | `whisper-base` (capable HW) or `whisper-tiny` (constrained HW) | Default when hardware probe says capable | Good | Native (auto-detects per chunk) |
-| **3 — Web Speech API** | Browser-native | `webkitSpeechRecognition` / `SpeechRecognition` | Fallback when Tier 2 not viable AND user has no Tier 1 access; or after adaptive demotion | Mediocre, single language at a time | No |
+| Tier                   | Where                                            | Model                                                          | Selected when                                                                                          | Quality                             | Code-switch?                    |
+| ---------------------- | ------------------------------------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------- | ------------------------------- |
+| **1 — Cloud STT**      | Provider (Deepgram Nova-3 default)               | Provider's multilingual model                                  | Paid user has explicitly enabled cloud, OR adaptive monitor demoted from Tier 2 with cloud as fallback | Best                                | Native                          |
+| **2 — Local Whisper**  | Browser worker via `@westenets/dvai-bridge-core` | `whisper-base` (capable HW) or `whisper-tiny` (constrained HW) | Default when hardware probe says capable                                                               | Good                                | Native (auto-detects per chunk) |
+| **3 — Web Speech API** | Browser-native                                   | `webkitSpeechRecognition` / `SpeechRecognition`                | Fallback when Tier 2 not viable AND user has no Tier 1 access; or after adaptive demotion              | Mediocre, single language at a time | No                              |
 
 **Why diarization comes free at every tier:** each participant runs
 their own transcriber against their own mic, tags utterances with their
@@ -193,153 +193,153 @@ files marked **MOD**.
 ### 6.1 Selection layer
 
 - **NEW** `lib/transcription/strategy.ts` — `TranscriptionStrategySelector`
-  - `select(): Promise<{ tier: Tier; model?: 'whisper-tiny' | 'whisper-base'; source: 'cache'|'probe'|'benchmark'|'override' }>`
-  - Caches result in `localStorage` under key `dvai.transcription.strategy.v1`
-  - Cache invalidates on hardware-fingerprint change
+    - `select(): Promise<{ tier: Tier; model?: 'whisper-tiny' | 'whisper-base'; source: 'cache'|'probe'|'benchmark'|'override' }>`
+    - Caches result in `localStorage` under key `dvai.transcription.strategy.v1`
+    - Cache invalidates on hardware-fingerprint change
 
 - **NEW** `lib/transcription/hardwareProbe.ts` — `HardwareProbe`
-  - Pure function. Reads `navigator.gpu`, `navigator.hardwareConcurrency`,
-    `navigator.deviceMemory`, mobile UA detection.
-  - Returns `{ category: 'definitely-tier-2' | 'borderline' | 'definitely-tier-3'; recommendedModel?: 'whisper-tiny'|'whisper-base'; reasoning: string }`
+    - Pure function. Reads `navigator.gpu`, `navigator.hardwareConcurrency`,
+      `navigator.deviceMemory`, mobile UA detection.
+    - Returns `{ category: 'definitely-tier-2' | 'borderline' | 'definitely-tier-3'; recommendedModel?: 'whisper-tiny'|'whisper-base'; reasoning: string }`
 
 - **NEW** `lib/transcription/benchmark.ts` — `CapabilityBenchmark`
-  - Downloads whisper-tiny once (~75MB), runs synthetic 5s transcription
-  - Returns `{ realtimeFactor: number; recommendedTier: Tier; recommendedModel: string }`
-  - Result cached in IndexedDB under hardware-fingerprint key
+    - Downloads whisper-tiny once (~75MB), runs synthetic 5s transcription
+    - Returns `{ realtimeFactor: number; recommendedTier: Tier; recommendedModel: string }`
+    - Result cached in IndexedDB under hardware-fingerprint key
 
 - **NEW** `lib/transcription/adaptiveMonitor.ts` — `AdaptiveMonitor`
-  - Active during meetings. Tracks buffer-of-audio vs buffer-of-transcribed.
-  - Fires `onTierDemotionNeeded` when behind > 5s for 3 consecutive checks.
+    - Active during meetings. Tracks buffer-of-audio vs buffer-of-transcribed.
+    - Fires `onTierDemotionNeeded` when behind > 5s for 3 consecutive checks.
 
 ### 6.2 Adapter layer
 
 - **NEW** `lib/transcription/adapters/types.ts` — `TranscriberAdapter` interface
 
-  ```ts
-  interface TranscriberAdapter {
-    start(audioStream: MediaStream): Promise<void>;
-    stop(): Promise<void>;
-    onTranscript(cb: (event: TranscriptionEvent) => void): () => void;
-    readonly tier: Tier;
-    readonly model?: string;
-  }
+    ```ts
+    interface TranscriberAdapter {
+        start(audioStream: MediaStream): Promise<void>;
+        stop(): Promise<void>;
+        onTranscript(cb: (event: TranscriptionEvent) => void): () => void;
+        readonly tier: Tier;
+        readonly model?: string;
+    }
 
-  interface TranscriptionEvent {
-    speaker: string;       // localParticipant.identity
-    text: string;
-    isFinal: boolean;
-    language: string | null;  // BCP-47, e.g. "en-US", "es-ES", null when unknown
-    tier: Tier;
-    timestamp: number;     // Date.now() at emission
-  }
-  ```
+    interface TranscriptionEvent {
+        speaker: string; // localParticipant.identity
+        text: string;
+        isFinal: boolean;
+        language: string | null; // BCP-47, e.g. "en-US", "es-ES", null when unknown
+        tier: Tier;
+        timestamp: number; // Date.now() at emission
+    }
+    ```
 
 - **NEW** `lib/transcription/adapters/whisperLocalAdapter.ts`
-  - Wraps a new `DVAI` instance configured for ASR:
-    - `backend: "transformers"`
-    - `pipelineTask: "automatic-speech-recognition"`
-    - `transformersModelId: "Xenova/whisper-tiny"` or `"Xenova/whisper-base"`
-    - `transport: "none"` — we call runPipeline directly
-    - Default worker URL — runs in worker thread (free win from problem #1)
-  - Streaming: uses Whisper's chunking, optionally with a VAD (Voice
-    Activity Detection) preprocessor to chunk at silences
-  - Implementation of VAD: lightweight RMS-based chunking for v1
-    (Silero VAD via transformers.js noted as future improvement)
+    - Wraps a new `DVAI` instance configured for ASR:
+        - `backend: "transformers"`
+        - `pipelineTask: "automatic-speech-recognition"`
+        - `transformersModelId: "Xenova/whisper-tiny"` or `"Xenova/whisper-base"`
+        - `transport: "none"` — we call runPipeline directly
+        - Default worker URL — runs in worker thread (free win from problem #1)
+    - Streaming: uses Whisper's chunking, optionally with a VAD (Voice
+      Activity Detection) preprocessor to chunk at silences
+    - Implementation of VAD: lightweight RMS-based chunking for v1
+      (Silero VAD via transformers.js noted as future improvement)
 
 - **NEW** `lib/transcription/adapters/cloudSttAdapter.ts`
-  - Default provider: **Deepgram Nova-3** ($0.26/streaming-hour, native
-    multilingual + code-switching + punctuation)
-  - WebSocket connection to Deepgram, streaming audio chunks
-  - API key sourced from a server-side endpoint (paid users only) —
-    NEVER exposed in client bundle
-  - Reconnect with exponential backoff (max 3 retries)
+    - Default provider: **Deepgram Nova-3** ($0.26/streaming-hour, native
+      multilingual + code-switching + punctuation)
+    - WebSocket connection to Deepgram, streaming audio chunks
+    - API key sourced from a server-side endpoint (paid users only) —
+      NEVER exposed in client bundle
+    - Reconnect with exponential backoff (max 3 retries)
 
 - **NEW** `lib/transcription/adapters/webSpeechAdapter.ts`
-  - Refactor of current `useLocalTranscriptionBroadcaster.ts` logic
-    into the adapter shape. No behavior change.
+    - Refactor of current `useLocalTranscriptionBroadcaster.ts` logic
+      into the adapter shape. No behavior change.
 
 ### 6.3 Re-transcription
 
 - **NEW** `lib/transcription/reTranscription.ts` — `ReTranscriptionService`
-  - `async run(recordingId: string, opts: { tier: 'cloud' | 'local-capable' }): Promise<void>`
-  - Fetches recording audio, streams through selected adapter
-  - Aligns new chunks to existing speaker-labeled chunks by timestamp
-  - Replaces text + language in Dexie, re-embeds, updates `tier` field
+    - `async run(recordingId: string, opts: { tier: 'cloud' | 'local-capable' }): Promise<void>`
+    - Fetches recording audio, streams through selected adapter
+    - Aligns new chunks to existing speaker-labeled chunks by timestamp
+    - Replaces text + language in Dexie, re-embeds, updates `tier` field
 
 ### 6.4 Auth/subscription stub
 
 - **NEW** `lib/auth/subscription.ts`
-  - `isPaidUser(): boolean` — returns `false` for v1 (this spec).
-  - Wired to real Appwrite subscription state in problem #5.
-  - Single chokepoint so swap is one file.
+    - `isPaidUser(): boolean` — returns `false` for v1 (this spec).
+    - Wired to real Appwrite subscription state in problem #5.
+    - Single chokepoint so swap is one file.
 
 ### 6.5 Refactors of existing code
 
 - **MOD** `lib/hooks/useLocalTranscriptionBroadcaster.ts` →
   rename to **NEW** `lib/hooks/useTranscriptionBroadcaster.ts`.
-  - Same hook signature, but delegates to whichever adapter the
-    strategy selected.
-  - All consumers (currently this is `VideoConference.tsx` indirectly)
-    keep working without changes if we keep an exported alias.
+    - Same hook signature, but delegates to whichever adapter the
+      strategy selected.
+    - All consumers (currently this is `VideoConference.tsx` indirectly)
+      keep working without changes if we keep an exported alias.
 
 - **MOD** `lib/db.ts` — `ingestTranscript()`
-  - Add optional `language: string | null` and `tier: Tier` parameters.
-  - Add the columns to the Dexie schema; bump schema version (Dexie
-    handles migration via `.upgrade()`).
+    - Add optional `language: string | null` and `tier: Tier` parameters.
+    - Add the columns to the Dexie schema; bump schema version (Dexie
+      handles migration via `.upgrade()`).
 
 - **MOD** `app/recordings/[id]/RecordingDetailClient.tsx`
-  - Add the "Improve transcript quality" button, gated on
-    `isPaidUser() && existingTranscriptTier === 'web-speech'`.
-  - Wire to `ReTranscriptionService.run()` with progress UI.
+    - Add the "Improve transcript quality" button, gated on
+      `isPaidUser() && existingTranscriptTier === 'web-speech'`.
+    - Wire to `ReTranscriptionService.run()` with progress UI.
 
 - **MOD** `lib/test/TestHarnessPanel.tsx`
-  - Add a "Test transcription tiers" button that runs each tier
-    against a synthetic audio sample, reports latency.
+    - Add a "Test transcription tiers" button that runs each tier
+      against a synthetic audio sample, reports latency.
 
 ### 6.6 UI / settings
 
 - **MOD** `app/settings/page.tsx` (with possible new section under
   `app/settings/menu/`)
-  - Transcription quality dropdown:
-    - **Auto** (default, runs hardware probe)
-    - **Local AI** (forces Tier 2; falls back to Tier 3 if hardware can't)
-    - **Basic** (forces Tier 3 — battery saver)
-    - **Cloud** (forces Tier 1 — paid only, disabled with upsell otherwise)
-  - "Run benchmark" button to manually re-evaluate hardware
+    - Transcription quality dropdown:
+        - **Auto** (default, runs hardware probe)
+        - **Local AI** (forces Tier 2; falls back to Tier 3 if hardware can't)
+        - **Basic** (forces Tier 3 — battery saver)
+        - **Cloud** (forces Tier 1 — paid only, disabled with upsell otherwise)
+    - "Run benchmark" button to manually re-evaluate hardware
 
 ## 7. Error handling
 
-| Failure | Detection | Recovery |
-|---|---|---|
-| HardwareProbe API unavailable (e.g. older browser) | try/catch around `navigator.gpu` access | Default to Tier 3, log warning |
-| Benchmark download fails (network) | fetch rejection | Use static-probe-only result |
-| Whisper model fails to load (Tier 2) | adapter `start()` rejects | Fallback to Tier 3 with toast |
-| Cloud STT auth fails (Tier 1) | WebSocket close 401/403 | Toast "Cloud unavailable, switching to local" → Tier 2 if available, else Tier 3 |
-| Cloud STT mid-meeting disconnect | adapter onDisconnect | Reconnect 3× with backoff; permanent failure → demote tier with toast |
-| Web Speech `onerror` (current behavior) | event handler | Existing restart pattern (preserved from current code) |
-| AdaptiveMonitor detects lag | buffer-delta threshold breached | Demote one tier, one-time toast per session |
-| `isPaidUser()` returns false during Tier 1 init | check inside selector | Refuse Tier 1 selection, fall through |
-| Re-transcription fails partway | per-chunk try/catch | Keep originals for failed chunks, save what succeeded, surface error toast |
-| Mic track unavailable (mute) | LiveKit track === null | No-op; not an error |
+| Failure                                            | Detection                               | Recovery                                                                         |
+| -------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------- |
+| HardwareProbe API unavailable (e.g. older browser) | try/catch around `navigator.gpu` access | Default to Tier 3, log warning                                                   |
+| Benchmark download fails (network)                 | fetch rejection                         | Use static-probe-only result                                                     |
+| Whisper model fails to load (Tier 2)               | adapter `start()` rejects               | Fallback to Tier 3 with toast                                                    |
+| Cloud STT auth fails (Tier 1)                      | WebSocket close 401/403                 | Toast "Cloud unavailable, switching to local" → Tier 2 if available, else Tier 3 |
+| Cloud STT mid-meeting disconnect                   | adapter onDisconnect                    | Reconnect 3× with backoff; permanent failure → demote tier with toast            |
+| Web Speech `onerror` (current behavior)            | event handler                           | Existing restart pattern (preserved from current code)                           |
+| AdaptiveMonitor detects lag                        | buffer-delta threshold breached         | Demote one tier, one-time toast per session                                      |
+| `isPaidUser()` returns false during Tier 1 init    | check inside selector                   | Refuse Tier 1 selection, fall through                                            |
+| Re-transcription fails partway                     | per-chunk try/catch                     | Keep originals for failed chunks, save what succeeded, surface error toast       |
+| Mic track unavailable (mute)                       | LiveKit track === null                  | No-op; not an error                                                              |
 
 ## 8. Testing strategy
 
 - **Unit (vitest):**
-  - `HardwareProbe` with mocked `navigator` for various device profiles
-  - `CapabilityBenchmark` with mocked Whisper inference times
-  - `TranscriptionStrategySelector` for various probe + pref + paid combos
-  - `AdaptiveMonitor` with synthetic buffer-growth patterns
-  - `ReTranscriptionService` alignment logic with synthetic timestamps
+    - `HardwareProbe` with mocked `navigator` for various device profiles
+    - `CapabilityBenchmark` with mocked Whisper inference times
+    - `TranscriptionStrategySelector` for various probe + pref + paid combos
+    - `AdaptiveMonitor` with synthetic buffer-growth patterns
+    - `ReTranscriptionService` alignment logic with synthetic timestamps
 - **Adapter contract tests** — each adapter satisfies the interface,
   mockable for higher-level tests
 - **Integration via TestHarnessPanel** — "Test transcription tiers"
   button: runs each tier against a 30s synthetic audio file, reports
   per-tier latency and (rough) accuracy
 - **Manual QA checklist**:
-  - Bilingual code-switching test (real bilingual speaker)
-  - Mid-meeting forced demotion (start at Tier 2, manually trigger via
-    dev override, verify graceful transition)
-  - Paid-user re-transcription end-to-end against a real recording
+    - Bilingual code-switching test (real bilingual speaker)
+    - Mid-meeting forced demotion (start at Tier 2, manually trigger via
+      dev override, verify graceful transition)
+    - Paid-user re-transcription end-to-end against a real recording
 
 ## 9. Cost model assumptions
 

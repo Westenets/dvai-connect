@@ -32,5 +32,14 @@ export const open = NEVER('open');
 export const realpath = NEVER('realpath');
 
 export default {
-    readFile, writeFile, stat, access, mkdir, readdir, unlink, rm, open, realpath,
+    readFile,
+    writeFile,
+    stat,
+    access,
+    mkdir,
+    readdir,
+    unlink,
+    rm,
+    open,
+    realpath,
 };

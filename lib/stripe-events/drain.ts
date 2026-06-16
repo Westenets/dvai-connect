@@ -47,13 +47,7 @@ export async function processStripeEvent(
         return 'ok';
     } catch (err: any) {
         const msg = err?.message ?? String(err);
-        console.error(
-            '[stripe-events] event',
-            doc.eventId,
-            'type=' + doc.type,
-            'failed:',
-            msg,
-        );
+        console.error('[stripe-events] event', doc.eventId, 'type=' + doc.type, 'failed:', msg);
         try {
             await deps.databases.updateDocument(deps.dbId, COLLECTION, doc.$id, {
                 processed: true,
@@ -61,10 +55,7 @@ export async function processStripeEvent(
                 error: msg.slice(0, 2000),
             });
         } catch (markErr: any) {
-            console.error(
-                '[stripe-events] could not mark errored:',
-                markErr?.message ?? markErr,
-            );
+            console.error('[stripe-events] could not mark errored:', markErr?.message ?? markErr);
         }
         return 'error';
     }

@@ -18,10 +18,7 @@ const PROJECT = process.env.NEXT_PUBLIC_APPWRITE_PROJECT!;
 const API_KEY = process.env.APPWRITE_API_KEY;
 const DB_ID = process.env.APPWRITE_DATABASE_ID || 'dvai-connect';
 
-export async function DELETE(
-    _request: Request,
-    context: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
     try {
         await requireAdmin();
     } catch {
@@ -37,9 +34,6 @@ export async function DELETE(
         await databases.deleteDocument(DB_ID, 'recordings', id);
         return NextResponse.json({ ok: true });
     } catch (err: any) {
-        return NextResponse.json(
-            { error: err?.message ?? 'Delete failed' },
-            { status: 500 },
-        );
+        return NextResponse.json({ error: err?.message ?? 'Delete failed' }, { status: 500 });
     }
 }

@@ -85,9 +85,7 @@ export default async function AdminBrandingPage() {
                         </Link>
                     );
                 }
-                return (
-                    <span className="text-slate-500 italic">unknown ({r.appwriteTeamId})</span>
-                );
+                return <span className="text-slate-500 italic">unknown ({r.appwriteTeamId})</span>;
             },
         },
         {
@@ -132,7 +130,12 @@ export default async function AdminBrandingPage() {
                     <span className="text-slate-400">—</span>
                 ),
         },
-        { key: 'customDomain', header: 'Custom domain', muted: true, render: (r) => r.customDomain ?? '—' },
+        {
+            key: 'customDomain',
+            header: 'Custom domain',
+            muted: true,
+            render: (r) => r.customDomain ?? '—',
+        },
         {
             key: 'emailFrom',
             header: 'Email from',
@@ -153,18 +156,16 @@ export default async function AdminBrandingPage() {
             <header className="mb-6">
                 <h1 className="text-2xl font-semibold mb-1">Branding</h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Per-organization branding. Customization is honored at
-                    runtime only for orgs whose tier has{' '}
-                    <code>customBranding=true</code> (Business + Enterprise).
+                    Per-organization branding. Customization is honored at runtime only for orgs
+                    whose tier has <code>customBranding=true</code> (Business + Enterprise).
                 </p>
             </header>
 
             <div className="mb-5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-5 py-4 text-sm">
-                <strong className="font-semibold">v1 note:</strong> Branding
-                rows are managed from an org's detail page. Logo upload uses a
-                URL field for v1 — drag-and-drop upload through an Appwrite
-                Storage bucket is a follow-up. Custom domain is accepted but
-                DNS verification is deferred to Phase 2.
+                <strong className="font-semibold">v1 note:</strong> Branding rows are managed from
+                an org's detail page. Logo upload uses a URL field for v1 — drag-and-drop upload
+                through an Appwrite Storage bucket is a follow-up. Custom domain is accepted but DNS
+                verification is deferred to Phase 2.
             </div>
 
             <DataTable

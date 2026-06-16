@@ -32,10 +32,7 @@ async function getSessionCookieValue(): Promise<string | null> {
 }
 
 function buildClient(sessionValue: string): ServerClient {
-    return new ServerClient()
-        .setEndpoint(ENDPOINT)
-        .setProject(PROJECT)
-        .setSession(sessionValue);
+    return new ServerClient().setEndpoint(ENDPOINT).setProject(PROJECT).setSession(sessionValue);
 }
 
 /**
@@ -63,8 +60,8 @@ export async function getUserRoles(): Promise<Map<string, AppRole>> {
                 const role: AppRole = me.roles.includes('owner')
                     ? 'owner'
                     : me.roles.includes('admin')
-                        ? 'admin'
-                        : 'member';
+                      ? 'admin'
+                      : 'member';
                 out.set(team.$id, role);
             } catch {
                 // Per-team listing failed; treat as member.

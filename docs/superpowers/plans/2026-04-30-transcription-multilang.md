@@ -22,6 +22,7 @@ Before starting any task:
 ## File structure (locked in this plan)
 
 **Created:**
+
 - `lib/transcription/types.ts` — shared types (`Tier`, `TranscriptionEvent`, `TranscriberAdapter`)
 - `lib/transcription/hardwareProbe.ts` — static device-capability probe
 - `lib/transcription/benchmark.ts` — on-demand whisper-tiny realtime benchmark
@@ -41,6 +42,7 @@ Before starting any task:
 - `lib/transcription/__tests__/webSpeechAdapter.test.ts`
 
 **Modified:**
+
 - `lib/db.ts` — Dexie schema bump; `ingestTranscript()` gains `language` and `tier` fields
 - `lib/hooks/useLocalTranscriptionBroadcaster.ts` — re-exports from new hook (back-compat alias) then later deleted
 - `lib/meetingComponents/VideoConference.tsx` — switch import to new hook
@@ -49,6 +51,7 @@ Before starting any task:
 - `app/settings/page.tsx` — add transcription quality dropdown
 
 **Deleted at the end:**
+
 - `lib/hooks/useLocalTranscriptionBroadcaster.ts` (after consumers migrated)
 
 ---
@@ -56,6 +59,7 @@ Before starting any task:
 ## Task 1: Shared types and adapter contract
 
 **Files:**
+
 - Create: `lib/transcription/types.ts`
 
 - [ ] **Step 1: Write the type definitions**
@@ -134,6 +138,7 @@ git commit -m "transcription: add shared types and adapter contract"
 ## Task 2: `isPaidUser()` subscription stub
 
 **Files:**
+
 - Create: `lib/auth/subscription.ts`
 - Test: `lib/auth/__tests__/subscription.test.ts`
 
@@ -191,6 +196,7 @@ git commit -m "auth: add isPaidUser() stub for transcription tier gating"
 ## Task 3: Hardware probe (static)
 
 **Files:**
+
 - Create: `lib/transcription/hardwareProbe.ts`
 - Test: `lib/transcription/__tests__/hardwareProbe.test.ts`
 
@@ -217,7 +223,10 @@ describe('probeHardware', () => {
     beforeEach(() => {
         original = {
             gpu: Object.getOwnPropertyDescriptor(globalThis.navigator, 'gpu'),
-            hardwareConcurrency: Object.getOwnPropertyDescriptor(globalThis.navigator, 'hardwareConcurrency'),
+            hardwareConcurrency: Object.getOwnPropertyDescriptor(
+                globalThis.navigator,
+                'hardwareConcurrency',
+            ),
             deviceMemory: Object.getOwnPropertyDescriptor(globalThis.navigator, 'deviceMemory'),
             userAgent: Object.getOwnPropertyDescriptor(globalThis.navigator, 'userAgent'),
         };
@@ -318,8 +327,7 @@ export interface HardwareProbeResult {
     fingerprint: string;
 }
 
-const isMobileUa = (ua: string): boolean =>
-    /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
+const isMobileUa = (ua: string): boolean => /iPhone|iPad|iPod|Android|Mobile/i.test(ua);
 
 const safeGet = <T>(fn: () => T, fallback: T): T => {
     try {
@@ -392,6 +400,7 @@ git commit -m "transcription: add static hardware probe for tier selection"
 ## Task 4: Adaptive monitor (runtime buffer-lag watcher)
 
 **Files:**
+
 - Create: `lib/transcription/adaptiveMonitor.ts`
 - Test: `lib/transcription/__tests__/adaptiveMonitor.test.ts`
 
@@ -421,7 +430,12 @@ describe('AdaptiveMonitor', () => {
 
     it('fires demotion after 3 consecutive lag samples above threshold', () => {
         const onDemote = vi.fn();
-        const m = new AdaptiveMonitor({ thresholdSec: 5, consecutive: 3, onDemote, checkIntervalMs: 1000 });
+        const m = new AdaptiveMonitor({
+            thresholdSec: 5,
+            consecutive: 3,
+            onDemote,
+            checkIntervalMs: 1000,
+        });
         m.start();
         // Each tick: audio grows by 10s, transcribed grows by 1s → 9s lag (above threshold)
         for (let i = 0; i < 3; i++) {
@@ -435,20 +449,30 @@ describe('AdaptiveMonitor', () => {
 
     it('resets counter when a sample comes back under threshold', () => {
         const onDemote = vi.fn();
-        const m = new AdaptiveMonitor({ thresholdSec: 5, consecutive: 3, onDemote, checkIntervalMs: 1000 });
+        const m = new AdaptiveMonitor({
+            thresholdSec: 5,
+            consecutive: 3,
+            onDemote,
+            checkIntervalMs: 1000,
+        });
         m.start();
         // Two laggy samples...
-        m.recordAudio(10); m.recordTranscribed(1);
+        m.recordAudio(10);
+        m.recordTranscribed(1);
         vi.advanceTimersByTime(1000);
-        m.recordAudio(10); m.recordTranscribed(1);
+        m.recordAudio(10);
+        m.recordTranscribed(1);
         vi.advanceTimersByTime(1000);
         // ...then a recovery
-        m.recordAudio(11); m.recordTranscribed(11);
+        m.recordAudio(11);
+        m.recordTranscribed(11);
         vi.advanceTimersByTime(1000);
         // Two more laggy samples — should not fire because counter reset
-        m.recordAudio(11); m.recordTranscribed(2);
+        m.recordAudio(11);
+        m.recordTranscribed(2);
         vi.advanceTimersByTime(1000);
-        m.recordAudio(11); m.recordTranscribed(2);
+        m.recordAudio(11);
+        m.recordTranscribed(2);
         vi.advanceTimersByTime(1000);
         expect(onDemote).not.toHaveBeenCalled();
         m.stop();
@@ -456,7 +480,12 @@ describe('AdaptiveMonitor', () => {
 
     it('only fires once per session even if lag persists', () => {
         const onDemote = vi.fn();
-        const m = new AdaptiveMonitor({ thresholdSec: 5, consecutive: 3, onDemote, checkIntervalMs: 1000 });
+        const m = new AdaptiveMonitor({
+            thresholdSec: 5,
+            consecutive: 3,
+            onDemote,
+            checkIntervalMs: 1000,
+        });
         m.start();
         for (let i = 0; i < 10; i++) {
             m.recordAudio(10);
@@ -501,7 +530,8 @@ export interface AdaptiveMonitorOptions {
 }
 
 export class AdaptiveMonitor {
-    private opts: Required<Omit<AdaptiveMonitorOptions, 'onDemote'>> & Pick<AdaptiveMonitorOptions, 'onDemote'>;
+    private opts: Required<Omit<AdaptiveMonitorOptions, 'onDemote'>> &
+        Pick<AdaptiveMonitorOptions, 'onDemote'>;
     private audioSec = 0;
     private transcribedSec = 0;
     private consecutiveLaggy = 0;
@@ -572,6 +602,7 @@ git commit -m "transcription: add AdaptiveMonitor for runtime tier demotion"
 ## Task 5: Web Speech adapter (refactor of current logic)
 
 **Files:**
+
 - Create: `lib/transcription/adapters/webSpeechAdapter.ts`
 - Test: `lib/transcription/__tests__/webSpeechAdapter.test.ts`
 
@@ -592,13 +623,16 @@ class MockRecognition {
     onerror: ((e: any) => void) | null = null;
     onend: (() => void) | null = null;
     started = false;
-    start = vi.fn(() => { this.started = true; });
-    stop = vi.fn(() => { this.started = false; this.onend?.(); });
+    start = vi.fn(() => {
+        this.started = true;
+    });
+    stop = vi.fn(() => {
+        this.started = false;
+        this.onend?.();
+    });
     fireResult(transcript: string, isFinal: boolean) {
         this.onresult?.({
-            results: [
-                { 0: { transcript }, isFinal, length: 1 },
-            ],
+            results: [{ 0: { transcript }, isFinal, length: 1 }],
         });
     }
 }
@@ -683,11 +717,7 @@ Expected: FAIL "Cannot find module"
 
 ```ts
 // lib/transcription/adapters/webSpeechAdapter.ts
-import type {
-    TranscriberAdapter,
-    TranscriptionEvent,
-    TranscriptionListener,
-} from '../types';
+import type { TranscriberAdapter, TranscriptionEvent, TranscriptionListener } from '../types';
 
 /**
  * WebSpeechAdapter — Tier 3 fallback. Wraps the browser-native
@@ -716,8 +746,7 @@ export class WebSpeechAdapter implements TranscriberAdapter {
 
     constructor(opts: WebSpeechAdapterOptions = {}) {
         this.language =
-            opts.language ??
-            (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
+            opts.language ?? (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
     }
 
     async start(_audioStream: MediaStream, speaker: string): Promise<void> {
@@ -726,8 +755,7 @@ export class WebSpeechAdapter implements TranscriberAdapter {
         this.isCleanedUp = false;
 
         const Ctor =
-            (globalThis as any).SpeechRecognition ||
-            (globalThis as any).webkitSpeechRecognition;
+            (globalThis as any).SpeechRecognition || (globalThis as any).webkitSpeechRecognition;
         if (!Ctor) {
             throw new Error('SpeechRecognition API not available in this browser');
         }
@@ -825,6 +853,7 @@ git commit -m "transcription: refactor Web Speech logic into adapter shape"
 ## Task 6: Local Whisper adapter (Tier 2)
 
 **Files:**
+
 - Create: `lib/transcription/adapters/whisperLocalAdapter.ts`
 
 This adapter uses `@westenets/dvai-bridge-core` with the
@@ -922,8 +951,7 @@ export class AudioChunker {
             }
 
             const closeOnSilence =
-                elapsedMs >= this.opts.minChunkMs &&
-                this.silentRunMs >= this.opts.silenceMs;
+                elapsedMs >= this.opts.minChunkMs && this.silentRunMs >= this.opts.silenceMs;
             const closeOnMax = elapsedMs >= this.opts.maxChunkMs;
 
             if (closeOnSilence || closeOnMax) {
@@ -1123,6 +1151,7 @@ git commit -m "transcription: add WhisperLocalAdapter (Tier 2) and audio chunker
 ## Task 7: Cloud STT adapter (Deepgram, Tier 1)
 
 **Files:**
+
 - Create: `lib/transcription/adapters/cloudSttAdapter.ts`
 - Create: `app/api/transcription/cloud-token/route.ts`
 
@@ -1182,11 +1211,7 @@ export async function POST(_req: Request) {
 
 ```ts
 // lib/transcription/adapters/cloudSttAdapter.ts
-import type {
-    TranscriberAdapter,
-    TranscriptionEvent,
-    TranscriptionListener,
-} from '../types';
+import type { TranscriberAdapter, TranscriptionEvent, TranscriptionListener } from '../types';
 
 /**
  * CloudSttAdapter — Tier 1. Streams mic audio to Deepgram Nova-3 over
@@ -1259,10 +1284,7 @@ export class CloudSttAdapter implements TranscriberAdapter {
         });
         if (this.opts.detectLanguage) params.set('detect_language', 'true');
 
-        this.ws = new WebSocket(`${baseUrl}?${params.toString()}`, [
-            'token',
-            token,
-        ]);
+        this.ws = new WebSocket(`${baseUrl}?${params.toString()}`, ['token', token]);
         this.ws.binaryType = 'arraybuffer';
 
         this.ws.onopen = () => this.beginPcmPump();
@@ -1275,10 +1297,7 @@ export class CloudSttAdapter implements TranscriberAdapter {
         if (!this.stream) return;
         this.ctx = new AudioContext({ sampleRate: 16000 });
         this.source = this.ctx.createMediaStreamSource(this.stream);
-        const bufferSize = Math.max(
-            256,
-            Math.round((PCM_CHUNK_MS / 1000) * this.ctx.sampleRate),
-        );
+        const bufferSize = Math.max(256, Math.round((PCM_CHUNK_MS / 1000) * this.ctx.sampleRate));
         const proc = (this.ctx as any).createScriptProcessor(bufferSize, 1, 1);
         this.worklet = proc;
         proc.onaudioprocess = (e: AudioProcessingEvent) => {
@@ -1305,8 +1324,7 @@ export class CloudSttAdapter implements TranscriberAdapter {
             const text: string = alt.transcript ?? '';
             if (!text || text.trim().length === 0) return;
             const isFinal = !!data.is_final;
-            const language: string | null =
-                data.detected_language ?? data.language ?? null;
+            const language: string | null = data.detected_language ?? data.language ?? null;
             this.emit({
                 speaker: this.speaker,
                 text,
@@ -1390,6 +1408,7 @@ git commit -m "transcription: add CloudSttAdapter (Tier 1, Deepgram) + token end
 ## Task 8: Capability benchmark (lazy)
 
 **Files:**
+
 - Create: `lib/transcription/benchmark.ts`
 
 The benchmark is intentionally simple: load whisper-tiny once, run a
@@ -1406,7 +1425,7 @@ import { DVAI } from '@westenets/dvai-bridge-core';
 import type { Tier, WhisperModel } from './types';
 
 export interface BenchmarkResult {
-    realtimeFactor: number;  // 1.0 = realtime; >1.0 = faster than realtime
+    realtimeFactor: number; // 1.0 = realtime; >1.0 = faster than realtime
     recommendedTier: Tier;
     recommendedModel?: WhisperModel;
     inferenceMs: number;
@@ -1492,6 +1511,7 @@ git commit -m "transcription: add lazy whisper-tiny capability benchmark"
 ## Task 9: Strategy selector
 
 **Files:**
+
 - Create: `lib/transcription/strategy.ts`
 - Test: `lib/transcription/__tests__/strategy.test.ts`
 
@@ -1659,10 +1679,10 @@ import { isPaidUser } from '@/lib/auth/subscription';
 import type { StrategyResult, Tier, WhisperModel } from './types';
 
 export type UserPreference =
-    | 'auto'         // hardware probe decides
-    | 'local-ai'     // force Tier 2; fall back to Tier 3 if hardware can't
-    | 'basic'        // force Tier 3
-    | 'cloud';       // request Tier 1 (paid only; falls back if not paid)
+    | 'auto' // hardware probe decides
+    | 'local-ai' // force Tier 2; fall back to Tier 3 if hardware can't
+    | 'basic' // force Tier 3
+    | 'cloud'; // request Tier 1 (paid only; falls back if not paid)
 
 export interface SelectStrategyArgs {
     pref: UserPreference;
@@ -1694,7 +1714,12 @@ async function compute(
     }
     if (args.pref === 'cloud') {
         if (isPaidUser()) {
-            return mk('cloud', undefined, 'paid-cloud-pref', 'User picked Cloud and is on a paid plan');
+            return mk(
+                'cloud',
+                undefined,
+                'paid-cloud-pref',
+                'User picked Cloud and is on a paid plan',
+            );
         }
         return mk(
             probe.category === 'definitely-tier-3' ? 'web-speech' : 'local-whisper',
@@ -1705,8 +1730,12 @@ async function compute(
     }
     if (args.pref === 'local-ai') {
         if (probe.category === 'definitely-tier-3') {
-            return mk('web-speech', undefined, 'static-probe',
-                'User picked Local AI but hardware cannot run Whisper in real-time');
+            return mk(
+                'web-speech',
+                undefined,
+                'static-probe',
+                'User picked Local AI but hardware cannot run Whisper in real-time',
+            );
         }
         return mk('local-whisper', probe.recommendedModel, 'user-override', 'User picked Local AI');
     }
@@ -1737,12 +1766,21 @@ async function compute(
             `Benchmark failed (${bench.realtimeFactor.toFixed(2)}× real-time); using Tier 3`,
         );
     } catch (err) {
-        return mk('web-speech', undefined, 'static-probe',
-            `Benchmark failed to run; defaulting to Tier 3 (${(err as Error).message})`);
+        return mk(
+            'web-speech',
+            undefined,
+            'static-probe',
+            `Benchmark failed to run; defaulting to Tier 3 (${(err as Error).message})`,
+        );
     }
 }
 
-function mk(tier: Tier, model: WhisperModel | undefined, source: StrategyResult['source'], reasoning: string): StrategyResult {
+function mk(
+    tier: Tier,
+    model: WhisperModel | undefined,
+    source: StrategyResult['source'],
+    reasoning: string,
+): StrategyResult {
     return { tier, model, source, reasoning };
 }
 
@@ -1779,7 +1817,9 @@ function writeCache(fpKey: string, result: StrategyResult): void {
 export function _resetStrategyCache(): void {
     inMemoryCache = null;
     if (typeof localStorage !== 'undefined') {
-        try { localStorage.removeItem(CACHE_KEY); } catch {}
+        try {
+            localStorage.removeItem(CACHE_KEY);
+        } catch {}
     }
 }
 ```
@@ -1801,6 +1841,7 @@ git commit -m "transcription: add TranscriptionStrategySelector with cache"
 ## Task 10: DB schema migration
 
 **Files:**
+
 - Modify: `lib/db.ts`
 
 - [ ] **Step 1: Read current db.ts to understand the schema**
@@ -1821,8 +1862,7 @@ backfills `tier: 'web-speech'` and `language: null` for existing rows.
 // Add a new version with the new fields:
 this.version(N + 1)
     .stores({
-        transcripts:
-            '++id, room_name, speaker, text, embedding, ts, language, tier',
+        transcripts: '++id, room_name, speaker, text, embedding, ts, language, tier',
     })
     .upgrade(async (tx) => {
         const table = tx.table('transcripts');
@@ -1837,7 +1877,10 @@ export async function ingestTranscript(
     speaker: string,
     text: string,
     roomName: string,
-    options: { language?: string | null; tier?: 'web-speech' | 'local-whisper' | 'cloud' | 'cloud-rerun' | 'local-rerun' } = {},
+    options: {
+        language?: string | null;
+        tier?: 'web-speech' | 'local-whisper' | 'cloud' | 'cloud-rerun' | 'local-rerun';
+    } = {},
 ): Promise<void> {
     // existing logic...
     // when inserting, include:
@@ -1850,13 +1893,13 @@ export async function ingestTranscript(
 
 Search for callers and add the optional fields where transcripts come
 from a known tier. (`useLocalTranscriptionBroadcaster.ts` will be
-removed in a later task; all *new* code goes through the new hook.)
+removed in a later task; all _new_ code goes through the new hook.)
 For now, existing callers can stay unchanged — the optional fields
 default correctly.
 
 Run: `grep -rn "ingestTranscript" lib/ app/ components/ --include="*.ts" --include="*.tsx"`
 
-For each caller that *knows* the tier (e.g. the new hook coming in
+For each caller that _knows_ the tier (e.g. the new hook coming in
 Task 12), pass it. For now, no edits needed — defaults handle it.
 
 - [ ] **Step 4: Verify build passes**
@@ -1876,6 +1919,7 @@ git commit -m "db: add language and tier columns to transcripts (Dexie upgrade)"
 ## Task 11: Re-transcription service
 
 **Files:**
+
 - Create: `lib/transcription/reTranscription.ts`
 - Test: `lib/transcription/__tests__/reTranscription.test.ts`
 
@@ -1942,10 +1986,7 @@ import { alignByTimestamp } from '../alignmentByTimestamp';
 
 describe('alignByTimestamp', () => {
     it('returns empty when no references provided', () => {
-        const out = alignByTimestamp(
-            [{ text: 'hi', language: 'en', timestampMs: 1000 }],
-            [],
-        );
+        const out = alignByTimestamp([{ text: 'hi', language: 'en', timestampMs: 1000 }], []);
         expect(out).toEqual([]);
     });
 
@@ -1956,9 +1997,9 @@ describe('alignByTimestamp', () => {
             { speaker: 'alice', timestampMs: 10000 },
         ];
         const newChunks = [
-            { text: 'hi', language: 'en', timestampMs: 100 },     // → alice
-            { text: 'hey', language: 'en', timestampMs: 4900 },   // → bob (4900 closer to 5000 than 0)
-            { text: 'k', language: 'en', timestampMs: 9500 },     // → alice (9500 closer to 10000 than 5000)
+            { text: 'hi', language: 'en', timestampMs: 100 }, // → alice
+            { text: 'hey', language: 'en', timestampMs: 4900 }, // → bob (4900 closer to 5000 than 0)
+            { text: 'k', language: 'en', timestampMs: 9500 }, // → alice (9500 closer to 10000 than 5000)
         ];
         const out = alignByTimestamp(newChunks, refs);
         expect(out.map((c) => c.speaker)).toEqual(['alice', 'bob', 'alice']);
@@ -2052,10 +2093,7 @@ export async function runReTranscription(opts: ReTranscriptionOptions): Promise<
     await audioCtx.close();
 
     // 3. Build references from existing rows for this room
-    const existingRows = await db.transcripts
-        .where('room_name')
-        .equals(opts.roomName)
-        .toArray();
+    const existingRows = await db.transcripts.where('room_name').equals(opts.roomName).toArray();
     if (existingRows.length === 0) {
         // No reference timeline — give up rather than guess speakers.
         throw new Error('No existing transcripts to align against; cannot preserve diarization.');
@@ -2097,6 +2135,7 @@ git commit -m "transcription: add paid re-transcription service with timestamp a
 ## Task 12: New `useTranscriptionBroadcaster` hook
 
 **Files:**
+
 - Create: `lib/hooks/useTranscriptionBroadcaster.ts`
 - Modify: `lib/hooks/useLocalTranscriptionBroadcaster.ts` (becomes a re-export shim)
 
@@ -2131,7 +2170,8 @@ function readUserPref(): UserPreference {
 
 function makeAdapter(tier: Tier, model?: string): TranscriberAdapter {
     if (tier === 'web-speech') return new WebSpeechAdapter();
-    if (tier === 'local-whisper') return new WhisperLocalAdapter({ model: (model as any) ?? 'whisper-tiny' });
+    if (tier === 'local-whisper')
+        return new WhisperLocalAdapter({ model: (model as any) ?? 'whisper-tiny' });
     return new CloudSttAdapter();
 }
 
@@ -2149,9 +2189,7 @@ export function useTranscriptionBroadcaster() {
     const { localParticipant } = useLocalParticipant();
     const remoteParticipants = useRemoteParticipants();
 
-    const isCcNeeded = remoteParticipants.some(
-        (p: any) => p.attributes?.ccEnabled === 'true',
-    );
+    const isCcNeeded = remoteParticipants.some((p: any) => p.attributes?.ccEnabled === 'true');
     const isRecording = (room as any).isRecording;
     const isMicEnabled = localParticipant.isMicrophoneEnabled;
     const shouldRun = (isCcNeeded || isRecording) && isMicEnabled;
@@ -2166,7 +2204,9 @@ export function useTranscriptionBroadcaster() {
 
         const tearDown = async () => {
             if (adapterRef.current) {
-                try { await adapterRef.current.stop(); } catch {}
+                try {
+                    await adapterRef.current.stop();
+                } catch {}
                 adapterRef.current = null;
             }
             if (monitorRef.current) {
@@ -2229,7 +2269,9 @@ export function useTranscriptionBroadcaster() {
                 await adapter.start(stream, localParticipant.identity ?? 'You');
             } catch (err) {
                 console.error('[useTranscriptionBroadcaster] adapter start failed', err);
-                toast.error(`Transcription unavailable on this tier (${chosenTier}). Falling back.`);
+                toast.error(
+                    `Transcription unavailable on this tier (${chosenTier}). Falling back.`,
+                );
                 if (chosenTier === 'cloud') {
                     pref = 'auto';
                     await startWithTier();
@@ -2245,7 +2287,7 @@ export function useTranscriptionBroadcaster() {
                     onDemote: async () => {
                         if (cancelledRef.current) return;
                         toast(
-                            "Switched to basic captions to keep up with the conversation. You can change this in Settings.",
+                            'Switched to basic captions to keep up with the conversation. You can change this in Settings.',
                             { icon: 'ℹ️', duration: 5000 },
                         );
                         await tearDown();
@@ -2304,6 +2346,7 @@ git commit -m "transcription: add tier-aware useTranscriptionBroadcaster hook"
 ## Task 13: Settings UI — transcription quality dropdown
 
 **Files:**
+
 - Modify: `app/settings/page.tsx`
 
 - [ ] **Step 1: Read current settings page**
@@ -2353,8 +2396,8 @@ function TranscriptionQualitySetting() {
                 </select>
             </label>
             <p className="setting-help">
-                Auto picks the best option your device can run in real-time.
-                Cloud requires a paid plan and sends audio to a server provider.
+                Auto picks the best option your device can run in real-time. Cloud requires a paid
+                plan and sends audio to a server provider.
             </p>
         </div>
     );
@@ -2382,6 +2425,7 @@ git commit -m "settings: add transcription quality dropdown"
 ## Task 14: RecordingDetailClient "Improve transcript" button
 
 **Files:**
+
 - Modify: `app/recordings/[id]/RecordingDetailClient.tsx`
 
 - [ ] **Step 1: Add the button + handler**
@@ -2395,7 +2439,10 @@ import { runReTranscription } from '@/lib/transcription/reTranscription';
 import { CloudSttAdapter } from '@/lib/transcription/adapters/cloudSttAdapter';
 
 // Inside the component:
-const [reTransProgress, setReTransProgress] = useState<{ processedSec: number; totalSec: number } | null>(null);
+const [reTransProgress, setReTransProgress] = useState<{
+    processedSec: number;
+    totalSec: number;
+} | null>(null);
 const [reTransRunning, setReTransRunning] = useState(false);
 // Detect tier of existing transcripts: read first row's tier field.
 // 'web-speech' rows are upgrade candidates; 'cloud' / 'local-whisper'
@@ -2404,13 +2451,12 @@ const [existingTier, setExistingTier] = useState<string | null>(null);
 useEffect(() => {
     let cancelled = false;
     (async () => {
-        const row = await db.transcripts
-            .where('room_name')
-            .equals(recording.roomName)
-            .first();
+        const row = await db.transcripts.where('room_name').equals(recording.roomName).first();
         if (!cancelled) setExistingTier((row as any)?.tier ?? null);
     })();
-    return () => { cancelled = true; };
+    return () => {
+        cancelled = true;
+    };
 }, [recording.roomName]);
 const showImprove = isPaidUser() && existingTier === 'web-speech';
 
@@ -2421,7 +2467,7 @@ const handleImprove = async () => {
         const cloud = new CloudSttAdapter();
         await runReTranscription({
             recordingAudioUrl: recording.audioUrl, // adjust to actual prop
-            roomName: recording.roomName,           // adjust to actual prop
+            roomName: recording.roomName, // adjust to actual prop
             transcribeChunk: async (pcm) => {
                 // For v1: a wrapper that sends one chunk through cloud and waits for the final.
                 // Implementation lives inside the adapter; this sketch is suggestive.
@@ -2439,13 +2485,15 @@ const handleImprove = async () => {
 };
 
 // In JSX:
-{showImprove && (
-    <button onClick={handleImprove} disabled={reTransRunning}>
-        {reTransRunning
-            ? `Improving… ${reTransProgress ? `${Math.round(reTransProgress.processedSec)}/${Math.round(reTransProgress.totalSec)}s` : ''}`
-            : 'Improve transcript quality'}
-    </button>
-)}
+{
+    showImprove && (
+        <button onClick={handleImprove} disabled={reTransRunning}>
+            {reTransRunning
+                ? `Improving… ${reTransProgress ? `${Math.round(reTransProgress.processedSec)}/${Math.round(reTransProgress.totalSec)}s` : ''}`
+                : 'Improve transcript quality'}
+        </button>
+    );
+}
 ```
 
 > **Implementation note for the engineer:** the CloudSttAdapter as
@@ -2477,6 +2525,7 @@ git commit -m "recordings: add 'Improve transcript' button (paid users)"
 ## Task 15: TestHarnessPanel — "Test transcription tiers" button
 
 **Files:**
+
 - Modify: `lib/test/TestHarnessPanel.tsx`
 
 - [ ] **Step 1: Add a button that runs each adapter on a synthetic mic audio source**
@@ -2486,7 +2535,9 @@ adapter for ~10s; record latency to first transcript. Display results
 in the panel.
 
 ```tsx
-const [tierTest, setTierTest] = useState<Record<string, { latencyMs?: number; ok: boolean; error?: string }>>({});
+const [tierTest, setTierTest] = useState<
+    Record<string, { latencyMs?: number; ok: boolean; error?: string }>
+>({});
 
 const runTierTest = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -2538,6 +2589,7 @@ git commit -m "test-harness: add 'Test transcription tiers' button"
 ## Task 16: Manual QA checklist
 
 **Files:**
+
 - Create: `docs/superpowers/qa/2026-04-30-transcription-multilang-qa.md`
 
 - [ ] **Step 1: Write the QA checklist**
@@ -2607,6 +2659,7 @@ git commit -m "qa: add manual checklist for multi-language transcription"
 ## Task 17: Switch existing consumers to new hook
 
 **Files:**
+
 - Modify: any file currently importing `useLocalTranscriptionBroadcaster`
 
 - [ ] **Step 1: Find consumers**

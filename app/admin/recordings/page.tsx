@@ -92,16 +92,15 @@ export default async function AdminRecordingsPage() {
             <header className="mb-6">
                 <h1 className="text-2xl font-semibold mb-1">Recordings</h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Every recording in this workspace. Admin actions bypass the
-                    per-user owner filter that gates the public /recordings page.
+                    Every recording in this workspace. Admin actions bypass the per-user owner
+                    filter that gates the public /recordings page.
                 </p>
             </header>
 
             <div className="mb-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-5 py-4 text-sm text-amber-900 dark:text-amber-100">
-                <strong className="font-semibold">Disclosure:</strong> Recording
-                content lives in server-side storage protected by server-side
-                encryption, not E2EE. Admin downloads + opens are auditable.
-                Forced-stop terminates egress mid-recording and may leave a
+                <strong className="font-semibold">Disclosure:</strong> Recording content lives in
+                server-side storage protected by server-side encryption, not E2EE. Admin downloads +
+                opens are auditable. Forced-stop terminates egress mid-recording and may leave a
                 truncated file.
             </div>
 
@@ -109,7 +108,15 @@ export default async function AdminRecordingsPage() {
                 columns={columns}
                 rows={rows ?? []}
                 rowKey={(r) => r.$id}
-                actions={(r) => <RecordingActions id={r.$id} recordingUrl={r.recording_url} status={r.status} egressId={r.egress_id} roomName={r.room_name} />}
+                actions={(r) => (
+                    <RecordingActions
+                        id={r.$id}
+                        recordingUrl={r.recording_url}
+                        status={r.status}
+                        egressId={r.egress_id}
+                        roomName={r.room_name}
+                    />
+                )}
                 emptyState={
                     rows === null
                         ? 'KPI source unavailable (APPWRITE_API_KEY missing or recordings collection not migrated).'
@@ -130,7 +137,8 @@ function StatusBadge({ status }: { status: string }) {
         <span
             className={
                 'inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ' +
-                (tone[status] ?? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200')
+                (tone[status] ??
+                    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200')
             }
         >
             {status}

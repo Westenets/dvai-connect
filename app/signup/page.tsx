@@ -35,7 +35,13 @@ function SignupInner() {
     const [validation, setValidation] = useState<
         | { state: 'loading' }
         | { state: 'invalid' }
-        | { state: 'valid'; programName: string; tier: string; commitmentMonths: number | null; seatsRemaining: number | null }
+        | {
+              state: 'valid';
+              programName: string;
+              tier: string;
+              commitmentMonths: number | null;
+              seatsRemaining: number | null;
+          }
         | { state: 'no-code' }
     >({ state: 'loading' });
 
@@ -110,9 +116,7 @@ function SignupInner() {
             setCheckoutOpen(true);
         } catch (err: any) {
             const msg =
-                err instanceof AppwriteException
-                    ? err.message
-                    : err?.message ?? 'Signup failed';
+                err instanceof AppwriteException ? err.message : (err?.message ?? 'Signup failed');
             setError(msg);
         } finally {
             setSubmitting(false);
@@ -215,21 +219,22 @@ function SignupInner() {
                             className="mt-1"
                         />
                         <span>
-                            I understand and agree to the{' '}
-                            {validation.commitmentMonths ?? 24}-month minimum
-                            commitment. Cancellation during this period
-                            requires coordination with my cohort administrator.
+                            I understand and agree to the {validation.commitmentMonths ?? 24}-month
+                            minimum commitment. Cancellation during this period requires
+                            coordination with my cohort administrator.
                         </span>
                     </label>
-                    {error && (
-                        <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
-                    )}
+                    {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
                     <button
                         type="submit"
                         disabled={submitting || !agree}
                         className="w-full rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 font-semibold px-4 py-3 text-sm"
                     >
-                        {submitting ? 'Working…' : user ? 'Continue to payment' : 'Create account and continue'}
+                        {submitting
+                            ? 'Working…'
+                            : user
+                              ? 'Continue to payment'
+                              : 'Create account and continue'}
                     </button>
                 </form>
 

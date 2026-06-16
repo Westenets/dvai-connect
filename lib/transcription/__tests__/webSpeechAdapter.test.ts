@@ -18,9 +18,7 @@ class MockRecognition {
     });
     fireResult(transcript: string, isFinal: boolean) {
         this.onresult?.({
-            results: [
-                { 0: { transcript }, isFinal, length: 1 },
-            ],
+            results: [{ 0: { transcript }, isFinal, length: 1 }],
         });
     }
 }

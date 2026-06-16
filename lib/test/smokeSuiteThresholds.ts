@@ -49,7 +49,10 @@ export function classifyDevice(d: DeviceInfo): DeviceClass {
  * Returns 'pass' / 'warn' / 'fail' for a measured value against a
  * range. Lower-is-better metric (latency, memory).
  */
-export function rate(value: number, range: { pass: number; warn: number }): 'pass' | 'warn' | 'fail' {
+export function rate(
+    value: number,
+    range: { pass: number; warn: number },
+): 'pass' | 'warn' | 'fail' {
     if (value <= range.pass) return 'pass';
     if (value <= range.warn) return 'warn';
     return 'fail';

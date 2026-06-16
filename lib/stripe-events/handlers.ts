@@ -113,14 +113,18 @@ export async function handleCheckoutSessionCompleted(
     const tier = session.metadata?.dvai_tier as PaidTierId | undefined;
     if (!subId || !customerId || !userId || !tier) {
         console.warn('[stripe-events/checkout.completed] missing key fields:', {
-            subId, customerId, userId, tier, eventId: event.id,
+            subId,
+            customerId,
+            userId,
+            tier,
+            eventId: event.id,
         });
         return;
     }
     const sub = await deps.stripe.subscriptions.retrieve(subId);
     const item = sub.items.data[0];
     const priceId = item?.price?.id;
-    const resolvedTier: TierId = priceId ? getTierByStripePriceId(priceId) ?? tier : tier;
+    const resolvedTier: TierId = priceId ? (getTierByStripePriceId(priceId) ?? tier) : tier;
 
     const isAfrica = resolvedTier === 'pro_africa';
     const signupCode = session.metadata?.dvai_signup_code;
@@ -162,12 +166,7 @@ export async function handleCheckoutSessionCompleted(
     if (existing) {
         await deps.databases.updateDocument(deps.dbId, SUBSCRIPTIONS, existing.$id, fields);
     } else {
-        await deps.databases.createDocument(
-            deps.dbId,
-            SUBSCRIPTIONS,
-            ID.unique(),
-            fields,
-        );
+        await deps.databases.createDocument(deps.dbId, SUBSCRIPTIONS, ID.unique(), fields);
     }
 }
 
@@ -233,10 +232,7 @@ export async function handleSubscriptionDeleted(
 /**
  * invoice.paid — extends the current period.
  */
-export async function handleInvoicePaid(
-    deps: HandlerDeps,
-    event: Stripe.Event,
-): Promise<void> {
+export async function handleInvoicePaid(deps: HandlerDeps, event: Stripe.Event): Promise<void> {
     const invoice = event.data.object as Stripe.Invoice;
     const subId = invoiceSubscriptionId(invoice);
     if (!subId) return;

@@ -86,8 +86,8 @@ function VerifyInner() {
                         {state === 'pending'
                             ? 'Verifying email…'
                             : state === 'ok'
-                                ? 'Email verified'
-                                : 'Verification failed'}
+                              ? 'Email verified'
+                              : 'Verification failed'}
                     </h1>
                     <p className="text-sm text-slate-600 dark:text-slate-400">{message}</p>
                     {state !== 'pending' && (

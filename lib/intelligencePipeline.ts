@@ -1,4 +1,4 @@
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage } from '@langchain/core/messages';
 import { llmService } from './llmService';
 import { db } from './db';
 
@@ -40,8 +40,10 @@ export async function runFullPipelineForRoom(roomName: string): Promise<void> {
             return;
         }
 
-        const ids = all.map(c => c.id as number).filter(Boolean);
-        console.log(`[INTEL] Running full pipeline for "${roomName}" (${all.length} transcripts)...`);
+        const ids = all.map((c) => c.id as number).filter(Boolean);
+        console.log(
+            `[INTEL] Running full pipeline for "${roomName}" (${all.length} transcripts)...`,
+        );
         await processBatch(roomName, 0, Math.max(...ids));
 
         // Unload LLM after completion to free memory
@@ -67,7 +69,11 @@ export async function runFullPipelineForRoom(roomName: string): Promise<void> {
  *
  * Must run on the main thread — DvAI uses MSW + its own transformers worker.
  */
-export async function processBatch(roomName: string, startId: number, endId: number): Promise<{
+export async function processBatch(
+    roomName: string,
+    startId: number,
+    endId: number,
+): Promise<{
     actionItems: string;
     summary: string;
     questions: string;
@@ -78,8 +84,9 @@ export async function processBatch(roomName: string, startId: number, endId: num
     const model = llmService.getModel();
 
     const chunks = await db.transcripts
-        .where('room_name').equals(roomName)
-        .filter(c => c.id !== undefined && c.id > startId && c.id <= endId)
+        .where('room_name')
+        .equals(roomName)
+        .filter((c) => c.id !== undefined && c.id > startId && c.id <= endId)
         .toArray();
 
     console.log(`[INTEL] Fetched ${chunks.length} chunks.`);
@@ -91,7 +98,7 @@ export async function processBatch(roomName: string, startId: number, endId: num
         return result;
     }
 
-    const textToProcess = chunks.map(c => `[${c.speaker}]: ${c.text}`).join('\n');
+    const textToProcess = chunks.map((c) => `[${c.speaker}]: ${c.text}`).join('\n');
 
     // 1. Action Items
     console.log('[INTEL] Running action_items prompt...');
@@ -101,7 +108,12 @@ export async function processBatch(roomName: string, startId: number, endId: num
     console.log(`[INTEL] action_items result: ${actionText}`);
     result.actionItems = actionText;
     if (actionText && actionText.toLowerCase() !== 'none') {
-        await db.insights.add({ room_name: roomName, type: 'action_items', content: actionText, timestamp: Date.now() });
+        await db.insights.add({
+            room_name: roomName,
+            type: 'action_items',
+            content: actionText,
+            timestamp: Date.now(),
+        });
     }
 
     // 2. Summary
@@ -112,7 +124,12 @@ export async function processBatch(roomName: string, startId: number, endId: num
     console.log(`[INTEL] summary result: ${summaryText}`);
     result.summary = summaryText;
     if (summaryText) {
-        await db.insights.add({ room_name: roomName, type: 'summary', content: summaryText, timestamp: Date.now() });
+        await db.insights.add({
+            room_name: roomName,
+            type: 'summary',
+            content: summaryText,
+            timestamp: Date.now(),
+        });
     }
 
     // 3. Questions
@@ -123,7 +140,12 @@ export async function processBatch(roomName: string, startId: number, endId: num
     console.log(`[INTEL] questions result: ${qText}`);
     result.questions = qText;
     if (qText && qText.toLowerCase() !== 'none') {
-        await db.insights.add({ room_name: roomName, type: 'questions', content: qText, timestamp: Date.now() });
+        await db.insights.add({
+            room_name: roomName,
+            type: 'questions',
+            content: qText,
+            timestamp: Date.now(),
+        });
     }
 
     await updateTracker(roomName, endId);

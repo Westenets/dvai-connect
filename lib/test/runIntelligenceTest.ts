@@ -34,9 +34,15 @@ export async function runTest(): Promise<TestResult> {
     console.log('[TEST] Clearing previous test room data...');
     const oldIds = await db.transcripts.where('room_name').equals(MOCK_MEETING_ROOM).primaryKeys();
     await db.transcripts.bulkDelete(oldIds as number[]);
-    const oldInsightIds = await db.insights.where('room_name').equals(MOCK_MEETING_ROOM).primaryKeys();
+    const oldInsightIds = await db.insights
+        .where('room_name')
+        .equals(MOCK_MEETING_ROOM)
+        .primaryKeys();
     await db.insights.bulkDelete(oldInsightIds as number[]);
-    const oldTracker = await db.processing_tracker.where('room_name').equals(MOCK_MEETING_ROOM).first();
+    const oldTracker = await db.processing_tracker
+        .where('room_name')
+        .equals(MOCK_MEETING_ROOM)
+        .first();
     if (oldTracker?.id) await db.processing_tracker.delete(oldTracker.id);
     console.log('[TEST] DB cleared for test room.');
 
@@ -51,7 +57,7 @@ export async function runTest(): Promise<TestResult> {
 
     // 3. Get IDs for the batch
     const allChunks = await db.transcripts.where('room_name').equals(MOCK_MEETING_ROOM).toArray();
-    const ids = allChunks.map(c => c.id as number).filter(Boolean);
+    const ids = allChunks.map((c) => c.id as number).filter(Boolean);
     const startId = 0;
     const endId = Math.max(...ids);
     console.log(`[TEST] Processing batch: IDs ${startId} → ${endId}`);

@@ -89,10 +89,8 @@ export function __resetTierByPriceIdCache() {
     TIER_BY_PRICE_ID_CACHE = null;
 }
 
-export const STRIPE_PORTAL_CONFIG_DEFAULT = () =>
-    process.env.STRIPE_PORTAL_CONFIG_DEFAULT ?? '';
-export const STRIPE_PORTAL_CONFIG_AFRICA = () =>
-    process.env.STRIPE_PORTAL_CONFIG_AFRICA ?? '';
+export const STRIPE_PORTAL_CONFIG_DEFAULT = () => process.env.STRIPE_PORTAL_CONFIG_DEFAULT ?? '';
+export const STRIPE_PORTAL_CONFIG_AFRICA = () => process.env.STRIPE_PORTAL_CONFIG_AFRICA ?? '';
 
 export const STRIPE_PORTAL_RETURN_URL = () =>
     process.env.STRIPE_PORTAL_RETURN_URL ?? 'https://connect.deepvoiceai.co/settings';

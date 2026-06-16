@@ -29,7 +29,7 @@ interface RecordingDoc {
 export const handleDeleteRecording = async (
     rec: RecordingDoc,
     currentUser: { $id: string } | null,
-    onSuccess?: () => void
+    onSuccess?: () => void,
 ) => {
     if (!currentUser) {
         toast.error('You must be logged in to delete a recording.');
@@ -39,7 +39,7 @@ export const handleDeleteRecording = async (
     // Ownership Check
     const ownerIds = (rec as any).owner || [];
     const isOwnerByField = Array.isArray(ownerIds) && ownerIds.includes(currentUser.$id);
-    
+
     // Legacy Check (Fallback)
     const legacyOwnerId = rec.started_by?.split('__')[1];
     const isLegacyOwner = legacyOwnerId === currentUser.$id;
@@ -57,10 +57,12 @@ export const handleDeleteRecording = async (
         confirmButtonText: 'Yes, delete it',
         cancelButtonText: 'Cancel',
         customClass: {
-            confirmButton: 'border-0 px-6 py-2 bg-[#d33] text-white rounded-xl font-semibold cursor-pointer outline-none transition-all hover:bg-red-600',
-            cancelButton: 'border-0 px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-semibold cursor-pointer outline-none transition-all hover:bg-slate-200 dark:hover:bg-slate-700'
+            confirmButton:
+                'border-0 px-6 py-2 bg-[#d33] text-white rounded-xl font-semibold cursor-pointer outline-none transition-all hover:bg-red-600',
+            cancelButton:
+                'border-0 px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-semibold cursor-pointer outline-none transition-all hover:bg-slate-200 dark:hover:bg-slate-700',
         },
-        buttonsStyling: false
+        buttonsStyling: false,
     });
 
     if (result.isConfirmed) {
@@ -88,7 +90,7 @@ export const handleDeleteRecording = async (
 
             toast.dismiss(deleteToastId);
             toast.success('Recording deleted successfully');
-            
+
             if (onSuccess) {
                 onSuccess();
             }
@@ -96,9 +98,9 @@ export const handleDeleteRecording = async (
             toast.dismiss(deleteToastId);
             console.error('Failed to delete recording:', error);
             toast.error(
-                error instanceof Error 
-                    ? `Failed to delete: ${error.message}` 
-                    : 'Failed to delete recording. You might not have permission.'
+                error instanceof Error
+                    ? `Failed to delete: ${error.message}`
+                    : 'Failed to delete recording. You might not have permission.',
             );
         }
     }

@@ -33,7 +33,12 @@ export interface TestHarnessSidebarProps extends React.HTMLAttributes<HTMLDivEle
     onClose: () => void;
 }
 
-export function TestHarnessSidebar({ onClose, style, className, ...props }: TestHarnessSidebarProps) {
+export function TestHarnessSidebar({
+    onClose,
+    style,
+    className,
+    ...props
+}: TestHarnessSidebarProps) {
     const room = useMaybeRoomContext();
     const roomName = room?.name || '';
     const { service: embedder } = useEmbedder();
@@ -86,9 +91,15 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
             for (const row of rows) {
                 speakerMap[row.speaker] = (speakerMap[row.speaker] || 0) + 1;
             }
-            const summary = Object.entries(speakerMap).map(([speaker, count]) => ({ speaker, count }));
+            const summary = Object.entries(speakerMap).map(([speaker, count]) => ({
+                speaker,
+                count,
+            }));
             setParticipantCheck(summary);
-            console.log(`[TestHarness] ${rows.length} total rows, ${summary.length} speakers:`, summary);
+            console.log(
+                `[TestHarness] ${rows.length} total rows, ${summary.length} speakers:`,
+                summary,
+            );
         } catch (e) {
             console.error('[TestHarness] DB check failed:', e);
         } finally {
@@ -109,13 +120,15 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
             const t0 = performance.now();
             const results = await searchWithLlamaIndex(queryEmbedding, queryRoom, 5);
             const retrievalMs = Math.round(performance.now() - t0);
-            console.log(`[TestHarness] RAG retrieval done in ${retrievalMs}ms, ${results.length} results.`);
+            console.log(
+                `[TestHarness] RAG retrieval done in ${retrievalMs}ms, ${results.length} results.`,
+            );
 
             // 2. Generate answer from context via LLM
             let answer = '';
             let generationMs = 0;
             if (results.length > 0) {
-                const context = results.map(r => r.text).join('\n');
+                const context = results.map((r) => r.text).join('\n');
                 const prompt = `Based on the following meeting transcript excerpts, answer the user's question. If the answer is not in the context, say so.\n\nContext:\n${context}\n\nQuestion: ${ragQuery}\n\nAnswer:`;
 
                 const t1 = performance.now();
@@ -227,19 +240,30 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                     <FlaskConical size={18} className="text-violet-400" />
                     <h2 className="text-white text-base font-bold">AI Test Harness</h2>
                 </div>
-                <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors bg-transparent border-0">
+                <button
+                    onClick={onClose}
+                    className="text-slate-400 hover:text-white transition-colors bg-transparent border-0"
+                >
                     <X size={20} />
                 </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5 font-mono text-xs">
-
                 {/* === Section 1: Multi-Participant DB Check === */}
                 <section>
                     <SectionLabel>Multi-Participant Check</SectionLabel>
                     <p className="text-slate-500 text-[10px] mb-2 leading-relaxed">
-                        Join from 2 browsers, click Sim Transcript in both, then check if both speakers appear in DB.
-                        {roomName ? <> Checking room: <span className="text-slate-300">&quot;{roomName}&quot;</span>.</> : ' (no room detected)'}
+                        Join from 2 browsers, click Sim Transcript in both, then check if both
+                        speakers appear in DB.
+                        {roomName ? (
+                            <>
+                                {' '}
+                                Checking room:{' '}
+                                <span className="text-slate-300">&quot;{roomName}&quot;</span>.
+                            </>
+                        ) : (
+                            ' (no room detected)'
+                        )}
                     </p>
                     <button
                         onClick={handleCheckParticipants}
@@ -252,12 +276,19 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                     {participantCheck.length > 0 && (
                         <div className="mt-2 flex flex-col gap-1">
                             {participantCheck.map(({ speaker, count }) => (
-                                <div key={speaker} className="flex justify-between items-center bg-slate-800/60 rounded-md px-3 py-2">
+                                <div
+                                    key={speaker}
+                                    className="flex justify-between items-center bg-slate-800/60 rounded-md px-3 py-2"
+                                >
                                     <span className="text-slate-300 truncate">{speaker}</span>
-                                    <span className="text-emerald-400 font-bold ml-2 shrink-0">{count} chunks</span>
+                                    <span className="text-emerald-400 font-bold ml-2 shrink-0">
+                                        {count} chunks
+                                    </span>
                                 </div>
                             ))}
-                            <p className={`mt-1 font-bold text-[10px] ${participantCheck.length >= 2 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                            <p
+                                className={`mt-1 font-bold text-[10px] ${participantCheck.length >= 2 ? 'text-emerald-400' : 'text-yellow-400'}`}
+                            >
                                 {participantCheck.length >= 2
                                     ? `${participantCheck.length} participants found — multi-capture working!`
                                     : 'Only 1 participant. Ensure second browser is also sim-transcribing.'}
@@ -272,7 +303,8 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                 <section>
                     <SectionLabel>AI Pipeline Test</SectionLabel>
                     <p className="text-slate-500 text-[10px] mb-2 leading-relaxed">
-                        Injects 30 mock utterances, runs LLM extraction (may take several minutes), validates outputs.
+                        Injects 30 mock utterances, runs LLM extraction (may take several minutes),
+                        validates outputs.
                     </p>
                     <button
                         onClick={handleRunTest}
@@ -285,11 +317,16 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
 
                     {testResult && (
                         <div className="mt-3 flex flex-col gap-2">
-                            <div className={`rounded-lg px-3 py-2 font-bold text-[10px] border ${testResult.passed ? 'bg-emerald-900/30 border-emerald-500/30 text-emerald-400' : 'bg-red-900/30 border-red-500/30 text-red-400'}`}>
-                                {testResult.passed ? 'PASSED' : 'FAILED'} — {testResult.durationMs}ms
+                            <div
+                                className={`rounded-lg px-3 py-2 font-bold text-[10px] border ${testResult.passed ? 'bg-emerald-900/30 border-emerald-500/30 text-emerald-400' : 'bg-red-900/30 border-red-500/30 text-red-400'}`}
+                            >
+                                {testResult.passed ? 'PASSED' : 'FAILED'} — {testResult.durationMs}
+                                ms
                                 {!testResult.passed && (
                                     <ul className="mt-1 pl-3 list-disc text-red-300 font-normal">
-                                        {testResult.failures.map((f, i) => <li key={i}>{f}</li>)}
+                                        {testResult.failures.map((f, i) => (
+                                            <li key={i}>{f}</li>
+                                        ))}
                                     </ul>
                                 )}
                             </div>
@@ -306,13 +343,14 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                 <section>
                     <SectionLabel>RAG Search</SectionLabel>
                     <p className="text-slate-500 text-[10px] mb-2 leading-relaxed">
-                        Semantic search over transcripts using LlamaIndex + DvAI embeddings. Searches {roomName ? `"${roomName}"` : 'test room'}.
+                        Semantic search over transcripts using LlamaIndex + DvAI embeddings.
+                        Searches {roomName ? `"${roomName}"` : 'test room'}.
                     </p>
                     <div className="flex gap-2">
                         <input
                             value={ragQuery}
-                            onChange={e => setRagQuery(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleRagSearch()}
+                            onChange={(e) => setRagQuery(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleRagSearch()}
                             placeholder="e.g. What was assigned to Alex?"
                             className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 text-[11px] outline-none focus:border-violet-500"
                         />
@@ -320,7 +358,10 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                             onClick={handleRagSearch}
                             disabled={ragLoading || !ragQuery.trim()}
                             className="px-3 py-2 rounded-lg border-0 font-bold text-[10px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            style={{ background: ragLoading ? '#334155' : '#0d9488', color: '#fff' }}
+                            style={{
+                                background: ragLoading ? '#334155' : '#0d9488',
+                                color: '#fff',
+                            }}
                         >
                             {ragLoading ? '...' : 'Go'}
                         </button>
@@ -339,20 +380,29 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                                     </div>
                                 </div>
                             ) : (
-                                <p className="text-[10px] text-slate-600 italic">No relevant context found.</p>
+                                <p className="text-[10px] text-slate-600 italic">
+                                    No relevant context found.
+                                </p>
                             )}
 
                             {/* Retrieved Context */}
                             {ragResult.results.length > 0 && (
                                 <div>
                                     <div className="text-[9px] font-bold uppercase tracking-wider mb-1 text-slate-500">
-                                        Retrieved Context ({ragResult.results.length} chunks, {ragResult.retrievalMs}ms)
+                                        Retrieved Context ({ragResult.results.length} chunks,{' '}
+                                        {ragResult.retrievalMs}ms)
                                     </div>
                                     {ragResult.results.map((r, i) => (
-                                        <div key={i} className="mb-1 pb-1 border-b border-white/5 last:border-0 last:mb-0 last:pb-0">
-                                            <div className="text-[9px] text-slate-600">Score: {r.score.toFixed(4)}</div>
+                                        <div
+                                            key={i}
+                                            className="mb-1 pb-1 border-b border-white/5 last:border-0 last:mb-0 last:pb-0"
+                                        >
+                                            <div className="text-[9px] text-slate-600">
+                                                Score: {r.score.toFixed(4)}
+                                            </div>
                                             <div className="text-[10px] text-slate-500 leading-relaxed">
-                                                {r.text.slice(0, 150)}{r.text.length > 150 ? '...' : ''}
+                                                {r.text.slice(0, 150)}
+                                                {r.text.length > 150 ? '...' : ''}
                                             </div>
                                         </div>
                                     ))}
@@ -368,16 +418,18 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                 <section>
                     <SectionLabel>Transcription Tier Test</SectionLabel>
                     <p className="text-slate-500 text-[10px] mb-2 leading-relaxed">
-                        Tries each transcription tier against your live mic.
-                        Reports time-to-first-transcript for each. Cloud tier
-                        is skipped (paid). Speak naturally for 5–10s after
-                        clicking.
+                        Tries each transcription tier against your live mic. Reports
+                        time-to-first-transcript for each. Cloud tier is skipped (paid). Speak
+                        naturally for 5–10s after clicking.
                     </p>
                     <button
                         onClick={runTierTest}
                         disabled={tierTestRunning}
                         className="w-full py-2 px-3 rounded-lg border-0 font-bold uppercase tracking-widest text-[10px] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ background: tierTestRunning ? '#374151' : '#0891b2', color: '#fff' }}
+                        style={{
+                            background: tierTestRunning ? '#374151' : '#0891b2',
+                            color: '#fff',
+                        }}
                     >
                         {tierTestRunning ? 'Testing tiers…' : 'Run Tier Test'}
                     </button>
@@ -410,9 +462,8 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                 <section>
                     <SectionLabel>Full Smoke Suite</SectionLabel>
                     <p className="text-slate-500 text-[10px] mb-2 leading-relaxed">
-                        Runs every AI subsystem in sequence (embedder, Gemma,
-                        ingest, RAG, optional pipeline). Captures latency +
-                        heap deltas, applies device-class thresholds.
+                        Runs every AI subsystem in sequence (embedder, Gemma, ingest, RAG, optional
+                        pipeline). Captures latency + heap deltas, applies device-class thresholds.
                     </p>
                     <div className="flex flex-col gap-1.5 mb-2">
                         <label className="flex items-center gap-2 text-slate-400 text-[10px]">
@@ -450,10 +501,10 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                                     s.status === 'pass'
                                         ? 'text-emerald-400'
                                         : s.status === 'warn'
-                                            ? 'text-yellow-400'
-                                            : s.status === 'fail'
-                                                ? 'text-red-400'
-                                                : 'text-slate-500';
+                                          ? 'text-yellow-400'
+                                          : s.status === 'fail'
+                                            ? 'text-red-400'
+                                            : 'text-slate-500';
                                 const heap = s.deltaHeapBytes
                                     ? ` ΔΉ ${(s.deltaHeapBytes / (1024 * 1024)).toFixed(1)}MB`
                                     : '';
@@ -463,18 +514,24 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                                         className="flex justify-between items-start bg-slate-800/60 rounded-md px-3 py-2"
                                     >
                                         <div className="flex flex-col">
-                                            <span className="text-slate-300 text-[11px]">{s.name}</span>
+                                            <span className="text-slate-300 text-[11px]">
+                                                {s.name}
+                                            </span>
                                             {s.message && (
                                                 <span className="text-slate-500 text-[9px] mt-0.5 max-w-[180px] truncate">
                                                     {s.message}
                                                 </span>
                                             )}
                                         </div>
-                                        <span className={`${color} font-bold text-[10px] text-right`}>
+                                        <span
+                                            className={`${color} font-bold text-[10px] text-right`}
+                                        >
                                             {s.status.toUpperCase()}
                                             <br />
                                             <span className="text-slate-400 font-normal">
-                                                {s.durationMs > 0 ? `${Math.round(s.durationMs)}ms` : '—'}
+                                                {s.durationMs > 0
+                                                    ? `${Math.round(s.durationMs)}ms`
+                                                    : '—'}
                                                 {heap}
                                             </span>
                                         </span>
@@ -491,11 +548,12 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
                                     smokeReport.overall === 'pass'
                                         ? 'bg-emerald-900/30 border-emerald-500/30 text-emerald-400'
                                         : smokeReport.overall === 'pass-with-warnings'
-                                            ? 'bg-yellow-900/30 border-yellow-500/30 text-yellow-400'
-                                            : 'bg-red-900/30 border-red-500/30 text-red-400'
+                                          ? 'bg-yellow-900/30 border-yellow-500/30 text-yellow-400'
+                                          : 'bg-red-900/30 border-red-500/30 text-red-400'
                                 }`}
                             >
-                                {smokeReport.overall.toUpperCase()} — total {Math.round(smokeReport.durationMs)}ms
+                                {smokeReport.overall.toUpperCase()} — total{' '}
+                                {Math.round(smokeReport.durationMs)}ms
                             </div>
                             <button
                                 onClick={downloadSmokeReport}
@@ -512,7 +570,11 @@ export function TestHarnessSidebar({ onClose, style, className, ...props }: Test
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-    return <h3 className="text-[10px] font-bold uppercase tracking-widest text-violet-400 mb-2">{children}</h3>;
+    return (
+        <h3 className="text-[10px] font-bold uppercase tracking-widest text-violet-400 mb-2">
+            {children}
+        </h3>
+    );
 }
 
 function Divider() {

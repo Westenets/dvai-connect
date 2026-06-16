@@ -70,7 +70,12 @@ export function RecordingActions({ id, recordingUrl, status, egressId, roomName 
                 type="button"
                 disabled={busy === 'delete'}
                 onClick={() => {
-                    if (!confirm('Delete this recording row? The file in storage is not removed by this action.')) return;
+                    if (
+                        !confirm(
+                            'Delete this recording row? The file in storage is not removed by this action.',
+                        )
+                    )
+                        return;
                     call('delete', `/api/admin/recordings/${encodeURIComponent(id)}`, 'DELETE');
                 }}
                 className="rounded-md bg-red-600 hover:bg-red-500 disabled:opacity-50 px-3 py-1.5 text-xs text-white"

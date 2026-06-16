@@ -52,9 +52,7 @@ export function useTranscriptionBroadcaster() {
     const { localParticipant } = useLocalParticipant();
     const remoteParticipants = useRemoteParticipants();
 
-    const isCcNeeded = remoteParticipants.some(
-        (p: any) => p.attributes?.ccEnabled === 'true',
-    );
+    const isCcNeeded = remoteParticipants.some((p: any) => p.attributes?.ccEnabled === 'true');
     const isRecording = (room as any).isRecording;
     const isMicEnabled = localParticipant.isMicrophoneEnabled;
     const shouldRun = (isCcNeeded || isRecording) && isMicEnabled;
@@ -123,10 +121,9 @@ export function useTranscriptionBroadcaster() {
                     language: event.language,
                 };
                 const enc = new TextEncoder();
-                room.localParticipant.publishData(
-                    enc.encode(JSON.stringify(payload)),
-                    { topic: 'transcription' } as any,
-                );
+                room.localParticipant.publishData(enc.encode(JSON.stringify(payload)), {
+                    topic: 'transcription',
+                } as any);
 
                 // Ingest finals to Dexie with tier + language metadata
                 if (event.isFinal && event.text.trim()) {
@@ -143,7 +140,9 @@ export function useTranscriptionBroadcaster() {
                 await adapter.start(stream, localParticipant.identity ?? 'You');
             } catch (err) {
                 console.error('[useTranscriptionBroadcaster] adapter start failed', err);
-                toast.error(`Transcription unavailable on this tier (${chosenTier}). Falling back.`);
+                toast.error(
+                    `Transcription unavailable on this tier (${chosenTier}). Falling back.`,
+                );
                 if (chosenTier === 'local-whisper') {
                     await startWithTier('web-speech');
                 }

@@ -1,8 +1,4 @@
-import type {
-    TranscriberAdapter,
-    TranscriptionEvent,
-    TranscriptionListener,
-} from '../types';
+import type { TranscriberAdapter, TranscriptionEvent, TranscriptionListener } from '../types';
 
 /**
  * WebSpeechAdapter — Tier 3 fallback. Wraps the browser-native
@@ -31,9 +27,7 @@ export class WebSpeechAdapter implements TranscriberAdapter {
     constructor(opts: WebSpeechAdapterOptions = {}) {
         this.language =
             opts.language ??
-            (typeof navigator !== 'undefined' && navigator.language
-                ? navigator.language
-                : 'en-US');
+            (typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'en-US');
     }
 
     async start(_audioStream: MediaStream, speaker: string): Promise<void> {
@@ -42,8 +36,7 @@ export class WebSpeechAdapter implements TranscriberAdapter {
         this.isCleanedUp = false;
 
         const Ctor =
-            (globalThis as any).SpeechRecognition ||
-            (globalThis as any).webkitSpeechRecognition;
+            (globalThis as any).SpeechRecognition || (globalThis as any).webkitSpeechRecognition;
         if (!Ctor) {
             throw new Error('SpeechRecognition API not available in this browser');
         }

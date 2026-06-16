@@ -74,7 +74,13 @@ export default async function AdminRoomsPage() {
             header: 'Participants',
             align: 'right',
             render: (r) => (
-                <span className={r.participantCount >= 1000 ? 'font-bold text-amber-600 dark:text-amber-400' : ''}>
+                <span
+                    className={
+                        r.participantCount >= 1000
+                            ? 'font-bold text-amber-600 dark:text-amber-400'
+                            : ''
+                    }
+                >
                     {r.participantCount}
                 </span>
             ),
@@ -108,9 +114,8 @@ export default async function AdminRoomsPage() {
                 <div>
                     <h1 className="text-2xl font-semibold mb-1">Rooms</h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Live room monitor. Refreshes every 5 seconds. Drill into a
-                        room for the full participant table and per-track encryption
-                        badges.
+                        Live room monitor. Refreshes every 5 seconds. Drill into a room for the full
+                        participant table and per-track encryption badges.
                     </p>
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
@@ -138,12 +143,11 @@ export default async function AdminRoomsPage() {
 function DisclosureBanner() {
     return (
         <div className="mb-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-5 py-4 text-sm text-amber-900 dark:text-amber-100">
-            <strong className="font-semibold">Privacy note:</strong>{' '}
-            Room metadata (name, participant count, recording state) is visible to
-            admins because the LiveKit server publishes it. Media content is not
-            decrypted server-side — admins cannot read meeting audio or video
-            even from here. End-meeting actions terminate the room for everyone
-            but do not produce a transcript.
+            <strong className="font-semibold">Privacy note:</strong> Room metadata (name,
+            participant count, recording state) is visible to admins because the LiveKit server
+            publishes it. Media content is not decrypted server-side — admins cannot read meeting
+            audio or video even from here. End-meeting actions terminate the room for everyone but
+            do not produce a transcript.
         </div>
     );
 }

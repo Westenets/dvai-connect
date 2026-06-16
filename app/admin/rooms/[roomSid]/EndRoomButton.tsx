@@ -16,10 +16,9 @@ export function EndRoomButton({ roomName }: { roomName: string }) {
         setPending(true);
         setError(null);
         try {
-            const res = await fetch(
-                `/api/admin/rooms/${encodeURIComponent(roomName)}/end`,
-                { method: 'POST' },
-            );
+            const res = await fetch(`/api/admin/rooms/${encodeURIComponent(roomName)}/end`, {
+                method: 'POST',
+            });
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
                 throw new Error(body.error ?? `HTTP ${res.status}`);

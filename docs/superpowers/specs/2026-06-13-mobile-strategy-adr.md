@@ -106,19 +106,19 @@ v2 rebuild.
 
 ## Trade-offs
 
-| Aspect | Phase 1 (Capacitor) | Phase 2 (React Native) |
-|---|---|---|
-| Time-to-market | 8-12 weeks | 14-18 weeks (after Phase 1) |
-| Reuses existing code | ~95% | ~30% (backend stays; UI rebuilt) |
-| E2EE on iOS | Via WKWebView from 15.4 (subject to smoke test) | Via native WebRTC SDK |
-| On-device AI on iOS | iOS 26+ via Apple Intelligence (15.4–25 disabled) | iOS 15.4+ via LiteRT-LM or Apple Intelligence native |
-| Battery (1-hour call) | ~10-20% worse than native | Native |
-| Background audio | Via AVAudioSession bridge | Native (proper) |
-| Screen share iOS | WebView only | iOS Broadcast Extension |
-| App Store discoverability | Hybrid (second-class) | Native (first-class) |
-| Maintenance load | Web + Capacitor (small native delta) | Web + RN (two codebases) |
-| Risk of App Review rejection | Higher (WebRTC + E2EE claims scrutinized) | Lower (native, similar to other LiveKit RN apps) |
-| Privacy MOAT claims integrity | Preserved (E2EE on every plan from day 1) | Preserved + reinforced |
+| Aspect                        | Phase 1 (Capacitor)                               | Phase 2 (React Native)                               |
+| ----------------------------- | ------------------------------------------------- | ---------------------------------------------------- |
+| Time-to-market                | 8-12 weeks                                        | 14-18 weeks (after Phase 1)                          |
+| Reuses existing code          | ~95%                                              | ~30% (backend stays; UI rebuilt)                     |
+| E2EE on iOS                   | Via WKWebView from 15.4 (subject to smoke test)   | Via native WebRTC SDK                                |
+| On-device AI on iOS           | iOS 26+ via Apple Intelligence (15.4–25 disabled) | iOS 15.4+ via LiteRT-LM or Apple Intelligence native |
+| Battery (1-hour call)         | ~10-20% worse than native                         | Native                                               |
+| Background audio              | Via AVAudioSession bridge                         | Native (proper)                                      |
+| Screen share iOS              | WebView only                                      | iOS Broadcast Extension                              |
+| App Store discoverability     | Hybrid (second-class)                             | Native (first-class)                                 |
+| Maintenance load              | Web + Capacitor (small native delta)              | Web + RN (two codebases)                             |
+| Risk of App Review rejection  | Higher (WebRTC + E2EE claims scrutinized)         | Lower (native, similar to other LiveKit RN apps)     |
+| Privacy MOAT claims integrity | Preserved (E2EE on every plan from day 1)         | Preserved + reinforced                               |
 
 ## Critical caveats (pinned)
 
@@ -148,12 +148,14 @@ v2 rebuild.
 ## Rejected alternatives
 
 ### Pure Capacitor (rejected)
+
 **Why rejected:** Enterprise 3-hour meetings hit the battery and
 background-audio ceiling. App Review may flag WebRTC in WebView for
 high-attendee meetings. No iOS 15.4–25 AI without a native llama.cpp plugin
 (which would have to be built anyway, eroding the "fast hybrid" advantage).
 
 ### Pure React Native rewrite (rejected)
+
 **Why rejected:** 14-18 weeks to first Beta cedes 4+ months of mobile
 revenue opportunity to Signal, Element Call, Jitsi just as Apple's
 2026 AI-disclosure rules favor on-device-AI positioning. Pro Mainstream
@@ -162,6 +164,7 @@ The privacy MOAT marketing is at its peak NOW; waiting 4-6 months risks
 the narrative.
 
 ### Defer mobile (rejected)
+
 **Why rejected:** Cedes the iOS privacy-meeting-app marketing window.
 Enterprise sales prospects routinely ask for mobile; no mobile = lost deals.
 
@@ -182,14 +185,15 @@ targeting `arm64-apple-ios17.0-simulator`, ad-hoc signed, launched via
 `xcrun simctl launch --console-pty`.
 
 **iOS 17.5 — PASS:**
+
 ```json
 {
-    "RTCRtpScriptTransform": "function",   // present in WKWebView by default
+    "RTCRtpScriptTransform": "function", // present in WKWebView by default
     "RTCRtpSender": "function",
-    "createEncodedStreams": false,         // older insertable-streams path (deprecated)
+    "createEncodedStreams": false, // older insertable-streams path (deprecated)
     "RTCEncodedVideoFrame": "undefined",
-    "mediaDevices": "undefined",           // NOT exposed by default — see note below
-    "getUserMedia": false,                 // NOT available by default — see note below
+    "mediaDevices": "undefined", // NOT exposed by default — see note below
+    "getUserMedia": false, // NOT available by default — see note below
     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 ..."
 }
 ```
@@ -208,6 +212,7 @@ targeting `arm64-apple-ios17.0-simulator`, ad-hoc signed, launched via
   setup step, not a blocker.
 
 **iOS 16.x and earlier — UNTESTED in this Mac's Xcode 26.5.**
+
 - Xcode 26.5 ships only with iOS 17.5+ simulator runtimes. Older runtimes
   must be downloaded explicitly.
 - Started a download of the iOS 16.4 runtime (6.18 GB), but the link rate
@@ -224,6 +229,7 @@ floor at 17.0 since the API has been stable since 16.4 and there are
 no known WKWebView regressions between 16.4 and 17.5).
 
 **Optional widening to iOS 16.4** is a sideline:
+
 - Either let the iOS 16.4 sim runtime finish downloading
   (`xcodebuild -downloadPlatform iOS -buildVersion 16.4` — overnight at
   current bandwidth), then re-run the smoke test against it; OR
@@ -233,6 +239,7 @@ no known WKWebView regressions between 16.4 and 17.5).
 - If it FAILS, floor stays at 17.
 
 **Capacitor Phase 1 plan amendment:**
+
 - `iOS minimum` set to 16.4 pending the 16.4 runtime smoke test.
 - `Info.plist` requirements documented for Phase 1: `NSCameraUsageDescription`,
   `NSMicrophoneUsageDescription`, `NSLocalNetworkUsageDescription` (for

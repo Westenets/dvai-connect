@@ -393,11 +393,13 @@ export default function Dashboard() {
                 ) : recordings.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {recordings.map((rec) => (
-                            <RecordingCard 
-                                key={rec.$id} 
-                                rec={rec} 
-                                user={user} 
-                                onDelete={(id) => setRecordings((prev) => prev.filter((r) => r.$id !== id))}
+                            <RecordingCard
+                                key={rec.$id}
+                                rec={rec}
+                                user={user}
+                                onDelete={(id) =>
+                                    setRecordings((prev) => prev.filter((r) => r.$id !== id))
+                                }
                             />
                         ))}
                     </div>

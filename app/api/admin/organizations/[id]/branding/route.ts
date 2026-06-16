@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-import {
-    Client as ServerClient,
-    Databases as ServerDatabases,
-    Query,
-    ID,
-} from 'node-appwrite';
+import { Client as ServerClient, Databases as ServerDatabases, Query, ID } from 'node-appwrite';
 import { requireAdmin } from '@/lib/auth/admin';
 import { generateVerificationToken } from '@/lib/branding/domain-verify';
 
@@ -42,10 +37,7 @@ interface BrandingRow {
     customDomainVerificationToken?: string;
 }
 
-export async function POST(
-    request: Request,
-    context: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
     try {
         await requireAdmin();
     } catch {
@@ -99,7 +91,11 @@ export async function POST(
             fields.customDomainVerifiedAt = null;
             fields.customDomainCheckedAt = null;
             fields.customDomainVerificationError = null;
-        } else if (newDomain === oldDomain && oldDomain && !existingRow?.customDomainVerificationToken) {
+        } else if (
+            newDomain === oldDomain &&
+            oldDomain &&
+            !existingRow?.customDomainVerificationToken
+        ) {
             // Domain unchanged but no token yet (e.g. row predates the
             // domain-verify migration) — backfill a token.
             fields.customDomainVerificationToken = generateVerificationToken();
@@ -116,9 +112,6 @@ export async function POST(
         });
         return NextResponse.json({ ok: true, created: created.$id });
     } catch (err: any) {
-        return NextResponse.json(
-            { error: err?.message ?? 'Save failed' },
-            { status: 500 },
-        );
+        return NextResponse.json({ error: err?.message ?? 'Save failed' }, { status: 500 });
     }
 }

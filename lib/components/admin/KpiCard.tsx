@@ -27,13 +27,9 @@ export function KpiCard({ label, value, sublabel, tone = 'neutral' }: Props) {
             <div className="text-xs font-semibold tracking-widest text-slate-500 dark:text-slate-400 uppercase mb-2">
                 {label}
             </div>
-            <div className={`text-3xl font-semibold tabular-nums ${TONE_CLASS[tone]}`}>
-                {value}
-            </div>
+            <div className={`text-3xl font-semibold tabular-nums ${TONE_CLASS[tone]}`}>{value}</div>
             {sublabel && (
-                <div className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    {sublabel}
-                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-2">{sublabel}</div>
             )}
         </div>
     );

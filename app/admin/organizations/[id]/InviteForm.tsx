@@ -21,11 +21,14 @@ export function InviteForm({ orgId }: { orgId: string }) {
         setBusy(true);
         setResult(null);
         try {
-            const res = await fetch(`/api/admin/organizations/${encodeURIComponent(orgId)}/invite`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email.trim(), name: name.trim(), roles: role }),
-            });
+            const res = await fetch(
+                `/api/admin/organizations/${encodeURIComponent(orgId)}/invite`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email.trim(), name: name.trim(), roles: role }),
+                },
+            );
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
                 throw new Error(body.error ?? `HTTP ${res.status}`);

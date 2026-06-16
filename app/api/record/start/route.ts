@@ -47,11 +47,7 @@ export async function GET(req: NextRequest) {
             return new NextResponse('Missing roomName parameter', { status: 403 });
         }
 
-        const {
-            LIVEKIT_API_KEY,
-            LIVEKIT_API_SECRET,
-            LIVEKIT_URL,
-        } = process.env;
+        const { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL } = process.env;
 
         const hostURL = new URL(LIVEKIT_URL!);
         hostURL.protocol = 'https:';
@@ -147,9 +143,9 @@ export async function GET(req: NextRequest) {
                 const roomAdmins = await appwriteDatabases.listDocuments(
                     'dvai-connect',
                     'room_admins',
-                    [AppwriteQuery.equal('roomId', roomName)]
+                    [AppwriteQuery.equal('roomId', roomName)],
                 );
-                const adminIds = roomAdmins.documents.map(doc => doc.adminId);
+                const adminIds = roomAdmins.documents.map((doc) => doc.adminId);
 
                 // Get participant userIds and startedBy for initial tracking
                 const { RoomServiceClient } = await import('livekit-server-sdk');
@@ -159,7 +155,7 @@ export async function GET(req: NextRequest) {
                     LIVEKIT_API_SECRET,
                 );
                 const participants = await roomServiceClient.listParticipants(roomName);
-                
+
                 const participantUserIds = participants
                     .map((p) => {
                         if (!p.metadata) return null;
@@ -173,7 +169,7 @@ export async function GET(req: NextRequest) {
                     .filter((id): id is string => !!id);
 
                 const startedBy = req.nextUrl.searchParams.get('startedBy') || 'unknown';
-                const initiator = participants.find(p => p.identity === startedBy);
+                const initiator = participants.find((p) => p.identity === startedBy);
                 let initiatorId = null;
                 if (initiator?.metadata) {
                     try {
@@ -183,7 +179,7 @@ export async function GET(req: NextRequest) {
                 }
 
                 // Combine admins and initiator for the owner array
-                const owners = Array.from(new Set([...adminIds, initiatorId].filter(id => !!id)));
+                const owners = Array.from(new Set([...adminIds, initiatorId].filter((id) => !!id)));
 
                 await appwriteDatabases.createDocument(
                     'dvai-connect',

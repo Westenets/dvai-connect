@@ -113,8 +113,7 @@ function computeCommitmentEnd(sub: Stripe.Subscription): string {
     // SubscriptionItem (each item can now have its own billing period).
     // We always create single-item subscriptions, so item 0 holds the
     // canonical period.
-    const startEpoch =
-        sub.items.data[0]?.current_period_start ?? Math.floor(Date.now() / 1000);
+    const startEpoch = sub.items.data[0]?.current_period_start ?? Math.floor(Date.now() / 1000);
     // Approximate end at start + 30 days/month for record-keeping; the
     // actual phase end is enforced by Stripe's billing engine via the
     // `duration` param on the schedule phase.
