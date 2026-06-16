@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireStripe } from '@/lib/stripe';
 import { Client as ServerClient, Databases as ServerDatabases, Query } from 'node-appwrite';
 import { getCurrentUser } from '@/lib/auth/session';
+import { buildHandlerDeps } from '@/lib/stripe-events/handlers';
+import { drainEventsForSession } from '@/lib/stripe-events/drain';
 
 /**
  * GET /api/checkout/verify?session_id=cs_test_…
@@ -93,11 +95,34 @@ export async function GET(request: Request) {
     try {
         const client = new ServerClient().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
         const databases = new ServerDatabases(client);
-        const res = await databases.listDocuments(DB_ID, 'subscriptions', [
-            Query.equal('stripeSubscriptionId', subId),
-            Query.limit(1),
-        ]);
-        const doc = res.documents[0] as unknown as { tier: string } | undefined;
+        const lookup = async () =>
+            (await databases.listDocuments(DB_ID, 'subscriptions', [
+                Query.equal('stripeSubscriptionId', subId),
+                Query.limit(1),
+            ])).documents[0] as unknown as { tier: string } | undefined;
+
+        let doc = await lookup();
+        if (!doc) {
+            // Cron drains every minute, but the polling client checks
+            // every 1.5s with a 60s timeout — so without an inline
+            // drain the user can race the cron and see "Almost there"
+            // even on the happy path. Do the cron's work for this
+            // specific session right here, then re-check. The cron
+            // remains the safety net for everything we don't touch.
+            try {
+                const drainDeps = buildHandlerDeps();
+                await drainEventsForSession(drainDeps, {
+                    sessionId,
+                    subscriptionId: subId,
+                });
+                doc = await lookup();
+            } catch (drainErr: any) {
+                console.warn(
+                    '[checkout/verify] inline drain failed:',
+                    drainErr?.message ?? drainErr,
+                );
+            }
+        }
         if (!doc) {
             return NextResponse.json({
                 status: 'pending',
