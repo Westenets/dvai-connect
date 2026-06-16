@@ -1,4 +1,5 @@
 onlyBuiltDependencies:
+  - '@datadog/pprof'
   - '@newrelic/fn-inspect'
   - '@newrelic/native-metrics'
   - esbuild
